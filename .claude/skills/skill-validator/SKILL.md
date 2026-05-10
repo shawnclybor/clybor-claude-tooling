@@ -1,6 +1,6 @@
 ---
 name: skill-validator
-description: Ralph-loop skill validator. Iteratively runs a target skill against representative inputs in a target repo, scores output against pass criteria, applies fixes, and re-runs until pass or budget exhausted. Use when you need to validate that a skill works as advertised on a real codebase rather than just reviewing the SKILL.md by eye. Triggers — "validate this skill against [repo]", "ralph loop on [skill]", "does this skill work on naf-mentor-dashboard", "run the skill-validator". Read-only against the target repo by default.
+description: Ralph-loop skill validator. Iteratively runs a target skill against representative inputs in a target repo, scores output against pass criteria, applies fixes, and re-runs until pass or budget exhausted. Use when you need to validate that a skill works as advertised on a real codebase rather than just reviewing the SKILL.md by eye. Triggers — "validate this skill against [repo]", "ralph loop on [skill]", "does this skill work on [target repo]", "run the skill-validator". Read-only against the target repo by default.
 ---
 
 # Skill Validator — Ralph Loop
@@ -12,8 +12,8 @@ A continuous-iteration eval loop for skills. Geoffrey Huntley-style: run the ski
 - After authoring a new skill, before promoting it for general use
 - After editing an existing skill's prompt or pre-flight checklist
 - When a skill behaves correctly in chat but fails in scripted runs (or vice versa)
-- When promoting a skill from one project to another (e.g., lifting a life-crm skill into a fresh repo)
-- When validating that a skill works against a specific target repo (e.g., `naf-mentor-dashboard-frontend`, `naf-mentor-dashboard-backend`)
+- When promoting a skill from one project to another
+- When validating that a skill works against a specific target repo
 
 ## When NOT to use
 
@@ -24,7 +24,7 @@ A continuous-iteration eval loop for skills. Geoffrey Huntley-style: run the ski
 ## Inputs
 
 - **`SKILL_PATH`** — path to the skill being validated (e.g., `.claude/skills/quality-review/SKILL.md`)
-- **`TARGET_REPO`** — path to the repo the skill will run against (e.g., `~/gits/naf-mentor-dashboard-frontend`)
+- **`TARGET_REPO`** — path to the repo the skill will run against
 - **`PASS_CRITERIA`** — file or inline list of required behaviors. Each criterion is a yes/no the loop can score. Format: `<id>: <description>` (one per line)
 - **`BUDGET`** — max iterations (default 5) and max minutes (default 30). Hard cap; the loop fails if either is hit.
 

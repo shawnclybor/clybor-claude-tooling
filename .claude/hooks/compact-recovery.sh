@@ -4,7 +4,7 @@
 # Triggered on Stop with the `compact` matcher. Re-injects ROADMAP.md (if present)
 # and recent git history so the next thread has cross-compaction continuity.
 #
-# Lifted from new-research-system. Generic: works for any project that follows the
+# Generic: works for any project that follows the
 # "ROADMAP.md at repo root" convention. If ROADMAP.md is missing, the hook degrades
 # gracefully and prints only the git log.
 
