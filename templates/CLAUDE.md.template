@@ -1,0 +1,62 @@
+# {{PROJECT_NAME}} — Router
+
+Project instructions for `{{PROJECT_NAME}}`. Owner: Shawn Clybor (shawn@clyborconsulting.com).
+
+**KISS. YAGNI.** Direct answers. Simplest thing that works. Don't build what isn't asked for.
+
+## Hard Rules (always on)
+
+1. **Two Strikes** — same op fails twice → STOP. Research, log the failure mode, report. No blind third retry. Trigger `five-whys` instead.
+2. **Blocker Protocol** — hit a blocker, stop and report. Explain what was tried. Ask before working around.
+3. **KISS / YAGNI** — Reuse before you write. Pick the simplest mechanism. Don't build for hypothetical futures.
+4. **Read before writing** — understand existing context (file, schema, prior version) before producing output.
+5. **No fabrication** — never invent quotes, citations, file paths, IDs, or APIs. If unsure, say so.
+6. **Quality gate before irreversible decisions** — schema changes, MCP/agent architecture, public-facing copy, anything that compounds → run `quality-review`.
+7. **Audit your writes** — after every write, restate what the tool returned (IDs, paths, params). No self-grading; cite the actual response.
+
+## The Router
+
+Every non-trivial request: **Classify → Load → Think → Pre-flight Checklist → Validate.** Full ritual: `.claude/rules/routing-protocol.md`.
+
+| If request touches… | Load |
+|---|---|
+| A plan, design, PRD, architecture decision, or other proposal before commit | `quality-review` skill (parallel adversarial team) |
+| Just KISS/YAGNI lens on existing code or design | `simplify` command |
+| Just "challenge my reasoning" lens | `adversarial` command |
+| Edge cases / failure modes / "what breaks this" | `chaos` command |
+| Something failed unexpectedly, retry-blind temptation | `five-whys` skill |
+| Client-facing prose, deliverables, emails ≥3 sentences | `writing-quality` skill |
+| Validating a skill or agent against a target repo | `skill-validator` skill (ralph loop) |
+
+Multi-domain → load multiple. Domain-specific governance (Notion, Gmail, Drive, Supabase, etc.) belongs in a project-specific rule file or Cowork plugin, NOT in this template.
+
+## Agents
+
+| Agent | Model | Role |
+|---|---|---|
+| `adversarial-reviewer` | Opus | Challenges claims and assumptions. Asks "is this the right thing?" |
+| `simplifier` | Sonnet | Finds over-engineering. Asks "is this the simplest way?" |
+| `chaos-engineer` | Sonnet | Stress-tests for edge cases and failure modes. Asks "what breaks this?" |
+
+The three lenses are non-overlapping by design. `quality-review` runs all three in parallel and synthesizes the findings.
+
+## Key Paths
+
+| Path | What |
+|---|---|
+| `.claude/rules/routing-protocol.md` | Full 5-step ritual |
+| `.claude/rules/kiss-yagni.md` | Principles, Two Strikes, Blocker Protocol |
+| `.claude/agents/quality/` | The 3 review agents |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator |
+| `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys |
+| `.claude/hooks/` | compact-recovery.sh |
+| `docs/` | Project-specific docs (PRDs, ADRs, schemas) |
+
+## Project-Specific Setup
+
+When initializing this template for a new project, fill in:
+
+- **Project name** above (`{{PROJECT_NAME}}`).
+- **Domain rules** in `.claude/rules/` for any tools the project uses (Supabase, Notion, etc.). Keep them small — auto-load is for always-relevant content only.
+- **ROADMAP.md** at repo root if you want the compact-recovery hook to re-inject it (default: enabled).
+- **Custom skills** in `.claude/skills/`. Don't duplicate what's already here.

@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(pip:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(git:*)",
+      "Bash(pandoc:*)",
+      "Bash(jq:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__brave-search__*"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/compact-recovery.sh",
+            "statusMessage": "Re-injecting ROADMAP after compaction..."
+          }
+        ]
+      }
+    ]
+  }
+}
