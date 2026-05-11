@@ -62,6 +62,10 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `writing-quality` — strip AI-isms from client-facing prose
 - `skill-validator` — ralph loop that iterates skill fixes against a target repo until pass criteria met
 - `dev-loop` — 7-stage development workflow: PRD → plan → validate → ralph → verify → evaluate → iterate
+- `prd-writer` — Stage 1. Write a PRD with binary success criteria using `templates/prd-template.md`
+- `task-plan` — Stage 2. Decompose the PRD into a sequenced checkbox task list using `templates/plan-template.md`
+- `ralph-implement` — Stage 4. Continuous-iteration code implementation with two-strike rule
+- `verify` — Stage 5. Run deterministic checks mapped to PRD success criteria
 - `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
 - `insight-promotion` — promotes a crystallized insight into always-on governance
 
@@ -125,6 +129,10 @@ clybor-claude-tooling/
 │   │   ├── writing-quality/SKILL.md
 │   │   ├── skill-validator/SKILL.md
 │   │   ├── dev-loop/SKILL.md
+│   │   ├── prd-writer/SKILL.md
+│   │   ├── task-plan/SKILL.md
+│   │   ├── ralph-implement/SKILL.md
+│   │   ├── verify/SKILL.md
 │   │   ├── insight-crystallizer/SKILL.md
 │   │   └── insight-promotion/SKILL.md
 │   ├── commands/
@@ -146,8 +154,8 @@ clybor-claude-tooling/
 │   └── settings.json.template
 ├── scripts/
 │   └── init.sh
-├── templates/
-│   └── CLAUDE.md.template
-└── docs/
-    └── PRD.md                  # bundle scope + ralph-loop spec
+└── templates/
+    ├── CLAUDE.md.template
+    ├── prd-template.md
+    └── plan-template.md
 ```

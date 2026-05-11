@@ -74,3 +74,10 @@ Tell the user clearly:
 ## Key principle
 
 > The goal is never "make it work this time." The goal is "make it never break this way again." Every Five Whys should end with a governance update or a script that prevents recurrence.
+
+## When to use debugger or error-coordinator instead
+
+- **`debugger`** — if the failure has a reproducible trigger and you need to find a root cause rather than walk a protocol. Reproduction-first, evidence-driven. Use `debugger` first; fall back to five-whys if `debugger` cannot reproduce or cannot find a root cause.
+- **`error-coordinator`** — if multiple parallel agents or tasks failed in the same run and the failures might share an upstream cause. Correlates symptoms; surfaces shared root causes.
+
+Five-whys is the protocol for unexpected failures with no reproduction. `debugger` is the executor when reproduction exists. Both end in a governance update.

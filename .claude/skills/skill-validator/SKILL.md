@@ -116,3 +116,8 @@ Each iteration:
 - `.skill-validator/<skill-name>/iteration-<N>.json` — per-iteration audit log
 - `.skill-validator/<skill-name>/SUMMARY.md` — final pass/fail report
 - A diff of `SKILL.md` showing what changed across the loop
+
+## Agent integration
+
+- **`debugger`** — invoked on the first same-failure-mode iteration repeat. Reproduces the skill failure deterministically and narrows the cause before patching.
+- **`error-coordinator`** — invoked when the validator runs against multiple representative inputs and 2+ fail in the same iteration. Correlates symptoms to find a shared cause in the skill (not in the inputs).

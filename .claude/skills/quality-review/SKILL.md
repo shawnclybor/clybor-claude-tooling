@@ -109,3 +109,18 @@ All accepted recommendations should be integrated into the source artifact (PRD,
 - Don't treat agent findings as authoritative — they inform user judgment, they don't override it
 - Don't let review become a substitute for building — the goal is better decisions, not more documents
 - Don't skip the chaos-engineer when the proposal "feels safe." Safety bias is exactly when chaos catches the most.
+
+## Synthesis via knowledge-synthesizer
+
+After Round 1 gathers findings from the three agents in parallel, invoke `knowledge-synthesizer` to combine the outputs rather than hand-rolling the merge. The synthesizer:
+
+- Identifies findings 2+ agents independently surfaced (high confidence)
+- Surfaces unique findings from a single agent (still data, not consensus)
+- Preserves disagreements explicitly (does not force resolution)
+- Flags coverage gaps
+
+For Round 2 re-engagement after context shifts, run the affected agents in parallel via `multi-agent-coordinator` (so a failure in one does not stop the others), then re-synthesize via `knowledge-synthesizer`.
+
+## Parallel spawn discipline
+
+The three review agents run truly in parallel — spawn them via `multi-agent-coordinator`, do not serialize. The coordinator tracks state, handles partial failures, and returns the combined results to the synthesizer.

@@ -102,3 +102,7 @@ The dev-loop orchestrator treats PARTIAL the same as FAIL — don't advance to S
 - **Cherry-picking checks** — picking the easy criteria and skipping the hard ones. If a criterion can't be checked, surface it; don't hide it.
 - **Stale runs** — running checks against an old build. Re-run after every implementation change.
 - **Flaky checks counted as PASS** — a check that passes 80% of the time is not a check. Fix the flake or strike the check.
+
+## Agent integration
+
+- **`code-reviewer`** — runs a final read-only pass over the implementation files after deterministic checks return PASS, before the dev-loop advances to Stage 6 evaluation. Catches issues the checks do not (type-safety gaps, naming, structural debt). A Critical finding from `code-reviewer` is treated the same as a failed check — return to Stage 4.

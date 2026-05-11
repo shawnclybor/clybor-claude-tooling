@@ -156,3 +156,8 @@ If the insight meets any of these criteria, suggest promoting it via the `insigh
 4. **Cross-session applicability** — relevant to future sessions that will not mention the originating context.
 
 `docs/insights/` is where knowledge lives. `.claude/rules/` and `CLAUDE.md` are where knowledge is enforced.
+
+## Agent integration
+
+- **`evidence-auditor`** — if the insight cites external sources (URLs, papers, claims attributed to third parties), runs before filing. Confirms each citation traces accurately. An insight with fabricated citations is worse than no insight.
+- **`research-analyst`** — if the insight synthesizes across 3+ external sources, invoke before drafting the Analysis section. Produces the cited-claims table the insight depends on.

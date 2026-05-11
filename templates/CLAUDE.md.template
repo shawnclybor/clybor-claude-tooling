@@ -93,7 +93,7 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, dev-loop, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
 | `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /dev-loop |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py |
-| `docs/` | Project-specific docs (PRDs, ADRs, schemas) |
+| `docs/PRDs/` | Project PRDs and plans (templates at `docs/PRDs/_templates/`) |
 
 ## Project-Specific Setup
 

@@ -101,3 +101,7 @@ Example (if essential): minimal concrete case.
 ```markdown
 N. **Rule Name** — one-sentence statement of the rule and its scope.
 ```
+
+## Agent integration
+
+- **`adversarial-reviewer`** — runs against the proposed governance edit before applying. The reviewer challenges whether the rule actually prevents the failure mode and whether the rule has unintended consequences. A High or Critical finding sends the draft back for revision.
