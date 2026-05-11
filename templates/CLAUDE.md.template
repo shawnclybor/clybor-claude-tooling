@@ -27,11 +27,12 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Something failed unexpectedly, retry-blind temptation | `five-whys` skill |
 | Client-facing prose, deliverables, emails ≥3 sentences | `writing-quality` skill |
 | Validating a skill against a target repo | `skill-validator` skill (ralph loop) |
-| A new feature or non-trivial change needing the full cycle | `dev-loop` skill or `/dev-loop` command |
-| Writing a PRD with binary success criteria | `prd-writer` skill |
-| Decomposing an accepted PRD into a task plan | `task-plan` skill |
-| Running the implementation loop against a task plan | `ralph-implement` skill |
-| Running the verification gate against PRD criteria | `verify` skill |
+| Writing a PRD with binary success criteria | `prd-writer` skill (Stage 1) |
+| Decomposing an accepted PRD into a task plan | `task-plan` skill (Stage 2) |
+| Validating the plan before implementation | `quality-review` skill (Stage 3) |
+| Running the implementation loop against a task plan | `ralph-implement` skill (Stage 4) |
+| Running the verification gate against PRD criteria | `verify` skill (Stage 5) |
+| Evaluating the built implementation | `quality-review` skill (Stage 6) |
 | A valuable insight or decision from this session worth keeping | `insight-crystallizer` skill |
 | An insight that should be always-on governance, not just retrievable | `insight-promotion` skill |
 
@@ -90,8 +91,8 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/agents/code/` | Code agents — code-reviewer, debugger, code-analyzer, security-auditor |
 | `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
 | `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
-| `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, dev-loop, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
-| `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /dev-loop |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
+| `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py |
 | `docs/PRDs/` | Project PRDs and plans (templates at `docs/PRDs/_templates/`) |
 

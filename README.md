@@ -61,11 +61,12 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `five-whys` — root-cause analysis when something breaks unexpectedly
 - `writing-quality` — strip AI-isms from client-facing prose
 - `skill-validator` — ralph loop that iterates skill fixes against a target repo until pass criteria met
-- `dev-loop` — 7-stage development workflow: PRD → plan → validate → ralph → verify → evaluate → iterate
 - `prd-writer` — Stage 1. Write a PRD with binary success criteria using `templates/prd-template.md`
 - `task-plan` — Stage 2. Decompose the PRD into a sequenced checkbox task list using `templates/plan-template.md`
 - `ralph-implement` — Stage 4. Continuous-iteration code implementation with two-strike rule
 - `verify` — Stage 5. Run deterministic checks mapped to PRD success criteria
+
+(Stages 3 and 6 use `quality-review` against the plan and the built implementation respectively. Stage 7 is iterate-or-close — no skill, just decision.)
 - `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
 - `insight-promotion` — promotes a crystallized insight into always-on governance
 
@@ -74,7 +75,6 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `/quality-review` — full 3-agent review
 - `/adversarial`, `/simplify`, `/chaos` — single-lens reviews
 - `/five-whys` — debug protocol
-- `/dev-loop` — run the 7-stage feature workflow
 
 **Rules** (auto-loaded)
 
@@ -128,7 +128,6 @@ clybor-claude-tooling/
 │   │   ├── five-whys/SKILL.md
 │   │   ├── writing-quality/SKILL.md
 │   │   ├── skill-validator/SKILL.md
-│   │   ├── dev-loop/SKILL.md
 │   │   ├── prd-writer/SKILL.md
 │   │   ├── task-plan/SKILL.md
 │   │   ├── ralph-implement/SKILL.md

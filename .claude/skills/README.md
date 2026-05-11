@@ -1,33 +1,37 @@
 # Skills
 
-Composable building blocks. Each skill has a single responsibility and a clear description that drives auto-invocation.
+Composable building blocks. Each skill has a single responsibility.
 
-## Bundled
+## Adversarial review
 
-**Adversarial review team**
+- **quality-review** — Orchestrates the 3-agent quality team (simplifier + adversarial-reviewer + chaos-engineer) in parallel via `multi-agent-coordinator`, synthesized via `knowledge-synthesizer`. Use before any irreversible decision (PRD, plan, schema, architecture).
+- **five-whys** — Root-cause analysis for unexpected failures. Triggered by the Two Strikes rule. Hands off to `debugger` for reproduction-based investigation and `error-coordinator` for correlated parallel failures.
 
-- **quality-review** — Orchestrates the 3-agent adversarial review team (simplifier + adversarial-reviewer + chaos-engineer) in parallel. Use before any irreversible decision.
-- **five-whys** — Root-cause analysis for unexpected failures. Triggered by the Two Strikes rule.
+## Development flow
 
-**Dev loop (7 stages)**
+Per-stage skills, invokable independently or in sequence. Each has explicit pass gates.
 
-- **prd-writer** — Stage 1. Write a PRD with binary success criteria.
-- **task-plan** — Stage 2. Decompose the PRD into a sequenced checkbox task list.
-- (Stage 3 uses `quality-review` against the plan)
-- **ralph-implement** — Stage 4. Continuous-iteration code implementation with two-strike rule.
-- **verify** — Stage 5. Run deterministic checks mapped to PRD success criteria.
-- (Stage 6 uses `quality-review` against the implementation)
-- **dev-loop** — Thin orchestrator that sequences the seven stages with explicit pass gates.
+| Stage | Skill | Pass gate |
+|---|---|---|
+| 1. PRD | **prd-writer** | Binary success criteria, scope, dependencies, risks. Uses `templates/prd-template.md`. |
+| 2. Plan | **task-plan** | Every criterion covered by ≥1 task; tasks one-pass completable; parallelizable groups identified via `task-distributor`. Uses `templates/plan-template.md`. |
+| 3. Validate plan | **quality-review** | No Critical findings; High findings addressed or accepted |
+| 4. Implement | **ralph-implement** | Every task check returns green within retry budget; `code-reviewer` clean per-task; `debugger` resolved any two-strikes |
+| 5. Verify | **verify** | Every PRD criterion's check returns green |
+| 6. Evaluate impl | **quality-review** | No Critical findings on the built artifact |
+| 7. Iterate or close | — | Return to Stage 4 with narrower scope, or write a closure note |
 
-**Knowledge capture**
+Stages run in order. A failed gate returns to that stage, not earlier ones. The numbered checkbox tasks in the plan double as the workflow log.
 
-- **insight-crystallizer** — Captures valuable analyses into `docs/insights/*.md` so they survive past the chat session.
-- **insight-promotion** — Promotes a crystallized insight into always-on governance (`CLAUDE.md`, `.claude/rules/`, or a skill).
+## Knowledge capture
 
-**Quality**
+- **insight-crystallizer** — Captures valuable analyses into `docs/insights/*.md` so they survive past the chat session. Cites sources via `evidence-auditor`; synthesizes multi-source claims via `research-analyst`.
+- **insight-promotion** — Promotes a crystallized insight into always-on governance (`CLAUDE.md`, `.claude/rules/`, or a skill SKILL.md). Runs the proposed rule through `adversarial-reviewer` before applying.
+
+## Quality
 
 - **writing-quality** — Audits and rewrites content to remove AI-isms. Runs before any client-facing prose ships.
-- **skill-validator** — Ralph-loop validator that iterates a target skill against pass criteria until pass or budget exhausted. Sibling to `ralph-implement`, specialized for skills.
+- **skill-validator** — Ralph-loop validator that iterates a target skill against pass criteria until pass or budget exhausted. Sibling to `ralph-implement`, specialized for skills. Invokes `debugger` on iteration failures.
 
 ## Adding skills
 
