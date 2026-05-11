@@ -32,7 +32,7 @@ The three lenses are non-overlapping by design. `quality-review` runs them in pa
 | `code-analyzer` | Sonnet | Deep-dive cross-file analysis; traces logic flow, finds dead code |
 | `security-auditor` | Opus | OWASP-style audit of input handling, secrets, auth, injection, crypto |
 
-Other lanes (orchestration, research, dev-experience) considered and not bundled by default — see [`docs/agent-recommendations.md`](docs/agent-recommendations.md) for the survey and rationale.
+Additional lanes (orchestration, research, dev-experience) are documented in [`docs/agent-recommendations.md`](docs/agent-recommendations.md) — pull what fits per project.
 
 **Skills**
 
@@ -71,13 +71,13 @@ That copies the `.claude/` tree, fills the `{{PROJECT_NAME}}` placeholder in `CL
 
 If you re-run init after updating the template, it overwrites `.claude/` files but leaves a project's own `CLAUDE.md` in place (creates `CLAUDE.md.new` instead so you can diff).
 
-## What this template does NOT include (by design)
+## Not in the template
 
-- Domain governance (Notion, Gmail, Drive, Slack, Supabase) — those live in per-project rule files or Cowork plugins
-- Document generators (docx, pptx, xlsx) — bundle them per project
-- Source-handling, research-integrity — research-system specifics
+- Domain governance (database, messaging, storage, calendar) — lives per project
+- Document generators (docx, pptx, xlsx) — bundle per project
+- Source-handling, research-integrity rules — bundle per project that needs them
 
-If a rule isn't always relevant to every project, it doesn't belong here.
+Add anything project-specific to that project's own `.claude/`, not here.
 
 ## Updating the template
 

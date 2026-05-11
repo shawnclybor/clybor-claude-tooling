@@ -1,6 +1,6 @@
 # Agents
 
-Subagents spawned via the Task tool. Read-only by default. Two lanes bundled — `quality/` and `code/`.
+Subagents spawned via the Task tool. Read-only by default. Two lanes ship — `quality/` and `code/`.
 
 ## Lane 1 — Quality review team (`quality/`)
 
@@ -30,4 +30,4 @@ When adding a new agent here, ensure it:
 
 Project-specific agents (language specialists, ORM specialists, framework experts) belong in the project's own `.claude/agents/`, not here.
 
-Other lanes considered but not bundled by default — orchestration, research, dev-experience. See [`docs/agent-recommendations.md`](../../docs/agent-recommendations.md) for the survey and the rationale; pull in lanes per-project as needed.
+Additional lanes available (orchestration, research, dev-experience) — see [`docs/agent-recommendations.md`](../../docs/agent-recommendations.md). Pull what fits per project.
