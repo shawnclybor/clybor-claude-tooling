@@ -28,6 +28,10 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Client-facing prose, deliverables, emails ≥3 sentences | `writing-quality` skill |
 | Validating a skill against a target repo | `skill-validator` skill (ralph loop) |
 | A new feature or non-trivial change needing the full cycle | `dev-loop` skill or `/dev-loop` command |
+| Writing a PRD with binary success criteria | `prd-writer` skill |
+| Decomposing an accepted PRD into a task plan | `task-plan` skill |
+| Running the implementation loop against a task plan | `ralph-implement` skill |
+| Running the verification gate against PRD criteria | `verify` skill |
 | A valuable insight or decision from this session worth keeping | `insight-crystallizer` skill |
 | An insight that should be always-on governance, not just retrievable | `insight-promotion` skill |
 
@@ -50,7 +54,7 @@ The three lenses are non-overlapping by design. `quality-review` runs all three 
 | `.claude/rules/routing-protocol.md` | Full 5-step ritual |
 | `.claude/rules/kiss-yagni.md` | Principles, Two Strikes, Blocker Protocol |
 | `.claude/agents/quality/` | The 3 review agents |
-| `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, dev-loop, insight-crystallizer, insight-promotion |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, dev-loop, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
 | `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /dev-loop |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py |
 | `docs/` | Project-specific docs (PRDs, ADRs, schemas) |
