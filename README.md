@@ -102,6 +102,87 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `kiss-yagni-reminder.py` — prints a one-line KISS / YAGNI checkpoint to stderr when writing code files (reminder, not block)
 - `ralph-stop.sh` — Stop hook for the Ralph Loop. Reads `.ralph-loop/state.json`, scans transcript for completion-promise, blocks exit + re-feeds prompt or allows exit
 
+## User journeys
+
+Five scenarios showing how the bundle's pieces compose.
+
+### 1. New feature, full dev cycle
+
+> *"I need to add rate limiting to the public API. Walk me through the right way."*
+
+```
+prd-writer        →  binary success criteria, scope, dependencies, risks
+task-plan         →  checkbox tasks; task-distributor groups parallel work
+/quality-review   →  simplifier + adversarial-reviewer + chaos-engineer on the plan
+ralph-implement   →  per-task loop with code-reviewer on every completed task;
+                     debugger if a task fails twice with the same error
+verify            →  every PRD criterion's check runs green; security-auditor
+                     covers any security-shaped criterion
+/quality-review   →  3-agent team against the built implementation
+```
+
+Result: a PRD, a plan, a verified implementation, and an audit trail of what passed each gate.
+
+### 2. Autonomous overnight task
+
+> *"Build the user-profile CRUD endpoints with tests. I'll check it in the morning."*
+
+```
+/ralph-loop "Implement the four CRUD endpoints in routes/profile/.
+             Write integration tests for each. Run the suite each iteration
+             and fix what fails. Output <promise>COMPLETE</promise> when all
+             tests pass." --completion-promise "COMPLETE" --max-iterations 30
+```
+
+The Stop hook re-feeds the prompt until Claude emits `COMPLETE` or hits 30 iterations. State lives in `.ralph-loop/state.json`. Cancel with `rm .ralph-loop/state.json`.
+
+Result: morning checkout shows the work + git history of every iteration.
+
+### 3. Production bug investigation
+
+> *"The dedup job is silently skipping records. I've retried twice with the same failure."*
+
+```
+/five-whys                  →  walks the root-cause protocol
+debugger (invoked by skill) →  reproduces the failure, narrows with evidence
+code-analyzer               →  traces the cross-file logic path that ends in
+                               the silent skip
+                            →  minimal fix proposed
+insight-promotion           →  if the root cause reveals a governance gap,
+                               codify the rule (e.g. "always log skip events
+                               with the input row")
+```
+
+Result: a structural root cause (not just a symptom), a minimal fix, and a governance update so the same class of bug doesn't recur silently.
+
+### 4. Pre-merge audit on a sensitive change
+
+> *"This PR touches the auth middleware. I don't want to ship without a hard look."*
+
+```
+code-reviewer       →  correctness, type-safety, structure, observability
+security-auditor    →  OWASP-style review of the auth flow specifically
+/quality-review     →  3-agent team on the design choice itself, not just the code
+```
+
+Result: numbered findings grouped Critical / High / Medium / Low across three lenses (quality, security, design). Merge gate is "no Critical; High addressed or accepted with rationale."
+
+### 5. Research-backed decision doc
+
+> *"Should we switch from polling to webhooks for the third-party integration? Write me the decision."*
+
+```
+research-analyst    →  multi-source synthesis (vendor docs, reliability data,
+                       community threads); produces a cited claims table
+search-specialist   →  precision lookups for specific API quirks
+evidence-auditor    →  verifies every citation traces accurately
+writing-quality     →  strips AI-isms from the decision doc before sharing
+insight-crystallizer→  files the decision to `docs/insights/` so future
+                       sessions don't re-litigate
+```
+
+Result: a defensible decision doc with cited claims, no fabricated sources, and a permanent record of the rationale.
+
 ## Init a new project
 
 ```bash
