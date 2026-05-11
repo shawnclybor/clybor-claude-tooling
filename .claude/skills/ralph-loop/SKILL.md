@@ -1,6 +1,6 @@
 ---
 name: ralph-loop
-description: Run a Ralph Loop — Stop-hook-driven autonomous iteration on a single prompt. Same prompt re-fed each iteration via a Stop hook that blocks session exit. Claude emits an exact completion-promise string to signal done. Use for well-defined tasks with automatic verification that can run autonomously (overnight, walk-away). Triggers — "ralph this", "ralph loop on X", "autonomous loop on X", "let it iterate until done", "run until completion-promise". Monolithic by design — one task per loop.
+description: Run a Ralph Loop — Stop-hook-driven autonomous iteration on a single prompt. Same prompt re-fed each iteration via a Stop hook that blocks session exit. Claude emits an exact completion-promise string to signal done. Use for well-defined tasks with automatic verification that can run autonomously (overnight, walk-away). Triggers — "ralph this", "ralph loop on X", "autonomous loop on X", "let it iterate until done", "run until completion-promise". Monolithic — one task per loop.
 ---
 
 # Ralph Loop
@@ -120,7 +120,7 @@ If not complete after 15 iterations:
 
 Note: completion-promise is a single exact string. If you need to distinguish completion paths (success vs blocked), use the max-iterations limit + manual review of the final state.
 
-## Monolithic by design
+## Monolithic architecture
 
 Ralph is intentionally single-process, single-repo, one-task-per-loop. The argument from Huntley:
 
