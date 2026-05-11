@@ -91,3 +91,4 @@ If the PRD is wrong, all three are wrong. Spend the time here.
 - Skipping out-of-scope — if you do not write the anti-scope, scope creeps
 - 500-word PRDs for 20-line features — the PRD should be proportional to the work
 - Unverified citations — every external claim runs through `evidence-auditor` before the PRD ships
+- **`metadata-fetcher`** — invoked when the PRD references a paper, library, package, or repo by identifier (DOI, package name, repo URL). Returns the structured record (version, license, OA status, last release) so the PRD cites accurate metadata. Mechanical lookup; no analysis.
