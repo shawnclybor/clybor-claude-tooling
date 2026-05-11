@@ -55,18 +55,27 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 | `metadata-fetcher` | Haiku | Mechanical metadata lookups |
 
 
-**Skills**
+**Skills — adversarial review**
 
 - `quality-review` — orchestrates the 3-agent team against a plan, PRD, file, or proposal
 - `five-whys` — root-cause analysis when something breaks unexpectedly
+
+**Skills — development flow** (run in sequence; each stage standalone)
+
+| Stage | Skill |
+|---|---|
+| 1. PRD | `prd-writer` (uses `templates/prd-template.md`) |
+| 2. Plan | `task-plan` (uses `templates/plan-template.md`) |
+| 3. Validate plan | `quality-review` |
+| 4. Implement | `ralph-implement` |
+| 5. Verify | `verify` |
+| 6. Evaluate impl | `quality-review` |
+| 7. Iterate or close | (decision, no skill) |
+
+**Skills — other**
+
 - `writing-quality` — strip AI-isms from client-facing prose
 - `skill-validator` — ralph loop that iterates skill fixes against a target repo until pass criteria met
-- `prd-writer` — Stage 1. Write a PRD with binary success criteria using `templates/prd-template.md`
-- `task-plan` — Stage 2. Decompose the PRD into a sequenced checkbox task list using `templates/plan-template.md`
-- `ralph-implement` — Stage 4. Continuous-iteration code implementation with two-strike rule
-- `verify` — Stage 5. Run deterministic checks mapped to PRD success criteria
-
-(Stages 3 and 6 use `quality-review` against the plan and the built implementation respectively. Stage 7 is iterate-or-close — no skill, just decision.)
 - `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
 - `insight-promotion` — promotes a crystallized insight into always-on governance
 
@@ -140,7 +149,7 @@ clybor-claude-tooling/
 │   │   ├── adversarial.md
 │   │   ├── simplify.md
 │   │   ├── chaos.md
-│   │   ├── five-whys.md
+│   │   └── five-whys.md
 │   ├── hooks/
 │   │   ├── README.md
 │   │   ├── compact-recovery.sh
