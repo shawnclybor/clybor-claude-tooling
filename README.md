@@ -13,7 +13,7 @@ The project-facing router template lives at [`templates/CLAUDE.md.template`](tem
 
 ## What you get
 
-**Three quality agents (the adversarial review team)**
+**Lane 1 — Quality review team (3 agents)**
 
 | Agent | Model | Lens | Asks |
 |---|---|---|---|
@@ -22,6 +22,17 @@ The project-facing router template lives at [`templates/CLAUDE.md.template`](tem
 | `chaos-engineer` | Sonnet | Robustness and edge cases | *What breaks this?* |
 
 The three lenses are non-overlapping by design. `quality-review` runs them in parallel and synthesizes findings.
+
+**Lane 2 — Code (4 agents)**
+
+| Agent | Model | Role |
+|---|---|---|
+| `code-reviewer` | Sonnet | Read-only review of a diff or file set |
+| `debugger` | Sonnet | Diagnose a bug with reproduction-first hypothesis narrowing |
+| `code-analyzer` | Sonnet | Deep-dive cross-file analysis; traces logic flow, finds dead code |
+| `security-auditor` | Opus | OWASP-style audit of input handling, secrets, auth, injection, crypto |
+
+Other lanes (orchestration, research, dev-experience) considered and not bundled by default — see [`docs/agent-recommendations.md`](docs/agent-recommendations.md) for the survey and rationale.
 
 **Skills**
 
@@ -82,10 +93,15 @@ clybor-claude-tooling/
 ├── .claude/
 │   ├── agents/
 │   │   ├── README.md
-│   │   └── quality/
-│   │       ├── adversarial-reviewer.md
-│   │       ├── simplifier.md
-│   │       └── chaos-engineer.md
+│   │   ├── quality/
+│   │   │   ├── adversarial-reviewer.md
+│   │   │   ├── simplifier.md
+│   │   │   └── chaos-engineer.md
+│   │   └── code/
+│   │       ├── code-reviewer.md
+│   │       ├── debugger.md
+│   │       ├── code-analyzer.md
+│   │       └── security-auditor.md
 │   ├── skills/
 │   │   ├── README.md
 │   │   ├── quality-review/SKILL.md
