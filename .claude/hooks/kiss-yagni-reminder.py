@@ -6,9 +6,8 @@ PURPOSE: One-line KISS/YAGNI checkpoint printed to stderr when writing code file
 
 Reminds — does not block. Exit 0 always.
 
-Lifted from naf-mentor-dashboard-frontend and generalized to cover common code-file
-extensions across languages. If your project uses a less common language, add the
-extension to CODE_EXTS below.
+Covers common code-file extensions across languages. If your project uses a
+less common language, add the extension to CODE_EXTS below.
 """
 import json
 import sys
