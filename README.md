@@ -54,7 +54,6 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 | `evidence-auditor` | Sonnet | Verifies quotes and citations |
 | `metadata-fetcher` | Haiku | Mechanical metadata lookups |
 
-A developer-experience lane is catalogued in [`docs/agent-recommendations.md`](docs/agent-recommendations.md) — pull per project.
 
 **Skills**
 
@@ -150,6 +149,5 @@ clybor-claude-tooling/
 ├── templates/
 │   └── CLAUDE.md.template
 └── docs/
-    ├── PRD.md                  # bundle scope + ralph-loop spec
-    └── agent-recommendations.md # other agents surveyed + recommendation
+    └── PRD.md                  # bundle scope + ralph-loop spec
 ```
