@@ -29,21 +29,26 @@ The three lenses are non-overlapping by design. `quality-review` runs them in pa
 - `five-whys` — root-cause analysis when something breaks unexpectedly
 - `writing-quality` — strip AI-isms from client-facing prose
 - `skill-validator` — ralph loop that iterates skill fixes against a target repo until pass criteria met
+- `dev-loop` — 7-stage development workflow: PRD → plan → validate → ralph → verify → evaluate → iterate
+- `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
+- `insight-promotion` — promotes a crystallized insight into always-on governance
 
 **Slash commands**
 
 - `/quality-review` — full 3-agent review
 - `/adversarial`, `/simplify`, `/chaos` — single-lens reviews
 - `/five-whys` — debug protocol
+- `/dev-loop` — run the 7-stage feature workflow
 
 **Rules** (auto-loaded)
 
 - `routing-protocol.md` — 5-step Classify→Load→Think→Pre-flight→Validate ritual
-- `kiss-yagni.md` — principles, Two Strikes, Blocker Protocol
+- `kiss-yagni.md` — principles, Two Strikes, Blocker Protocol, Cascade Re-Scope
 
 **Hooks**
 
 - `compact-recovery.sh` — re-injects ROADMAP and recent commits after context-window compaction
+- `kiss-yagni-reminder.py` — prints a one-line KISS / YAGNI checkpoint to stderr when writing code files (reminder, not block)
 
 ## Init a new project
 
@@ -73,27 +78,37 @@ For long-running projects that have customized rules, prefer copying individual 
 
 ```
 clybor-claude-tooling/
-├── CLAUDE.md                   # this repo's own router (meta — describes itself)
 ├── README.md
 ├── .claude/
-│   ├── agents/quality/
-│   │   ├── adversarial-reviewer.md
-│   │   ├── simplifier.md
-│   │   └── chaos-engineer.md
+│   ├── agents/
+│   │   ├── README.md
+│   │   └── quality/
+│   │       ├── adversarial-reviewer.md
+│   │       ├── simplifier.md
+│   │       └── chaos-engineer.md
 │   ├── skills/
+│   │   ├── README.md
 │   │   ├── quality-review/SKILL.md
 │   │   ├── five-whys/SKILL.md
 │   │   ├── writing-quality/SKILL.md
-│   │   └── skill-validator/SKILL.md
+│   │   ├── skill-validator/SKILL.md
+│   │   ├── dev-loop/SKILL.md
+│   │   ├── insight-crystallizer/SKILL.md
+│   │   └── insight-promotion/SKILL.md
 │   ├── commands/
+│   │   ├── README.md
 │   │   ├── quality-review.md
 │   │   ├── adversarial.md
 │   │   ├── simplify.md
 │   │   ├── chaos.md
-│   │   └── five-whys.md
+│   │   ├── five-whys.md
+│   │   └── dev-loop.md
 │   ├── hooks/
-│   │   └── compact-recovery.sh
+│   │   ├── README.md
+│   │   ├── compact-recovery.sh
+│   │   └── kiss-yagni-reminder.py
 │   ├── rules/
+│   │   ├── README.md
 │   │   ├── routing-protocol.md
 │   │   └── kiss-yagni.md
 │   └── settings.json.template
@@ -102,5 +117,6 @@ clybor-claude-tooling/
 ├── templates/
 │   └── CLAUDE.md.template
 └── docs/
-    └── PRD.md                  # bundle scope + ralph-loop spec
+    ├── PRD.md                  # bundle scope + ralph-loop spec
+    └── agent-recommendations.md # other agents surveyed + recommendation
 ```

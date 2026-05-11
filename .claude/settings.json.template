@@ -13,12 +13,22 @@
       "Bash(git:*)",
       "Bash(pandoc:*)",
       "Bash(jq:*)",
-      "mcp__sequential-thinking__sequentialthinking",
-      "mcp__brave-search__*"
+      "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": []
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/kiss-yagni-reminder.py"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "compact",
