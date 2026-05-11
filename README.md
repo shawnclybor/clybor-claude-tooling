@@ -21,7 +21,7 @@ The project-facing router template lives at [`templates/CLAUDE.md.template`](tem
 | `simplifier` | Sonnet | KISS / YAGNI | *Is this the simplest way?* |
 | `chaos-engineer` | Sonnet | Robustness and edge cases | *What breaks this?* |
 
-The three lenses are non-overlapping by design. `quality-review` runs them in parallel and synthesizes findings.
+The three lenses are non-overlapping. `quality-review` runs them in parallel and synthesizes findings.
 
 **Lane 2 — Code (4 agents)**
 

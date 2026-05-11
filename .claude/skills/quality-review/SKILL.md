@@ -5,7 +5,7 @@ description: Structured 3-agent quality review using parallel simplifier, advers
 
 # Quality Review
 
-A structured interrogation methodology using three review agents in parallel to stress-test proposals before committing to them. Each agent attacks a different axis. No overlap by design.
+A structured interrogation methodology using three review agents in parallel to stress-test proposals before committing to them. Each agent attacks a different axis with no overlap.
 
 ## The Three Lenses
 
