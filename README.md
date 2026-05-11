@@ -2,7 +2,14 @@
 
 Standardized Claude Code bootstrap for new projects. Drop-in `.claude/` tree + `CLAUDE.md` template + adversarial review team + ralph-loop skill validator.
 
-The project-facing `CLAUDE.md` template lives at [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template). `scripts/init.sh` copies it into a target project and substitutes `{{PROJECT_NAME}}`. There is intentionally no `CLAUDE.md` at this repo's root — the bootstrap stays agnostic.
+## Install / use
+
+1. Clone this repo: `git clone https://github.com/shawnclybor/clybor-claude-tooling.git ~/gits/clybor-claude-tooling`
+2. Create the target project dir (if it doesn't exist): `mkdir -p ~/gits/my-new-project`
+3. Run init: `bash ~/gits/clybor-claude-tooling/scripts/init.sh ~/gits/my-new-project "My New Project"`
+4. `cd ~/gits/my-new-project` and start Claude Code
+
+The project-facing router template lives at [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template). `scripts/init.sh` copies it into the target project and substitutes `{{PROJECT_NAME}}`.
 
 ## What you get
 
