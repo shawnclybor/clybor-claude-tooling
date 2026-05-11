@@ -1,6 +1,6 @@
 # Rules
 
-Auto-loaded governance read on every non-trivial request. Small on purpose. Anything domain-specific belongs in a per-project rule file or a plugin, not here.
+Auto-loaded governance read on every non-trivial request. Small. Anything domain-specific belongs in a per-project rule file or a plugin, not here.
 
 ## Bundled
 

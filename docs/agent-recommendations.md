@@ -55,9 +55,9 @@ Pull per project where the surface warrants.
 | `build-engineer` | Sonnet | Build optimization, bundle sizes, CI/CD | Complex builds |
 | `git-workflow-manager` | Sonnet | Branching strategies, conflict resolution | Multi-contributor team |
 
-## Project-local agents (do not bundle)
+## Project-local agents
 
-These belong in the project that uses them.
+These live in the project that uses them, not in this template.
 
 - **Language and framework specialists** — agents tuned to a specific language, runtime, or framework
 - **Stack investigators** — agents that probe a specific service or platform
