@@ -141,7 +141,6 @@ clybor-claude-tooling/
 │   │   ├── simplify.md
 │   │   ├── chaos.md
 │   │   ├── five-whys.md
-│   │   └── dev-loop.md
 │   ├── hooks/
 │   │   ├── README.md
 │   │   ├── compact-recovery.sh

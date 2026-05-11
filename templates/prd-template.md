@@ -40,4 +40,4 @@ Each criterion is binary — verifiable by running a command, reading a file, or
 
 ---
 
-**How to use:** copy this file to `docs/PRDs/<feature-slug>.md`, fill it in, and invoke the `prd-writer` skill if you want guided refinement. The `dev-loop` skill consumes this file at Stage 1; `verify` consumes the success criteria at Stage 5.
+**How to use:** copy this file to `docs/PRDs/<feature-slug>.md`, fill it in, and invoke the `prd-writer` skill if you want guided refinement. The `task-plan` skill consumes this file at Stage 2; `verify` consumes the success criteria at Stage 5.

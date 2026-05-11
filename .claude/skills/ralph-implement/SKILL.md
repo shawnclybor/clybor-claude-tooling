@@ -118,7 +118,7 @@ The loop stops without closing when any task exhausts its retry budget, two-stri
 - **code-reviewer** — invoked after every task check passes, before marking done
 - **multi-agent-coordinator** — orchestrates parallel spawns
 - **error-coordinator** — correlates failures across parallel tasks
-- **quality-review** — runs at the end of the parent `dev-loop` (Stage 6); not invoked inside this skill
+- **quality-review** — runs at Stage 6 against the built implementation; not invoked inside this skill
 - **skill-validator** — sibling skill, specialized for validating skills
 
 ## Anti-patterns

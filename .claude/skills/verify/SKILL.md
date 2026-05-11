@@ -86,7 +86,7 @@ A failed criterion does not auto-fix anything. Report the failure with:
 - Where the evidence lives
 - The smallest hint at the root cause (don't guess — cite the actual output)
 
-Then stop and surface to the user / dev-loop orchestrator. The next step is either return to `ralph-implement` with a narrower task list or update the PRD if the criterion was wrong.
+Then stop and surface to the user. The next step is either return to `ralph-implement` with a narrower task list or update the PRD if the criterion was wrong.
 
 ## Pass / fail summary
 
@@ -94,7 +94,7 @@ Then stop and surface to the user / dev-loop orchestrator. The next step is eith
 - **FAIL** — at least one check returned red
 - **PARTIAL** — some criteria pass, some have no check (the verification is incomplete; either write the missing checks or document why they can't be written)
 
-The dev-loop orchestrator treats PARTIAL the same as FAIL — don't advance to Stage 6 with unmapped criteria.
+Treat PARTIAL the same as FAIL — do not advance to Stage 6 with unmapped criteria.
 
 ## Anti-patterns
 
@@ -105,4 +105,4 @@ The dev-loop orchestrator treats PARTIAL the same as FAIL — don't advance to S
 
 ## Agent integration
 
-- **`code-reviewer`** — runs a final read-only pass over the implementation files after deterministic checks return PASS, before the dev-loop advances to Stage 6 evaluation. Catches issues the checks do not (type-safety gaps, naming, structural debt). A Critical finding from `code-reviewer` is treated the same as a failed check — return to Stage 4.
+- **`code-reviewer`** — runs a final read-only pass over the implementation files after deterministic checks return PASS, before Stage 6 evaluation. Catches issues the checks do not (type-safety gaps, naming, structural debt). A Critical finding from `code-reviewer` is treated the same as a failed check — return to Stage 4.
