@@ -39,24 +39,46 @@ Multi-domain → load multiple. Domain-specific governance (Notion, Gmail, Drive
 
 ## Agents
 
-**Lane 1 — Quality review team**
+**Lane 1 — Quality**
 
 | Agent | Model | Role |
 |---|---|---|
-| `adversarial-reviewer` | Opus | Challenges claims and assumptions. Asks "is this the right thing?" |
-| `simplifier` | Sonnet | Finds over-engineering. Asks "is this the simplest way?" |
-| `chaos-engineer` | Sonnet | Stress-tests for edge cases and failure modes. Asks "what breaks this?" |
+| `adversarial-reviewer` | Opus | Challenges claims and assumptions |
+| `simplifier` | Sonnet | KISS / YAGNI lens |
+| `chaos-engineer` | Sonnet | Robustness / edge-case lens |
 
-The three lenses are non-overlapping by design. `quality-review` runs all three in parallel.
+The three lenses are non-overlapping. `quality-review` runs them in parallel.
 
 **Lane 2 — Code**
 
 | Agent | Model | Role |
 |---|---|---|
-| `code-reviewer` | Sonnet | Read-only review of a diff or file set. Catches correctness, type-safety, structure, security issues. |
-| `debugger` | Sonnet | Diagnose a bug. Reproduction-first, evidence-driven hypothesis narrowing. |
-| `code-analyzer` | Sonnet | Deep-dive cross-file analysis. Traces logic flow, surfaces implicit contracts, finds dead code. |
-| `security-auditor` | Opus | OWASP-style assessment of input handling, secrets, auth, injection risk, crypto. |
+| `code-reviewer` | Sonnet | Quality review of a diff or file set |
+| `debugger` | Sonnet | Reproduction-first bug diagnosis |
+| `code-analyzer` | Sonnet | Cross-file logic-flow analysis |
+| `security-auditor` | Opus | OWASP-style threat audit |
+
+**Lane 3 — Orchestration**
+
+| Agent | Model | Role |
+|---|---|---|
+| `workflow-orchestrator` | Sonnet | Sequences multi-stage workflows |
+| `multi-agent-coordinator` | Sonnet | Tracks parallel agent state; handles partial failures |
+| `agent-organizer` | Sonnet | Picks which agents fit a task |
+| `task-distributor` | Sonnet | Splits work across parallel agents safely |
+| `context-manager` | Sonnet | Manages shared context across handoffs |
+| `error-coordinator` | Sonnet | Correlates failures to find shared root causes |
+| `knowledge-synthesizer` | Sonnet | Combines multi-agent outputs into a single report |
+| `performance-monitor` | Sonnet | Surfaces hotspots in agent runtime |
+
+**Lane 4 — Research**
+
+| Agent | Model | Role |
+|---|---|---|
+| `research-analyst` | Sonnet | Multi-source synthesis with cited claims |
+| `search-specialist` | Haiku | Quick precision lookups |
+| `evidence-auditor` | Sonnet | Verifies quotes and citations |
+| `metadata-fetcher` | Haiku | Mechanical metadata lookups |
 
 ## Key Paths
 
@@ -64,8 +86,10 @@ The three lenses are non-overlapping by design. `quality-review` runs all three 
 |---|---|
 | `.claude/rules/routing-protocol.md` | Full 5-step ritual |
 | `.claude/rules/kiss-yagni.md` | Principles, Two Strikes, Blocker Protocol |
-| `.claude/agents/quality/` | The 3 review agents (adversarial-reviewer, simplifier, chaos-engineer) |
-| `.claude/agents/code/` | Code-level agents (code-reviewer, debugger, code-analyzer, security-auditor) |
+| `.claude/agents/quality/` | Review team — adversarial-reviewer, simplifier, chaos-engineer |
+| `.claude/agents/code/` | Code agents — code-reviewer, debugger, code-analyzer, security-auditor |
+| `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
+| `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
 | `.claude/skills/` | quality-review, five-whys, writing-quality, skill-validator, dev-loop, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
 | `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /dev-loop |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py |

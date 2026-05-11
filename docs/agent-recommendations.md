@@ -1,8 +1,10 @@
-# Agent Reference
+# Agent Catalog
 
-Catalog of agents that fit alongside the bundled quality and code lanes. Organized by lane. Pull what each project needs.
+Reference for agents that ship with this template plus additional lanes available to pull per project.
 
-## Lane 1 — Quality (bundled)
+## Bundled lanes
+
+### Lane 1 — Quality (`.claude/agents/quality/`)
 
 | Agent | Model | Role |
 |---|---|---|
@@ -10,66 +12,58 @@ Catalog of agents that fit alongside the bundled quality and code lanes. Organiz
 | `simplifier` | Sonnet | KISS / YAGNI lens |
 | `chaos-engineer` | Sonnet | Robustness / edge-case lens |
 
-`quality-review` orchestrates the three in parallel.
-
-## Lane 2 — Code (bundled)
+### Lane 2 — Code (`.claude/agents/code/`)
 
 | Agent | Model | Role |
 |---|---|---|
-| `code-reviewer` | Sonnet | Read-only quality review of a diff or file set |
+| `code-reviewer` | Sonnet | Quality review of a diff or file set |
 | `debugger` | Sonnet | Reproduction-first bug diagnosis |
 | `code-analyzer` | Sonnet | Cross-file logic-flow analysis |
 | `security-auditor` | Opus | OWASP-style threat audit |
 
-## Lane 3 — Orchestration
-
-For projects that spawn many parallel agents or chain multi-stage workflows. Useful when the existing 7 stages of `dev-loop` need more sophisticated coordination than the orchestrator provides.
+### Lane 3 — Orchestration (`.claude/agents/orchestration/`)
 
 | Agent | Model | Role |
 |---|---|---|
-| `workflow-orchestrator` | Sonnet | Sequences multi-step workflows with state |
+| `workflow-orchestrator` | Sonnet | Sequences multi-stage workflows |
 | `multi-agent-coordinator` | Sonnet | Tracks parallel agent state; handles partial failures |
-| `agent-organizer` | Sonnet | Picks which agents to spawn for a given task |
+| `agent-organizer` | Sonnet | Picks which agents fit a task |
 | `task-distributor` | Sonnet | Splits work across parallel agents safely |
-| `context-manager` | Sonnet | Manages shared context across agents |
-| `error-coordinator` | Sonnet | Correlates failures across agents; recovers cleanly |
-| `knowledge-synthesizer` | Sonnet | Synthesizes findings across agents into a report |
-| `performance-monitor` | Sonnet | Observes agent latency, retry counts, escalation rates |
+| `context-manager` | Sonnet | Manages shared context across handoffs |
+| `error-coordinator` | Sonnet | Correlates failures to find shared root causes |
+| `knowledge-synthesizer` | Sonnet | Combines multi-agent outputs |
+| `performance-monitor` | Sonnet | Surfaces hotspots in agent runtime |
 
-## Lane 4 — Research
-
-For projects that synthesize external sources or maintain cited findings.
+### Lane 4 — Research (`.claude/agents/research/`)
 
 | Agent | Model | Role |
 |---|---|---|
-| `research-analyst` | Sonnet | Deep technology research, multi-source synthesis |
-| `search-specialist` | Haiku | Quick documentation lookups, precision retrieval |
-| `evidence-auditor` | Sonnet | Verifies quotes, citations, factual claims |
-| `metadata-fetcher` | Haiku | Bibliographic / API metadata lookups |
+| `research-analyst` | Sonnet | Multi-source synthesis with cited claims |
+| `search-specialist` | Haiku | Quick precision lookups |
+| `evidence-auditor` | Sonnet | Verifies quotes and citations |
+| `metadata-fetcher` | Haiku | Mechanical metadata lookups |
 
-## Lane 5 — Developer experience
+## Additional lane — Developer experience
 
-For projects with serious documentation, dependency, or tooling surfaces.
+Pull per project where the surface warrants.
 
-| Agent | Model | Role |
-|---|---|---|
-| `documentation-engineer` | Sonnet | Technical guides, API docs, documentation-as-code |
-| `dependency-manager` | Sonnet | Dependency conflicts, security audits, supply chain |
-| `mcp-developer` | Sonnet | MCP server / client development |
-| `build-engineer` | Sonnet | Build optimization, bundle sizes, CI/CD |
-| `git-workflow-manager` | Sonnet | Branching strategies, conflict resolution |
+| Agent | Model | Role | When to add |
+|---|---|---|---|
+| `documentation-engineer` | Sonnet | Technical guides, API docs, docs-as-code | Docs are a first-class deliverable |
+| `dependency-manager` | Sonnet | Dependency conflicts, security audits, supply chain | Non-trivial dependency graph |
+| `mcp-developer` | Sonnet | MCP server / client development | Project builds or consumes MCPs |
+| `build-engineer` | Sonnet | Build optimization, bundle sizes, CI/CD | Complex builds |
+| `git-workflow-manager` | Sonnet | Branching strategies, conflict resolution | Multi-contributor team |
 
-## Project-local lanes (do not bundle)
+## Project-local agents (do not bundle)
 
-These belong in the project that uses them, not in this template.
+These belong in the project that uses them.
 
-- **Language specialists** — `react-specialist`, `python-specialist`, `typescript-pro`, `php-pro`, `laravel-specialist`, `nextjs-developer`, `frontend-developer`, `api-designer`
-- **Stack investigators** — agents that probe specific service stacks
-- **Data-stack agents** — `data-pipeline-engineer`, `database-optimizer`, ORM specialists
-- **Domain-specific reviewers** — agents tuned to a single workflow or product
+- **Language and framework specialists** — agents tuned to a specific language, runtime, or framework
+- **Stack investigators** — agents that probe a specific service or platform
+- **Data-stack specialists** — agents tuned to a specific database, ORM, or data pipeline
+- **Workflow-specific reviewers** — agents tuned to a single product or domain
 
 ## Adding a lane to a project
 
-Drop the agent files into the project's `.claude/agents/<lane>/` and add a routing row in the project's `CLAUDE.md` pointing at when to invoke them.
-
-Genericize before lifting — strip stack-specific phrasing so the agent works for the project at hand.
+Drop the agent files into the project's `.claude/agents/<lane>/`. Add a row in the project's `CLAUDE.md` routing table for when to invoke them. Genericize before lifting if the source agent mentions a specific tech stack.

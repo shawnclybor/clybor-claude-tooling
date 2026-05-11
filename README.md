@@ -28,11 +28,33 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 | Agent | Model | Role |
 |---|---|---|
 | `code-reviewer` | Sonnet | Read-only review of a diff or file set |
-| `debugger` | Sonnet | Diagnose a bug with reproduction-first hypothesis narrowing |
-| `code-analyzer` | Sonnet | Deep-dive cross-file analysis; traces logic flow, finds dead code |
-| `security-auditor` | Opus | OWASP-style audit of input handling, secrets, auth, injection, crypto |
+| `debugger` | Sonnet | Reproduction-first bug diagnosis |
+| `code-analyzer` | Sonnet | Cross-file logic-flow analysis |
+| `security-auditor` | Opus | OWASP-style threat audit |
 
-Additional lanes (orchestration, research, dev-experience) are documented in [`docs/agent-recommendations.md`](docs/agent-recommendations.md) — pull what fits per project.
+**Lane 3 — Orchestration (8 agents)**
+
+| Agent | Model | Role |
+|---|---|---|
+| `workflow-orchestrator` | Sonnet | Sequences multi-stage workflows |
+| `multi-agent-coordinator` | Sonnet | Tracks parallel agent state; handles partial failures |
+| `agent-organizer` | Sonnet | Picks which agents fit a task |
+| `task-distributor` | Sonnet | Splits work across parallel agents safely |
+| `context-manager` | Sonnet | Manages shared context across handoffs |
+| `error-coordinator` | Sonnet | Correlates failures to find shared root causes |
+| `knowledge-synthesizer` | Sonnet | Combines multi-agent outputs |
+| `performance-monitor` | Sonnet | Surfaces hotspots in agent runtime |
+
+**Lane 4 — Research (4 agents)**
+
+| Agent | Model | Role |
+|---|---|---|
+| `research-analyst` | Sonnet | Multi-source synthesis with cited claims |
+| `search-specialist` | Haiku | Quick precision lookups |
+| `evidence-auditor` | Sonnet | Verifies quotes and citations |
+| `metadata-fetcher` | Haiku | Mechanical metadata lookups |
+
+A developer-experience lane is catalogued in [`docs/agent-recommendations.md`](docs/agent-recommendations.md) — pull per project.
 
 **Skills**
 
@@ -93,15 +115,10 @@ clybor-claude-tooling/
 ├── .claude/
 │   ├── agents/
 │   │   ├── README.md
-│   │   ├── quality/
-│   │   │   ├── adversarial-reviewer.md
-│   │   │   ├── simplifier.md
-│   │   │   └── chaos-engineer.md
-│   │   └── code/
-│   │       ├── code-reviewer.md
-│   │       ├── debugger.md
-│   │       ├── code-analyzer.md
-│   │       └── security-auditor.md
+│   │   ├── quality/             # adversarial-reviewer, simplifier, chaos-engineer
+│   │   ├── code/                # code-reviewer, debugger, code-analyzer, security-auditor
+│   │   ├── orchestration/       # 8 orchestration agents
+│   │   └── research/            # research-analyst, search-specialist, evidence-auditor, metadata-fetcher
 │   ├── skills/
 │   │   ├── README.md
 │   │   ├── quality-review/SKILL.md
