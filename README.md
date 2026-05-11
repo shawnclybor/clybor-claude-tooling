@@ -2,6 +2,8 @@
 
 Standardized Claude Code bootstrap for new projects. Drop-in `.claude/` tree + `CLAUDE.md` template + adversarial review team + ralph-loop skill validator.
 
+The project-facing `CLAUDE.md` template lives at [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template). `scripts/init.sh` copies it into a target project and substitutes `{{PROJECT_NAME}}`. There is intentionally no `CLAUDE.md` at this repo's root — the bootstrap stays agnostic.
+
 ## What you get
 
 **Three quality agents (the adversarial review team)**
