@@ -60,6 +60,12 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `quality-review` — orchestrates the 3-agent team against a plan, PRD, file, or proposal
 - `five-whys` — root-cause analysis when something breaks unexpectedly
 
+**Skills — ralph loops**
+
+- `ralph-loop` — canonical Stop-hook ralph. Single prompt + completion-promise. Use for autonomous walk-away iteration. `/ralph-loop` command.
+- `ralph-implement` — task-driven sibling. Reads a task plan, supports parallel groups, structured escalation.
+- `skill-validator` — ralph specialized for validating SKILL.md files.
+
 **Skills — development flow** (run in sequence; each stage standalone)
 
 | Stage | Skill |
@@ -75,7 +81,6 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 **Skills — other**
 
 - `writing-quality` — strip AI-isms from client-facing prose
-- `skill-validator` — ralph loop that iterates skill fixes against a target repo until pass criteria met
 - `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
 - `insight-promotion` — promotes a crystallized insight into always-on governance
 
@@ -84,6 +89,7 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 - `/quality-review` — full 3-agent review
 - `/adversarial`, `/simplify`, `/chaos` — single-lens reviews
 - `/five-whys` — debug protocol
+- `/ralph-loop` — start a Stop-hook-driven autonomous ralph loop
 
 **Rules** (auto-loaded)
 
@@ -94,6 +100,7 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel and
 
 - `compact-recovery.sh` — re-injects ROADMAP and recent commits after context-window compaction
 - `kiss-yagni-reminder.py` — prints a one-line KISS / YAGNI checkpoint to stderr when writing code files (reminder, not block)
+- `ralph-stop.sh` — Stop hook for the Ralph Loop. Reads `.ralph-loop/state.json`, scans transcript for completion-promise, blocks exit + re-feeds prompt or allows exit
 
 ## Init a new project
 
@@ -136,10 +143,11 @@ clybor-claude-tooling/
 │   │   ├── quality-review/SKILL.md
 │   │   ├── five-whys/SKILL.md
 │   │   ├── writing-quality/SKILL.md
+│   │   ├── ralph-loop/SKILL.md
+│   │   ├── ralph-implement/SKILL.md
 │   │   ├── skill-validator/SKILL.md
 │   │   ├── prd-writer/SKILL.md
 │   │   ├── task-plan/SKILL.md
-│   │   ├── ralph-implement/SKILL.md
 │   │   ├── verify/SKILL.md
 │   │   ├── insight-crystallizer/SKILL.md
 │   │   └── insight-promotion/SKILL.md
@@ -149,11 +157,13 @@ clybor-claude-tooling/
 │   │   ├── adversarial.md
 │   │   ├── simplify.md
 │   │   ├── chaos.md
-│   │   └── five-whys.md
+│   │   ├── five-whys.md
+│   │   └── ralph-loop.md
 │   ├── hooks/
 │   │   ├── README.md
 │   │   ├── compact-recovery.sh
-│   │   └── kiss-yagni-reminder.py
+│   │   ├── kiss-yagni-reminder.py
+│   │   └── ralph-stop.sh
 │   ├── rules/
 │   │   ├── README.md
 │   │   ├── routing-protocol.md

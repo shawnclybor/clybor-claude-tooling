@@ -39,6 +39,15 @@
             "statusMessage": "Re-injecting ROADMAP after compaction..."
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ralph-stop.sh",
+            "statusMessage": "Ralph loop hook checking state..."
+          }
+        ]
       }
     ]
   }

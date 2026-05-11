@@ -9,6 +9,7 @@ Slash commands — thin orchestrators that invoke skills or agents.
 - **/simplify** — Single-lens review using only the simplifier (Sonnet)
 - **/chaos** — Single-lens review using only the chaos-engineer (Sonnet)
 - **/five-whys** — Walk the five-whys root-cause protocol when something broke
+- **/ralph-loop** — Start a Stop-hook-driven autonomous ralph loop with a single prompt and a completion-promise
 
 ## Adding commands
 
