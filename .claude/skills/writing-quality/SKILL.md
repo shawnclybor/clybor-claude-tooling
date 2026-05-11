@@ -405,3 +405,6 @@ Run this skill automatically in these cases:
 ---
 
 *Adapted from [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) v3.3.0 (MIT license).*
+## Agent integration
+
+- **`evidence-auditor`** — invoked when the content under audit cites external sources (URLs, papers, claims attributed to third parties). Confirms each citation traces accurately before the rewritten version ships. Catches the AI-ism category that this skill itself cannot detect: fabricated or misattributed citations.

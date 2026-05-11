@@ -161,3 +161,4 @@ If the insight meets any of these criteria, suggest promoting it via the `insigh
 
 - **`evidence-auditor`** — if the insight cites external sources (URLs, papers, claims attributed to third parties), runs before filing. Confirms each citation traces accurately. An insight with fabricated citations is worse than no insight.
 - **`research-analyst`** — if the insight synthesizes across 3+ external sources, invoke before drafting the Analysis section. Produces the cited-claims table the insight depends on.
+- **`knowledge-synthesizer`** — invoked when Phase 4 detects 3+ related insights in `docs/insights/`. Combines them into a consolidated overview so individual insights compound into knowledge rather than a pile.

@@ -121,3 +121,5 @@ Each iteration:
 
 - **`debugger`** — invoked on the first same-failure-mode iteration repeat. Reproduces the skill failure deterministically and narrows the cause before patching.
 - **`error-coordinator`** — invoked when the validator runs against multiple representative inputs and 2+ fail in the same iteration. Correlates symptoms to find a shared cause in the skill (not in the inputs).
+
+- **`code-reviewer`** — invoked on the SKILL.md patch before it is applied each iteration. Catches sloppy edits — broken frontmatter, accidental scope drift, removed pre-flight items — that would make the next iteration noisy. A Critical finding from code-reviewer reverts the patch and re-diagnoses.

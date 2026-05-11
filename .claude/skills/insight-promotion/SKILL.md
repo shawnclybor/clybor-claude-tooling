@@ -105,3 +105,7 @@ N. **Rule Name** — one-sentence statement of the rule and its scope.
 ## Agent integration
 
 - **`adversarial-reviewer`** — runs against the proposed governance edit before applying. The reviewer challenges whether the rule actually prevents the failure mode and whether the rule has unintended consequences. A High or Critical finding sends the draft back for revision.
+- **`simplifier`** — invoked alongside adversarial-reviewer in Step 4. Asks whether the proposed rule is the simplest framing that addresses the failure mode. A long rule is a rule that gets skimmed.
+- **`chaos-engineer`** — invoked alongside the other two. Asks what breaks the rule itself — edge cases the rule does not cover, situations where following the rule produces a worse outcome.
+
+The three together replicate the `quality-review` lens before any governance edit lands. Bad rules compound on every session.

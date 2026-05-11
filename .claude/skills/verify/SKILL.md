@@ -106,3 +106,5 @@ Treat PARTIAL the same as FAIL — do not advance to Stage 6 with unmapped crite
 ## Agent integration
 
 - **`code-reviewer`** — runs a final read-only pass over the implementation files after deterministic checks return PASS, before Stage 6 evaluation. Catches issues the checks do not (type-safety gaps, naming, structural debt). A Critical finding from `code-reviewer` is treated the same as a failed check — return to Stage 4.
+
+- **`security-auditor`** — invoked when the PRD includes any security-shaped criterion (input validation, auth, secrets, injection, dependency surface). The deterministic check alone does not satisfy a security criterion — `security-auditor` is the gate. A Critical finding from `security-auditor` is treated the same as a failed check.
