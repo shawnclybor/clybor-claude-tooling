@@ -3,8 +3,9 @@
 # to clybor-claude-tooling, or that has DRIFTED from the canonical copy.
 #
 # Modes:
-#   --surface  list candidates + drift, always exit 0   (for SessionStart hook)
-#   --gate     block (exit 1) on DRIFT of staged files; warn on new candidates (for pre-commit)
+#   --surface  list candidates + drift, always exit 0   (SessionStart / global pre-commit nudge)
+#   --gate     block (exit 1) on ANY drift of shared tooling (full tree), warn on candidates
+#              (per-project .githooks/pre-commit — managed projects must never drift)
 #
 # Canonical repo: $CLYBOR_TOOLING or ~/gits/clybor-claude-tooling.
 # Reusable categories (relative to repo root): .claude/skills .claude/hooks .claude/commands
@@ -17,6 +18,8 @@ cd "$REPO" || exit 0
 
 # Don't analyze the canonical repo against itself.
 [ "$(cd "$CANON" 2>/dev/null && pwd)" = "$REPO" ] && exit 0
+# Don't scan the home dir — global ~/.claude/skills are not project tooling.
+[ "$REPO" = "$HOME" ] && exit 0
 [ -d "$CANON" ] || { [ "$MODE" = "--gate" ] && exit 0; echo "(clybor-tooling not found at $CANON; set CLYBOR_TOOLING)"; exit 0; }
 
 # Per-project files that legitimately differ and must NOT be promotion-checked.
@@ -38,16 +41,9 @@ list_files() {
   } | sort -u
 }
 
-if [ "$MODE" = "--gate" ]; then
-  # only staged files (bash 3.2 portable — no mapfile)
-  while IFS= read -r f; do
-    [ -n "$f" ] || continue
-    printf '%s\n' "$f" | grep -qE '^(\.githooks/|scripts/.*\.sh$|\.claude/(skills|hooks|commands|agents)/)' || continue
-    [ -f "$f" ] && scan "$f"
-  done < <(git diff --cached --name-only 2>/dev/null)
-else
-  while IFS= read -r f; do [ -n "$f" ] && scan "$f"; done < <(list_files)
-fi
+# Full-tree scan for both modes: drift in any shared tooling file is caught regardless of
+# what is staged. This is what makes --gate non-honor-system.
+while IFS= read -r f; do [ -n "$f" ] && scan "$f"; done < <(list_files)
 
 if [ "${#drift[@]}" -gt 0 ]; then
   echo "⚠ tooling DRIFT vs clybor-claude-tooling (promote or sync):" >&2

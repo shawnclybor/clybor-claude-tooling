@@ -7,8 +7,11 @@
 # those run their local .githooks/pre-commit, which itself calls the promotion gate.
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
+# Non-blocking nudge: surface drift/candidates but never block an arbitrary repo's commit
+# (avoids false blocks on filename collisions in repos that aren't clybor-tooling-managed).
+# Hard blocking lives in managed projects' own .githooks/pre-commit (--gate, full tree).
 if [ -x "$CANON/scripts/check-promotion.sh" ]; then
-  bash "$CANON/scripts/check-promotion.sh" --gate || exit $?
+  bash "$CANON/scripts/check-promotion.sh" --surface || true
 fi
 # preserve the repo's own default hook (not auto-run while core.hooksPath is set globally)
 if [ -x "$ROOT/.git/hooks/pre-commit" ]; then exec "$ROOT/.git/hooks/pre-commit"; fi
