@@ -259,3 +259,13 @@ clybor-claude-tooling/
     ├── prd-template.md
     └── plan-template.md
 ```
+
+## Catalog (assets/ + catalog.json)
+
+Sanitized, reusable tooling harvested from real projects — indexed in `catalog.json`,
+PII-gated by `scripts/verify-clean.py` (pre-commit). To set up a NEW project from the
+catalog, invoke the `project-bootstrap` skill (assets/skills/project-bootstrap/) — it
+profiles the project, proposes an install set, copies assets, fills adaptation tokens,
+and writes a TOOLING.md manifest. Rebuilds of the catalog itself: scrub with
+`scripts/scrub.py`, verify with `scripts/verify-clean.py` (token mode enforces that
+every {{TOKEN}} is declared in catalog.json adaptation_points).

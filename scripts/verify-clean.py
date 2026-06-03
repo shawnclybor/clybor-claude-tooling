@@ -33,7 +33,9 @@ def load_denylist():
     if not os.path.exists(DENYLIST):
         print(f"WARN: denylist not found at {DENYLIST} — denylist pass skipped")
         return {}
-    return json.load(open(DENYLIST))
+    raw = json.load(open(DENYLIST))
+    # keep only list-valued classes; "_comment" and other metadata keys are not term lists
+    return {k: v for k, v in raw.items() if isinstance(v, list) and not k.startswith("_")}
 
 
 def load_declared_tokens():

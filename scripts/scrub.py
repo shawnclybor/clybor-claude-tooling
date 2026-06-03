@@ -34,6 +34,7 @@ def main():
         print(__doc__)
         return 2
     deny = json.load(open(DENYLIST)) if os.path.exists(DENYLIST) else {}
+    deny = {k: v for k, v in deny.items() if isinstance(v, list) and not k.startswith("_")}
     rc = 0
     for path in sys.argv[1:]:
         text = orig = open(path, encoding="utf-8").read()
