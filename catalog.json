@@ -1,0 +1,49 @@
+{
+  "catalog_version": "0.1.0",
+  "assets": [
+    {
+      "id": "five-whys",
+      "type": "skill",
+      "tier": "B",
+      "domains": ["debugging", "process", "governance"],
+      "summary": "Root-cause analysis protocol for unexpected failures; ends in a documentation update so the failure can't repeat silently",
+      "source": {"repo": "life-crm-meta plugin", "harvested": "2026-06-03"},
+      "requires": {"mcp": [], "env": [], "assets": []},
+      "adaptation_points": ["{{KNOWLEDGE_BASE}}"],
+      "targets": ["claude-code", "cowork"]
+    },
+    {
+      "id": "writing-quality",
+      "type": "skill",
+      "tier": "B",
+      "domains": ["writing", "consulting", "quality"],
+      "summary": "AI-ism audit and rewrite for client-facing prose: tiered word lists, pattern categories, severity tiers, context profiles",
+      "source": {"repo": "life-crm-meta plugin (adapted from conorbronsdon/avoid-ai-writing v3.3.0, MIT)", "harvested": "2026-06-03"},
+      "requires": {"mcp": [], "env": [], "assets": []},
+      "adaptation_points": ["{{CLIENT_EXAMPLES}}", "{{CORRECTION_LOG}}"],
+      "targets": ["claude-code", "cowork"]
+    },
+    {
+      "id": "meeting-workflow",
+      "type": "skill",
+      "tier": "C",
+      "domains": ["meetings", "consulting", "task-management"],
+      "summary": "Transcript to structured records: extract (with action-item decomposition + mandatory second-pass re-read), confirm, write to your record system, compile synthesis signals",
+      "source": {"repo": "life-crm-meta plugin (generalized from meeting-to-notion)", "harvested": "2026-06-03"},
+      "requires": {"mcp": [], "env": [], "assets": []},
+      "adaptation_points": ["{{RECORD_SYSTEM}}", "{{TASK_TRACKER}}"],
+      "targets": ["claude-code", "cowork"]
+    },
+    {
+      "id": "governance-skill-template",
+      "type": "skill",
+      "tier": "C",
+      "domains": ["governance", "process", "meta"],
+      "summary": "Template for domain-governance skills: Golden Rule, tool-selection table, pre-flight checklist, Known Issues, Two Strikes, validation",
+      "source": {"repo": "life-crm-governance plugin (pattern extracted from gmail-governance + calendar-governance)", "harvested": "2026-06-03"},
+      "requires": {"mcp": [], "env": [], "assets": []},
+      "adaptation_points": ["{{DOMAIN}}", "{{TOOL}}", "{{CANONICAL_RECORD}}"],
+      "targets": ["claude-code", "cowork"]
+    }
+  ]
+}

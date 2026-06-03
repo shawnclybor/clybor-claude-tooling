@@ -97,5 +97,5 @@ Tell the user clearly:
 
 ## Adaptation points
 
-- `{{KNOWLEDGE_BASE}}` — where your team files persistent findings (a wiki, a
+- `{{KNOWLEDGE_BASE}}` — where your team files persistent findings (a wiki page, a
   wiki database, a docs/ folder). Step 4's "document" lands there.
