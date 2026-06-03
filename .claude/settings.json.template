@@ -39,6 +39,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if echo \"$input\" | grep -qE 'CLAUDE\\.md|\\.claude/rules/'; then bash scripts/check-context-budget.sh 1>&2; fi"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "compact",

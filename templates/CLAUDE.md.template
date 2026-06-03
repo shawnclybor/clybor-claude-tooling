@@ -13,6 +13,7 @@ Project instructions for `{{PROJECT_NAME}}`.
 5. **No fabrication** — never invent quotes, citations, file paths, IDs, or APIs. If unsure, say so.
 6. **Quality gate before irreversible decisions** — schema changes, MCP/agent architecture, public-facing copy, anything that compounds → run `quality-review`.
 7. **Audit your writes** — after every write, restate what the tool returned (IDs, paths, params). No self-grading; cite the actual response.
+8. **Context budget** — always-on context stays small. After editing `CLAUDE.md` or `.claude/rules/*.md`, run `bash scripts/check-context-budget.sh`; over budget = trim narrative or move content into a skill.
 
 ## The Router
 
@@ -36,8 +37,10 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Evaluating the built implementation | `quality-review` skill (Stage 6) |
 | A valuable insight or decision from this session worth keeping | `insight-crystallizer` skill |
 | An insight that should be always-on governance, not just retrievable | `insight-promotion` skill |
+| A tooling improvement (skill, script, rule, hook) worth porting back to the master template | `promote-to-tooling` skill |
+| Work that is a fixed sequence of steps with a human review gate between each | copy `templates/stage-pipeline/` from the master; see `task-plan` |
 
-Multi-domain → load multiple. Domain-specific governance (Notion, Gmail, Drive, Supabase, etc.) belongs in a project-specific rule file or Cowork plugin, NOT in this template.
+Multi-domain → load multiple. **Load is also a filter** — anything the request doesn't touch is do-not-load: never read another domain's rules or another project's material for a scoped task; never preload "just in case." Domain-specific governance (Notion, Gmail, Drive, Supabase, etc.) belongs in a project-specific rule file or Cowork plugin, NOT in this template.
 
 ## Agents
 
@@ -92,7 +95,9 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/agents/code/` | Code agents — code-reviewer, debugger, code-analyzer, security-auditor |
 | `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
 | `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
-| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling |
+| `scripts/` (master repo) | init.sh, check-knowledge.sh, check-context-budget.sh, log-correction.sh |
+| `templates/stage-pipeline/` (master repo) | Numbered-stage folder skeleton for sequential, human-gated work |
 | `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /ralph-loop |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py, ralph-stop.sh |
 | `docs/PRDs/` | Project PRDs and plans (templates at `docs/PRDs/_templates/`) |

@@ -59,6 +59,15 @@ Take the `task-distributor` output verbatim into the plan's "Parallelizable grou
 
 Starting points, not formulas. The plan must match the actual work.
 
+## Stage-pipeline plans
+
+When the work is a fixed sequence of steps with a human review gate between each (research → draft → final; data → eval → report), the plan scaffolds the execution structure instead of only listing tasks:
+
+- Copy `templates/stage-pipeline/` from the master tooling repo to where the work lives; rename/renumber stages (`01-`, `02-` — zero-padded prefixes encode execution order; reordering = renaming folders).
+- Each stage folder carries a `CONTEXT.md` contract — Inputs (source / where / why), Process (numbered steps), Outputs (artifact / location / format) — under 80 lines, plus an `output/` folder for the handoff artifact.
+- A stage reads ONLY its declared Inputs (previous stage's `output/` + named references). Everything else is do-not-load.
+- Tasks then map 1:1 to stages; each stage's DONE check = its Outputs exist and satisfy the contract. The human inspects `output/` before the next stage runs — every output is an edit surface.
+
 ## Pre-flight checklist
 
 Before writing the plan:

@@ -15,6 +15,8 @@ State the classification out loud in one line before loading anything. Multi-dom
 
 Load ONLY the matching skills, agents, or rule files on demand. Do not preload. Use the routing table in CLAUDE.md.
 
+Load is also a filter — anything the request doesn't touch is do-not-load: never read another domain's rules or another project's material for a scoped task; never preload "just in case."
+
 If a request is ambiguous between two skills, load both. The cost of loading is far less than the cost of acting without governance.
 
 ### 3. Think (Sequential Thinking)

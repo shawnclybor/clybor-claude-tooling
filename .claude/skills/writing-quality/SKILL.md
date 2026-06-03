@@ -33,6 +33,7 @@ Trigger detect mode when the user says "detect," "flag only," "audit only," "jus
 1. Audit and identify every AI-ism, citing specific text
 2. Rewrite to remove all AI-isms
 3. Return the cleaned text with a brief summary of major changes
+4. If the user corrects the result, log it: `bash scripts/log-correction.sh "<pattern-slug>" "<project>"` — a REPEAT alert (exit 2) means propose the source-level fix (voice guide, template, this skill's rules), not another draft fix
 
 ## In detect mode:
 1. Audit and identify every AI-ism, citing specific text
