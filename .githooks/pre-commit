@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Repo pre-commit gate. Enable once with: git config core.hooksPath .githooks
+set -e
+ROOT="$(git rev-parse --show-toplevel)"
+if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
+  bash "$ROOT/scripts/check-knowledge.sh"
+fi

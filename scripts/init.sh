@@ -62,13 +62,26 @@ echo "[4/5] copied PRD + plan templates to docs/PRDs/_templates/"
 if [ -d "$TARGET/.claude/hooks" ]; then
   chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
   chmod +x "$TARGET/.claude/hooks/"*.py 2>/dev/null || true
-  echo "[5/5] made hooks executable"
+  echo "[5/6] made hooks executable"
+fi
+
+# 6. Knowledge-invariant validator + git pre-commit gate
+mkdir -p "$TARGET/scripts" "$TARGET/.githooks"
+cp "$REPO_ROOT/scripts/check-knowledge.sh" "$TARGET/scripts/check-knowledge.sh"
+cp "$REPO_ROOT/.githooks/pre-commit" "$TARGET/.githooks/pre-commit"
+chmod +x "$TARGET/scripts/check-knowledge.sh" "$TARGET/.githooks/pre-commit"
+if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git -C "$TARGET" config core.hooksPath .githooks
+  echo "[6/6] installed check-knowledge.sh + pre-commit gate (core.hooksPath=.githooks)"
+else
+  echo "[6/6] copied check-knowledge.sh + .githooks/pre-commit (run 'git init' then 'git config core.hooksPath .githooks' to arm the gate)"
 fi
 
 echo
 echo "Done. Next steps:"
 echo "  1. cd $TARGET"
 echo "  2. Review CLAUDE.md and edit the project-specific section"
-echo "  3. Add domain-specific rules to .claude/rules/ if needed"
-echo "  4. (Optional) create ROADMAP.md so the compact-recovery hook can re-inject it"
-echo "  5. Start a feature with: claude code (then invoke /dev-loop)"
+echo "  3. Add domain-specific rules to .claude/rules/ (each must be referenced in CLAUDE.md — the gate enforces it)"
+echo "  4. (Optional) create a knowledge/ wiki (raw/ wiki/ index.md log.md schema.md) — the gate enforces its invariants"
+echo "  5. (Optional) create ROADMAP.md so the compact-recovery hook can re-inject it"
+echo "  6. Start a feature with: claude code (then invoke /dev-loop)"
