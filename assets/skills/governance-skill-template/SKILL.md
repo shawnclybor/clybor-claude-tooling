@@ -27,9 +27,9 @@ Which tool to use for which operation — the table that prevents using the wron
 
 | Goal | Tool | Notes |
 |------|------|-------|
-| {{e.g. read a record}} | {{TOOL}}.read | first choice; fast and reliable |
-| {{e.g. search}} | {{TOOL}}.search | caveat: result cap / filter limits |
-| {{e.g. write}} | {{TOOL}}.write | requires find-first step — see checklist |
+| [FILL: e.g. read a record] | {{TOOL}}.read | first choice; fast and reliable |
+| [FILL: e.g. search] | {{TOOL}}.search | caveat: result cap / filter limits |
+| [FILL: e.g. write] | {{TOOL}}.write | requires find-first step — see checklist |
 
 Document the DEFAULTS the user expects (timezone, naming format, notification behavior,
 title conventions) — wrong defaults are silent failures that a checklist catches.
@@ -41,7 +41,7 @@ Before the first write in this domain, answer every item yes/no — no silent sk
 - [ ] Did I search for an existing record first (update beats create)?
 - [ ] Am I using exact field/property names (check the trap table below)?
 - [ ] Are relations/links wired from the correct side?
-- [ ] {{Domain-specific check 3-5 — derived from your actual failure history}}
+- [ ] [FILL: Domain-specific check 3-5 — derived from your actual failure history]
 
 ## Known Issues
 
@@ -49,7 +49,7 @@ _Confirmed failure modes from actual runs. Every five-whys in this domain append
 
 | Date | Issue | Resolution |
 |------|-------|------------|
-| {{YYYY-MM-DD}} | {{What broke, with the exact error or wrong behavior}} | {{The workaround or rule that prevents it}} |
+| [FILL: YYYY-MM-DD] | [FILL: What broke, with the exact error or wrong behavior] | [FILL: The workaround or rule that prevents it] |
 
 ## Two Strikes Rule
 
