@@ -49,6 +49,11 @@ so the user can verify or swap. Example: `{{...RECORD_SYSTEM}}` → "[Notion Not
 After the user confirms or corrects, apply all fills with Edit. Do not ask token-by-token
 questions; one confirmation round total.
 
+Template-type assets (e.g. `governance-skill-template`) fill like everything else: seed
+them with the project's FIRST concrete domain (its primary external system). The unfilled
+master stays in the catalog — for additional domains, re-copy from the catalog rather
+than un-filling the installed seed.
+
 ## Step 5 — Write TOOLING.md
 
 At the project root, write a manifest. One line per installed asset, exactly:
