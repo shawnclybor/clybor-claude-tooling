@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# GLOBAL pre-commit (installed at ~/.config/git/hooks via git config --global core.hooksPath).
+# Runs in every repo that does NOT set its own core.hooksPath. Two jobs:
+#   1. enforce the promotion drift gate (clybor-claude-tooling)
+#   2. NOT bypass a repo's own default .git/hooks/pre-commit (core.hooksPath shadows it)
+# Repos with their own core.hooksPath (e.g. clybor-tooling projects, husky) override this entirely;
+# those run their local .githooks/pre-commit, which itself calls the promotion gate.
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
+if [ -x "$CANON/scripts/check-promotion.sh" ]; then
+  bash "$CANON/scripts/check-promotion.sh" --gate || exit $?
+fi
+# preserve the repo's own default hook (not auto-run while core.hooksPath is set globally)
+if [ -x "$ROOT/.git/hooks/pre-commit" ]; then exec "$ROOT/.git/hooks/pre-commit"; fi
+exit 0

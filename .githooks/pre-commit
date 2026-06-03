@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # Repo pre-commit gate. Enable once with: git config core.hooksPath .githooks
-set -e
 ROOT="$(git rev-parse --show-toplevel)"
+CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
+# 1. local knowledge-wiki / project-rule invariants
 if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
-  bash "$ROOT/scripts/check-knowledge.sh"
+  bash "$ROOT/scripts/check-knowledge.sh" || exit $?
 fi
+# 2. promotion drift gate vs clybor-claude-tooling
+if [ -x "$CANON/scripts/check-promotion.sh" ]; then
+  bash "$CANON/scripts/check-promotion.sh" --gate || exit $?
+fi
+exit 0
