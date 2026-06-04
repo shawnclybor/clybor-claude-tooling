@@ -19,6 +19,8 @@ import os
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True  # don't litter consumer repos with __pycache__/*.pyc
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 VALIDATOR = os.path.join(HERE, "no-postmortem-validator.py")
 

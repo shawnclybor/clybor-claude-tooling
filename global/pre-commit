@@ -24,6 +24,13 @@ fi
 if [ -x "$CANON/scripts/check-promotion.sh" ]; then
   bash "$CANON/scripts/check-promotion.sh" --surface || true
 fi
+
+# no-postmortem doc gate: block tombstone/post-mortem prose in operational
+# .claude/*.md. No-op in repos without the hook or without such docs.
+if [ -f "$ROOT/.claude/hooks/no-postmortem-precommit.py" ]; then
+  python3 "$ROOT/.claude/hooks/no-postmortem-precommit.py" || exit 1
+fi
+
 # preserve the repo's own default hook (not auto-run while core.hooksPath is set globally)
 if [ -x "$ROOT/.git/hooks/pre-commit" ]; then exec "$ROOT/.git/hooks/pre-commit"; fi
 exit 0

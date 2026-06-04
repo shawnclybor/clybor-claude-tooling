@@ -35,6 +35,10 @@
           {
             "type": "command",
             "command": "python3 .claude/hooks/kiss-yagni-reminder.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/no-postmortem-validator.py"
           }
         ]
       }

@@ -10,4 +10,8 @@ fi
 if [ -x "$CANON/scripts/check-promotion.sh" ]; then
   bash "$CANON/scripts/check-promotion.sh" --gate || exit $?
 fi
+# 3. no-postmortem doc gate (operational .claude/*.md)
+if [ -f "$ROOT/.claude/hooks/no-postmortem-precommit.py" ]; then
+  python3 "$ROOT/.claude/hooks/no-postmortem-precommit.py" || exit $?
+fi
 exit 0
