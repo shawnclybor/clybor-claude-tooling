@@ -50,7 +50,7 @@ TypeScript frontend, a research repo, a documentation site?
 4. **Generalize** — strip project paths, person names, repo-specific IDs. Pick the right
    default over adding a config (KISS).
 5. **Apply** — in Cowork, `.claude/` paths need Desktop Commander on the host path
-   (`/Users/shawnclybor/gits/clybor-claude-tooling/...`); `scripts/`, `templates/`,
+   (`~/gits/clybor-claude-tooling/...`); `scripts/`, `templates/`,
    `docs/` take native writes. In Claude Code, edit directly.
 6. **Wire the references** — router row and Key Paths in `templates/CLAUDE.md.template`,
    skills-list row, `settings.json.template` hook if applicable. Undiscoverable tooling
