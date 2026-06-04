@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """verify-clean.py — PII + undeclared-token gate for the tooling catalog.
 
-Scans assets/ (default) or --target <dir> for:
+Scans assets/ (default), --target <dir>, or --staged (the files in this commit) for:
   1. Denylist terms (scripts/denylist.local.json — gitignored, never ships)
   2. Regex PII classes: UUID/32-hex identifiers, IPv4, email, /Users/<name> paths
   3. Token mode: any {{TOKEN}} not declared in that asset's catalog.json
      adaptation_points. Enforced only when catalog.json exists; absent
      (Stage B) -> WARN + exit 0 for tokens, PII still enforced.
 
+--staged scans the full staged diff of the current commit (denylist + PII only,
+no token check) — the public-repo gate that blocks any non-agnostic commit.
+
 Exit 0 = clean. Exit 1 = findings (printed file:line). Used as pre-commit hook.
 """
 import json
 import os
 import re
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,9 +82,42 @@ def scan_file(path, denylist, declared, target):
     return findings
 
 
+def staged_files():
+    """Repo-relative paths of files added/copied/modified in the current commit."""
+    out = subprocess.run(
+        ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+        capture_output=True, text=True, cwd=ROOT,
+    ).stdout
+    return [f for f in out.splitlines() if f and os.path.isfile(os.path.join(ROOT, f))]
+
+
+SKIP_EXT = (".zip", ".plugin", ".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico")
+
+
+def run_staged(denylist):
+    """Public-repo gate: scan everything staged for this commit (denylist + PII regex)."""
+    findings = []
+    files = staged_files()
+    for rel in files:
+        if rel.endswith(SKIP_EXT) or os.path.basename(rel) == ".DS_Store":
+            continue
+        # declared=None -> token check skipped (staged files may live anywhere)
+        findings.extend(scan_file(os.path.join(ROOT, rel), denylist, None, ROOT))
+    if findings:
+        for path, n, msg in findings:
+            print(f"FAIL {os.path.relpath(path, ROOT)}:{n}  {msg}")
+        print(f"\n{len(findings)} finding(s) in staged content — commit BLOCKED. "
+              "Scrub before committing to a public repo (or `git commit --no-verify` to override).")
+        return 1
+    print(f"clean: {len(files)} staged file(s) (denylist {'on' if denylist else 'OFF'})")
+    return 0
+
+
 def main():
     target = os.path.join(ROOT, "assets")
     args = sys.argv[1:]
+    if "--staged" in args:
+        return run_staged(load_denylist())
     if "--target" in args:
         target = os.path.abspath(args[args.index("--target") + 1])
     if not os.path.isdir(target):

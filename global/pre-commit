@@ -7,6 +7,17 @@
 # those run their local .githooks/pre-commit, which itself calls the promotion gate.
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
+
+# HARD GATE: committing INTO the public canonical repo must pass the agnostic scan of the
+# full staged diff (client names via denylist + PII regex). This is the gate that makes a
+# leak into clybor-tooling impossible — not honor-system, not assets/-only.
+if [ "$(cd "$CANON" 2>/dev/null && pwd)" = "$ROOT" ] && [ -f "$ROOT/scripts/verify-clean.py" ]; then
+  if ! python3 "$ROOT/scripts/verify-clean.py" --staged; then
+    echo "BLOCKED: staged content failed the public-repo agnostic gate (clybor-claude-tooling)." >&2
+    exit 1
+  fi
+fi
+
 # Non-blocking nudge: surface drift/candidates but never block an arbitrary repo's commit
 # (avoids false blocks on filename collisions in repos that aren't clybor-tooling-managed).
 # Hard blocking lives in managed projects' own .githooks/pre-commit (--gate, full tree).
