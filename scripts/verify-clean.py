@@ -31,6 +31,7 @@ REGEX_CLASSES = {
 }
 TOKEN_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
 SKIP_IPV4 = {"0.0.0.0", "127.0.0.1", "1.0.0", "0.1.0"}  # version-string lookalikes
+NAME_CLASSES = {"client", "person"}  # match on word boundaries so a short proper name never fires as a substring inside a longer ordinary word
 
 
 def load_denylist():
@@ -66,9 +67,17 @@ def scan_file(path, denylist, declared, target):
         return [(path, 0, f"unreadable: {e}")]
     aid = asset_id_for(path, target)
     for n, line in enumerate(text.split("\n"), 1):
+        line_lower = line.lower()
         for cls, terms in denylist.items():
             for term in terms:
-                if term.lower() in line.lower():
+                if cls in NAME_CLASSES:
+                    esc = re.escape(term.lower())
+                    lead = r"\b" if term[:1].isalnum() else ""
+                    trail = r"\b" if term[-1:].isalnum() else ""
+                    hit = re.search(lead + esc + trail, line_lower) is not None
+                else:
+                    hit = term.lower() in line_lower
+                if hit:
                     findings.append((path, n, f"denylist[{cls}]: {term}"))
         for cls, rx in REGEX_CLASSES.items():
             for m in rx.finditer(line):

@@ -28,6 +28,8 @@ REGEX_REPLACEMENTS = [
     (re.compile(r"/Users/[a-z][a-z0-9_-]*", re.I), "{{HOME}}"),
 ]
 
+NAME_CLASSES = {"client", "person"}  # match on word boundaries so a short proper name never fires as a substring inside a longer ordinary word
+
 
 def main():
     if len(sys.argv) < 2:
@@ -41,7 +43,13 @@ def main():
         for cls, terms in deny.items():
             token = cls.upper().replace("-", "_")
             for term in sorted(terms, key=len, reverse=True):
-                text = re.sub(re.escape(term), "{{%s}}" % token, text, flags=re.I)
+                pat = re.escape(term)
+                if cls in NAME_CLASSES:
+                    if term[:1].isalnum():
+                        pat = r"\b" + pat
+                    if term[-1:].isalnum():
+                        pat = pat + r"\b"
+                text = re.sub(pat, "{{%s}}" % token, text, flags=re.I)
         for rx, repl in REGEX_REPLACEMENTS:
             text = rx.sub(repl, text)
         if text != orig:
