@@ -1,6 +1,6 @@
 ---
 name: graduate-project
-description: Graduate a life-crm project into its own ~/gits/<slug> repo and wire the OKF "spine" between them. Use when a life-crm project needs its own dev/build space (moving to Claude Code), or the user says "graduate <project>", "spin up a repo for <project>", "give <project> its own repo", "move <project> to gits". Scaffolds the repo from clybor-claude-tooling (build) or the ClaudeOS/OKF template (knowledge), writes the spine pointers anchored on the Notion Project ID, flips the life-crm folder to role: crm, and registers + backlinks. Done = check-spine.py + validate-okf.py pass.
+description: Graduate a life-crm project into its own ~/gits dev repo and wire the OKF spine between them. Use when a life-crm project needs its own dev or build space (the move to Claude Code), or the user says graduate this project, spin up a repo for it, give it its own repo, or move it to gits. Scaffolds the repo from clybor-claude-tooling (build) or the ClaudeOS or OKF template (knowledge), writes the spine pointers anchored on the Notion Project ID, flips the life-crm folder to role crm, and registers plus backlinks. Done when check-spine.py and validate-okf.py pass.
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
