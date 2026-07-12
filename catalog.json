@@ -136,6 +136,31 @@
         "claude-code",
         "cowork"
       ]
+    },
+    {
+      "id": "graduate-project",
+      "type": "skill",
+      "tier": "A",
+      "domains": [
+        "meta",
+        "setup",
+        "governance"
+      ],
+      "summary": "Graduate a life-crm project into its own ~/gits repo and wire the OKF spine (Notion-ID-anchored pointers, role: crm flip, register + backlink). Done = check-spine + validate-okf pass.",
+      "source": {
+        "repo": "clybor-claude-tooling (native)",
+        "harvested": "2026-07-12"
+      },
+      "requires": {
+        "mcp": [],
+        "env": [],
+        "assets": []
+      },
+      "adaptation_points": [],
+      "targets": [
+        "claude-code",
+        "cowork"
+      ]
     }
   ]
 }
