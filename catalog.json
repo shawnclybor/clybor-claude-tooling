@@ -161,6 +161,43 @@
         "claude-code",
         "cowork"
       ]
+    },
+    {
+      "id": "notion-governance",
+      "type": "skill",
+      "tier": "B",
+      "domains": [
+        "notion",
+        "crm",
+        "governance",
+        "task-management"
+      ],
+      "summary": "Notion read/write governance for a build repo: the six database IDs plus the record-type-to-database mapping (decision / lesson / event / commitment), the relation-replace trap, retrieval routing (enumerate/locate/comprehend), trailing-space property traps, and pre-write checklist",
+      "source": {
+        "repo": "life-crm-governance plugin (trimmed for build repos)",
+        "harvested": "2026-08-04"
+      },
+      "requires": {
+        "mcp": [
+          "notion"
+        ],
+        "env": [],
+        "assets": []
+      },
+      "adaptation_points": [
+        "{{PROJECT_NAME}}",
+        "{{NOTION_PROJECT_ID}}",
+        "{{DB_CONTACT_ID}}",
+        "{{DB_NOTE_ID}}",
+        "{{DB_PROJECT_ID}}",
+        "{{DB_AA_TASK_ID}}",
+        "{{DB_CLIENT_ID}}",
+        "{{DB_KB_ID}}"
+      ],
+      "targets": [
+        "claude-code",
+        "cowork"
+      ]
     }
   ]
 }
