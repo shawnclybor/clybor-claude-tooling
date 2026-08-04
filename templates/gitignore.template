@@ -1,0 +1,44 @@
+# Baseline .gitignore — scaffolded by clybor-claude-tooling/scripts/init.sh
+# Add project-specific entries below the marked section.
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Backups produced by sed -i / init.sh
+*.bak
+*.bak-*
+
+# Raw research capture: unreviewed source material, often large and often
+# containing third-party or client content. Curated output lives in
+# knowledge/wiki/ and IS tracked.
+knowledge/raw/
+
+# Tooling
+.skill-validator/
+bundles/
+
+# ---- project-specific ----

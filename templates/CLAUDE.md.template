@@ -42,7 +42,18 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Work that is a fixed sequence of steps with a human review gate between each | copy `templates/stage-pipeline/` from the master; see `task-plan` |
 | Cowork plugin edits queuing in `cowork/_pending-edits/` / scheduled drain of the plugin-rebuild queue | copy `templates/scheduled-tasks/plugin-rebuild-queue.md` from the master — gated-rebuild queue-drain pattern |
 
-Multi-domain → load multiple. **Load is also a filter** — anything the request doesn't touch is do-not-load: never read another domain's rules or another project's material for a scoped task; never preload "just in case." Domain-specific governance (Notion, Gmail, Drive, Supabase, etc.) belongs in a project-specific rule file or Cowork plugin, NOT in this template.
+### Installed catalog assets
+
+Skills installed from the `clybor-claude-tooling` catalog (manifest: `TOOLING.md`). `project-bootstrap`
+appends one row here per installed asset. **An installed skill with no row here is unreachable** — a cold
+session follows this table and nothing else, so an unrouted skill is dead weight on disk. `bash scripts/check-knowledge.sh`
+enforces this.
+
+<!-- BEGIN INSTALLED-ASSETS -->
+<!-- (none yet — project-bootstrap fills this) -->
+<!-- END INSTALLED-ASSETS -->
+
+Multi-domain → load multiple. **Load is also a filter** — anything the request doesn't touch is do-not-load: never read another domain's rules or another project's material for a scoped task; never preload "just in case." Domain-specific governance (Notion, Gmail, Drive, Supabase, etc.) lives in a **lazy-loaded skill** under `.claude/skills/` — installed from the catalog by `project-bootstrap`, or hand-written. Keep the skill body out of this always-on file; only its router row belongs here.
 
 ## Agents
 
@@ -98,7 +109,10 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
 | `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
 | `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling, why-diagnostic |
-| `scripts/` (master repo) | init.sh, check-knowledge.sh, check-context-budget.sh, log-correction.sh |
+| `scripts/` (this repo) | `check-knowledge.sh`, `check-context-budget.sh` — installed by the scaffold; both run from the repo root |
+| `.claude/knowledge-check.conf` | Optional knobs for `check-knowledge.sh` (watched paths, skill-router gate). Defaults apply when absent |
+| `TOOLING.md` | Manifest of catalog assets installed into this repo |
+| `scripts/` (master repo) | `init.sh`, `log-correction.sh`, `promote.sh` — run from `~/gits/clybor-claude-tooling` |
 | `templates/stage-pipeline/` (master repo) | Numbered-stage folder skeleton for sequential, human-gated work |
 | `.claude/commands/` | /quality-review, /simplify, /adversarial, /chaos, /five-whys, /ralph-loop |
 | `.claude/hooks/` | compact-recovery.sh, kiss-yagni-reminder.py, ralph-stop.sh |
@@ -110,6 +124,8 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 When initializing this template for a new project, fill in:
 
 - **Project name** above (`{{PROJECT_NAME}}`).
-- **Domain rules** in `.claude/rules/` for any tools the project uses (Supabase, Notion, etc.). Keep them small — auto-load is for always-relevant content only.
+- **Domain governance** as a lazy-loaded skill in `.claude/skills/` (install from the catalog with `project-bootstrap`, or write it). `.claude/rules/` is for always-relevant, small content only — everything domain-specific is a skill.
+- **A router row** in *Installed catalog assets* above for every skill in `.claude/skills/`. No row = unreachable.
 - **ROADMAP.md** at repo root if you want the compact-recovery hook to re-inject it (default: enabled).
 - **Custom skills** in `.claude/skills/`. Don't duplicate what's already here.
+- **`knowledge/`** if the project accumulates research: `knowledge/{raw,wiki}/` plus `index.md`, `log.md`. Put a `.gitkeep` in any directory meant to survive a clone while empty — git does not track empty directories. Adjust the watched paths in `.claude/knowledge-check.conf` if work lands somewhere other than `automations/`.

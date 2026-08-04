@@ -1,7 +1,10 @@
 .DS_Store
 .skill-validator/
 *.bak
+*.bak-*
+__pycache__/
+*.py[cod]
 
-# tooling-catalog
-scripts/denylist.local.json
+# tooling-catalog — local, uncommitted secret/constant sources (never ship to the public repo)
+scripts/*.local.json
 bundles/

@@ -1,0 +1,17 @@
+# knowledge-check.conf — per-repo knobs for scripts/check-knowledge.sh
+# Sourced as shell if present. Everything here is commented out: the defaults
+# below are what check-knowledge.sh already uses.
+
+# WATCH_PATHS — space-separated path prefixes whose staged changes require a new
+# knowledge/log.md entry. THE DEFAULT ASSUMES work lands in automations/.
+# If this repo's real work lives anywhere else (src/, pipelines/, analysis/,
+# deliverables/), set it here — otherwise that work commits UNGATED.
+#
+# WATCH_PATHS="automations/ knowledge/wiki/ .env"
+
+# SKILL_ROUTER_CHECK — 1 (default) fails the gate when a directory under
+# .claude/skills/ is not named anywhere in CLAUDE.md, i.e. an installed skill the
+# router cannot reach. Set to 0 only for repos with deliberately unrouted
+# sub-skills that other skills invoke directly.
+#
+# SKILL_ROUTER_CHECK=1
