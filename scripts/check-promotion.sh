@@ -29,6 +29,17 @@ candidates=(); drift=()
 scan() { # $1 = relative path of a candidate file
   local rel="$1"
   printf '%s\n' "$rel" | grep -qE "$SKIP_RE" && return
+  # Catalog skills ship from assets/skills/ in the master, tokenised, then get filled
+  # per project by init.sh. A filled install legitimately differs from its tokenised
+  # source, so neither "promotable" (it came FROM the catalog) nor "drift" (tokens
+  # differ by design) applies. Distinguishing a token-fill from a genuine local
+  # improvement needs token-normalised diffing — that's the manual promote-to-tooling
+  # skill's job, not an always-on nag. Skip any skill the master carries as an asset.
+  case "$rel" in
+    .claude/skills/*)
+      local sname="${rel#.claude/skills/}"; sname="${sname%%/*}"
+      [ -e "$CANON/assets/skills/$sname" ] && return ;;
+  esac
   local canon="$CANON/$rel"
   if [ ! -e "$canon" ]; then candidates+=("$rel");
   elif ! diff -q "$rel" "$canon" >/dev/null 2>&1; then drift+=("$rel"); fi
