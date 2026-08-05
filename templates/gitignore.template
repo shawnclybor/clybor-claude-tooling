@@ -35,7 +35,13 @@ npm-debug.log*
 # Raw research capture: unreviewed source material, often large and often
 # containing third-party or client content. Curated output lives in
 # knowledge/wiki/ and IS tracked.
-knowledge/raw/
+#
+# Written as `dir/*` + a negation, NOT as `knowledge/raw/`. Git cannot re-include
+# anything beneath an excluded DIRECTORY, so the `knowledge/raw/` form also swallows
+# the .gitkeep — and the directory then vanishes on clone, which is the opposite of
+# what init.sh's setup steps tell you to expect. Ignore the CONTENTS, keep the marker.
+knowledge/raw/*
+!knowledge/raw/.gitkeep
 
 # Tooling
 .skill-validator/
