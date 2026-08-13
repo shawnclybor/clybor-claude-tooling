@@ -37,6 +37,8 @@ plugins/<name>/
 
 ## Hooks — what a plugin hook can and cannot do
 
+**This skill is a build tool; a hook is runtime.** Packaging the plugin happens once, here. A hook in `hooks/hooks.json` ships inside the plugin and fires on the end user's tool calls every session. Everything below is build-time guidance about that runtime component — get it right at package time.
+
 Plugins are the only way to run hooks in Cowork: `settings.json` hooks are inert there; the plugin `hooks/hooks.json` slot is the path that loads. A PreToolUse hook **fires on every tool and can hard-block** a call (exit 2, or a JSON `permissionDecision:deny`) — confirmed on both local and cloud Cowork, including the render path (the Bash tool `mcp__workspace__bash` and `Write`).
 
 But a hook **fails open**: if the hook script exits non-zero without an explicit deny (a crash), the tool runs anyway, silently. So:
