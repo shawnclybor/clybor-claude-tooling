@@ -19,4 +19,18 @@ if [ -f knowledge/log.md ]; then
   echo "### Recent knowledge/log.md"
   grep -E '^- ' knowledge/log.md | head -n 6
 fi
+
+# Availability gate — standing audit, NOT an entry gate. Commit hooks catch a claim
+# the moment it is written and never ask again; every failure this gate exists for
+# was a claim that SAT (Seismic ~2 months, Dep 13 six days). This re-asks each session.
+if [ -f scripts/check_dependency_probes.py ]; then
+  out="$(python3 scripts/check_dependency_probes.py --audit 2>/dev/null)"
+  if [ -n "$out" ]; then
+    [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
+    emitted=1
+    echo ""
+    echo "### Open dependencies"
+    echo "$out"
+  fi
+fi
 exit 0

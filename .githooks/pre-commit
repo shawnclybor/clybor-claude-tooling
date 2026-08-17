@@ -14,4 +14,9 @@ fi
 if [ -f "$ROOT/.claude/hooks/no-postmortem-precommit.py" ]; then
   python3 "$ROOT/.claude/hooks/no-postmortem-precommit.py" || exit $?
 fi
+# 4. availability gate — every OPEN dependency owned by someone else must declare
+#    [probed: …] / [decisional] / [NOT PROBED: …]. Override: PROBE_OK=1 git commit
+if [ -f "$ROOT/scripts/check_dependency_probes.py" ] && [ -z "$PROBE_OK" ]; then
+  python3 "$ROOT/scripts/check_dependency_probes.py" --staged || exit $?
+fi
 exit 0
