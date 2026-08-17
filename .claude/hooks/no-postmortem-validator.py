@@ -8,9 +8,10 @@ PURPOSE: BLOCK post-mortem / tombstone prose from landing in operational
          permissionDecision, so it cannot be walked past. Honor-system gates fail;
          this is the codified gate.
 
-SCOPE: Markdown under the project's operational dirs — .claude/{skills,PRPs,
-       commands,agents,deliverables,rules}. Code files are out of scope
-       (validate-code-write.py); auto-memory and audit docs are exempt.
+SCOPE: Every markdown file in the repo — CLAUDE.md, ROADMAP.md, docs/,
+       workstreams/, knowledge/wiki/, .claude/. Code files are out of scope
+       (validate-code-write.py); running logs, raw captures and audit docs are
+       exempt (EXEMPT_PATHS + PROVENANCE_HINTS).
 
 OVERRIDE (conscious, never silent):
   - the file name signals provenance (audit/postmortem/changelog/history/...), OR
@@ -30,9 +31,15 @@ import json
 import re
 import sys
 
-SCOPED_DIRS = (
-    "/.claude/skills/", "/.claude/prps/", "/.claude/commands/",
-    "/.claude/agents/", "/.claude/deliverables/", "/.claude/rules/",
+# Scope is EVERY markdown file in the repo. Prose lands in docs/, workstreams/,
+# ROADMAP.md and CLAUDE.md far more often than in .claude/ — an allowlist there
+# left the loudest surfaces ungated. Exemptions below, plus the name-based
+# PROVENANCE_HINTS and the inline override marker.
+EXEMPT_PATHS = (
+    "/knowledge/log.md",    # append-only running log — diff-against-past is its job
+    "/knowledge/raw/",      # unedited captures
+    "/docs/reference/",     # client source converted verbatim — not our prose to police
+    "/node_modules/", "/.git/", "/_archived/",
 )
 PROVENANCE_HINTS = (
     "postmortem", "post-mortem", "post_mortem", "audit", "changelog",
@@ -53,6 +60,12 @@ BLOCK_PATTERNS = [
     (r"\bpost-(adversarial-review|kiss-review|kiss|chaos-review|review)\b",
      "review-narration: 'post-<review>'"),
     (r"\bai cosplay\b", "meta-narration: 'AI cosplay'"),
+    (r"(?m)^#{1,6}\s.*\b(what changed|changes made|what(?:'s| was| we) (?:cut|fixed|removed|added)"
+     r"|before\s*(?:/|and|→|vs\.?)\s*after|summary of changes)\b",
+     "change-narration heading"),
+    (r"\bupdated to reflect\b", "change-narration: 'updated to reflect'"),
+    (r"\breplaces the (previous|old|former|prior)\b", "tombstone: 'replaces the previous ...'"),
+    (r"\bthis (?:doc|file|section) (?:now|previously)\b", "self-narration: 'this doc now/previously ...'"),
 ]
 
 # Case-SENSITIVE gravestone heading, e.g. '## Spec Xy — REMOVED'
@@ -84,6 +97,8 @@ WARN_PATTERNS = [
     (r"\bsuperseded\b", "'superseded'"),
     (r"\bdeprecated\b", "'deprecated'"),
     (r"\(retired\b", "'(retired ...)'"),
+    (r"\bgoing forward\b", "ceremonial: 'going forward'"),
+    (r"\bas of (today|this writing)\b", "ceremonial: 'as of today'"),
 ]
 
 
@@ -101,7 +116,7 @@ def extract_content(tool_name, tool_input):
 
 def in_scope(file_path):
     p = file_path.replace("\\", "/").lower()
-    return p.endswith(".md") and any(d in p for d in SCOPED_DIRS)
+    return p.endswith(".md") and not any(d in p for d in EXEMPT_PATHS)
 
 
 def find_hits(content):

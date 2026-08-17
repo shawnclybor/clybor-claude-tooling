@@ -25,10 +25,28 @@ cd "$REPO" || exit 0
 # Per-project files that legitimately differ and must NOT be promotion-checked.
 SKIP_RE='(\.claude/rules/.*-project\.md|\.claude/settings\.json|CLAUDE\.md|knowledge/)'
 
+# Per-repo opt-out: .claude/promotion-ignore, one repo-relative path or glob per line
+# ('#' comments, blank lines ignored). For shared tooling a project legitimately
+# extends with local content — e.g. a skills README that indexes client-specific
+# skills. Without this the gate blocks every commit in that repo forever, which
+# trains --no-verify and costs the real drift checks their teeth.
+IGNORE_GLOBS=()
+if [ -f .claude/promotion-ignore ]; then
+  while IFS= read -r line; do
+    line="${line%%#*}"; line="$(printf '%s' "$line" | tr -d '[:space:]')"
+    [ -n "$line" ] && IGNORE_GLOBS+=("$line")
+  done < .claude/promotion-ignore
+fi
+
 candidates=(); drift=()
 scan() { # $1 = relative path of a candidate file
   local rel="$1"
   printf '%s\n' "$rel" | grep -qE "$SKIP_RE" && return
+  local g
+  for g in ${IGNORE_GLOBS+"${IGNORE_GLOBS[@]}"}; do
+    # shellcheck disable=SC2254
+    case "$rel" in $g) return ;; esac
+  done
   # Catalog skills ship from assets/skills/ in the master, tokenised, then get filled
   # per project by init.sh. A filled install legitimately differs from its tokenised
   # source, so neither "promotable" (it came FROM the catalog) nor "drift" (tokens
