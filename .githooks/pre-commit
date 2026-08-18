@@ -19,4 +19,10 @@ fi
 if [ -f "$ROOT/scripts/check_dependency_probes.py" ] && [ -z "$PROBE_OK" ]; then
   python3 "$ROOT/scripts/check_dependency_probes.py" --staged || exit $?
 fi
+# 5. tracker-staleness gate — no live pointer may name a superseded tracker version.
+#    Two hand sweeps on 2026-08-18 both missed surfaces; this is the codified version.
+#    Override: TRACKER_OK=1 git commit
+if [ -f "$ROOT/scripts/check_tracker_version.py" ] && [ -z "$TRACKER_OK" ]; then
+  python3 "$ROOT/scripts/check_tracker_version.py" --staged --quiet || exit $?
+fi
 exit 0
