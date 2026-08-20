@@ -33,4 +33,18 @@ if [ -f scripts/check_dependency_probes.py ]; then
     echo "$out"
   fi
 fi
+
+# Probe-visibility gate — names the paths where a recursive-grep zero means nothing.
+# check_dependency_probes forces a probe to be DECLARED; this one says whether the
+# probe could have reached its target. Both are needed: on 2026-08-17 three of five
+# eval subagents recorded a false negative from a grep that had been silently narrowed.
+if [ -f scripts/check_grep_blindspots.py ]; then
+  out="$(python3 scripts/check_grep_blindspots.py --audit 2>/dev/null)"
+  if [ -n "$out" ]; then
+    [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
+    emitted=1
+    echo ""
+    echo "$out"
+  fi
+fi
 exit 0
