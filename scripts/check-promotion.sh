@@ -67,8 +67,11 @@ list_files() {
   { ls .githooks/* 2>/dev/null
     ls scripts/*.sh 2>/dev/null
     find .claude/skills .claude/hooks .claude/commands .claude/agents -type f 2>/dev/null
-  } | sort -u
+  } | sort -u | grep -Ev '(^|/)(\.DS_Store|Thumbs\.db|\.localized)$|(^|/)__pycache__/|\.pyc$|(^|/)\.git/|~$|\.swp$|\.bak-'
 }
+
+# OS and editor droppings are not tooling. They are never promotable and never drift;
+# flagging them trains people to ignore the checker, which is how a real drift gets missed.
 
 # Full-tree scan for both modes: drift in any shared tooling file is caught regardless of
 # what is staged. This is what makes --gate non-honor-system.
