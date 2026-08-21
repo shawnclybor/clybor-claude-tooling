@@ -25,4 +25,9 @@ fi
 if [ -f "$ROOT/scripts/check_tracker_version.py" ] && [ -z "$TRACKER_OK" ]; then
   python3 "$ROOT/scripts/check_tracker_version.py" --staged --quiet || exit $?
 fi
+# 6. PHI gate — refuse a commit that stages client documents or identifiers.
+#    No-ops in repos without the scanner. Needs a client-name list outside git.
+if [ -f "$ROOT/scripts/phi-scan.py" ]; then
+  python3 "$ROOT/scripts/phi-scan.py" --staged || exit $?
+fi
 exit 0
