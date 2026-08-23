@@ -278,11 +278,19 @@ def index_problems(root):
     except Exception as e:
         return [f"{INDEX_NAME} unreadable: {e}"]
     probs = [f"{INDEX_NAME} does not list '{f}'" for f in files if f not in text]
-    imt = os.path.getmtime(path)
-    newer = [f for f in files if os.path.getmtime(os.path.join(root, f)) > imt]
-    if newer:
-        probs.append(f"{INDEX_NAME} is older than {len(newer)} artifact(s) "
-                     f"({', '.join(newer[:3])}{'…' if len(newer) > 3 else ''}) — regenerate")
+    # Staleness is a CONTENT question, not a timestamp one. An mtime comparison answers
+    # "was the index written last?", which diverges from "is the index wrong?" on every
+    # write that does not change what the index renders — ticking a checkbox, or a bare
+    # touch. That fired on a clean slug reporting "0 file(s) with problems", which trains
+    # people to regenerate reflexively and stop reading the output. Rebuilding in memory
+    # and diffing catches the case the mtime check existed for (frontmatter title/status
+    # changed while the filename stayed put) with no false positives.
+    try:
+        if build_index(root).strip() != text.strip():
+            probs.append(f"{INDEX_NAME} content is stale — run: "
+                         f"python3 .claude/hooks/check-prp-naming.py --index {root}")
+    except Exception as e:                              # never fail the audit on the check itself
+        probs.append(f"{INDEX_NAME} could not be rebuilt for comparison: {e}")
     return probs
 
 
