@@ -87,14 +87,34 @@ Copy `.claude/PRPs/_templates/plan-template.md` to `.claude/PRPs/{slug}/plan.md`
 
 - **Mandatory reading**: exact file paths + line ranges. Vague references ("the relevant skill") are not allowed.
 - **Mirror target**: path + which sections to copy verbatim vs adapt.
-- **Step-by-step tasks**: numbered. Each task has a clear DONE check. No "polish" or "finalize" tasks — those hide ambiguity.
+- **Step-by-step tasks**: numbered, **one line each, no hard-wrapping** (wrapped text breaks later find-and-replace edits and makes `file:line` citations drift). Each task has a DONE check that **can come back red** — binary is not enough. A grep for a phrase the task itself wrote is binary and unfalsifiable; check behaviour the task changed instead. No "polish" or "finalize" tasks.
+- **Acceptance checklist**: reference each PRD criterion by number and label. **Never restate a criterion's condition** — that creates a second copy which drifts from the PRD.
+- **Test authorship map**: every artifact the acceptance test names, and the one task that creates it. Build-execute ticks tasks, not checklist lines, so an unauthored artifact ships unbuilt.
+- **Dependency order**: the real edges, not the task numbering. Flag any DONE that cannot be evaluated until a later task lands.
 - **Acceptance test**: how build-evaluate will measure success. Reference the PRD's anchor case explicitly.
 - **Anti-patterns to avoid**: from the profile, plus anything specific to this build.
 - **Estimated effort**: rough order — minutes, hours, days. Helps execute pick the right caps.
 
 ## Phase 6: SAFETY CHECK
 
-If the profile defines forbidden patterns (e.g., "skill description > 1024 chars," "plugin.json missing version bump"), grep the plan for them. If any appear, flag and refuse to exit — the plan as written will fail validate.
+**6a — mechanical gate. Run it; do not eyeball it.**
+
+```bash
+python3 .claude/hooks/check-plan-soundness.py .claude/PRPs/{slug}/plan.md --prd .claude/PRPs/{slug}/prd.md
+```
+
+Non-zero exit means the plan has a defect that a reviewer panel would otherwise spend an hour finding. **Fix and re-run until it passes — do not proceed to Phase 7 on a failing plan.** It checks six things no amount of careful reading reliably catches:
+
+- a DONE check that greps a string its own task body wrote (can never go red)
+- an artifact the acceptance test uses that no task authors (ships unbuilt)
+- a DONE that depends on a later task's output (unevaluable when it runs)
+- a criterion whose wording disagrees across the PRD table, PRD checklist and plan checklist
+- a dependency cycle, or an edge naming a task that does not exist
+- a duplicate task number
+
+If it reports zero tasks parsed, the task lines are malformed — fix the format rather than ignoring the run.
+
+**6b — profile patterns.** If the profile defines forbidden patterns (e.g., "skill description > 1024 chars," "plugin.json missing version bump"), grep the plan for them. If any appear, flag and refuse to exit — the plan as written will fail validate.
 
 ## Phase 7: LINK BACK
 
@@ -120,4 +140,5 @@ Validate before executing: `build-validate {slug}` — offer to dispatch via `Sk
 - This skill writes ONLY the plan markdown. No implementation files.
 - Mirror existing artifacts aggressively. New structure invites bugs.
 - The acceptance test must reference the PRD's anchor case. If it doesn't, you wrote the wrong test.
-- "Step-by-step tasks" must each have a binary DONE check. Tasks that say "improve X" are a smell.
+- "Step-by-step tasks" must each have a DONE check that can come back red. Binary is necessary but not sufficient: `grep -q "never drops" schema.md`, on a file the same task wrote, is binary and cannot fail. Tasks that say "improve X" are a smell.
+- Phase 6a is a gate, not advice. A plan that fails `check-plan-soundness.py` will fail build-validate for the same reasons, an hour later and at the cost of a five-agent panel.

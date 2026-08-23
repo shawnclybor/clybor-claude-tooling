@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Negative control for check-plan-soundness.py.
+#
+# A verifier that never fails is not a verifier. This seeds one defect per check
+# class into a copy of a known-good plan and requires the checker to go red on
+# each, then requires it to go green on the unmodified copy.
+#
+# Usage: test-plan-soundness.sh [plan.md] [prd.md]
+set -u
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+CHECK="$HERE/check-plan-soundness.py"
+PLAN="${1:-$HERE/../PRPs/build-a-yellow-sheet/plan.md}"
+PRD="${2:-$HERE/../PRPs/build-a-yellow-sheet/prd-yellow-sheet.md}"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+pass=0; fail=0
+run() { python3 "$CHECK" "$1" --prd "$PRD" >/dev/null 2>&1; echo $?; }
+
+green() {  # $1 label, $2 file — expect exit 0
+  if [ "$(run "$2")" = "0" ]; then echo "  ok   $1"; pass=$((pass+1))
+  else echo "  FAIL $1 — expected PASS, got FAIL"; fail=$((fail+1)); fi
+}
+red() {    # $1 label, $2 file — expect non-zero
+  if [ "$(run "$2")" != "0" ]; then echo "  ok   $1"; pass=$((pass+1))
+  else echo "  FAIL $1 — checker stayed green on a seeded defect"; fail=$((fail+1)); fi
+}
+
+echo "baseline"
+cp "$PLAN" "$TMP/clean.md"
+green "unmodified plan passes" "$TMP/clean.md"
+
+echo
+echo "seeded defects — each must turn the checker red"
+
+# 1 self-satisfying DONE: grep for a phrase the task body itself writes
+python3 - "$TMP/clean.md" "$TMP/d1.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("- [ ] **6. Money parsing module**",
+  "- [ ] **99. Bogus task** — this body contains the phrase quantum-marmalade-token. DONE: `grep -q \"quantum-marmalade-token\" out.md` hits.\n- [ ] **6. Money parsing module**", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "self-satisfying DONE" "$TMP/d1.md"
+
+# 2 unauthored artifact referenced by the acceptance test
+python3 - "$TMP/clean.md" "$TMP/d2.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("## Acceptance test", "## Acceptance test\n\nAlso runs `tests/nobody-authors-this.sh`.\n", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "unauthored artifact" "$TMP/d2.md"
+
+# 3 dependency cycle
+python3 - "$TMP/clean.md" "$TMP/d3.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("### Dependency order, explicitly",
+              "### Dependency order, explicitly\n\n`7 → 8` · `8 → 7`\n", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "dependency cycle" "$TMP/d3.md"
+
+# 4 dependency edge naming a task that does not exist
+python3 - "$TMP/clean.md" "$TMP/d4.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("### Dependency order, explicitly",
+              "### Dependency order, explicitly\n\n`7 → 998`\n", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "undefined task in dependency order" "$TMP/d4.md"
+
+# 5 duplicate task number
+python3 - "$TMP/clean.md" "$TMP/d5.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("- [ ] **6. Money parsing module**",
+  "- [ ] **7. Duplicate of seven** — filler. DONE: nothing.\n- [ ] **6. Money parsing module**", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "duplicate task number" "$TMP/d5.md"
+
+# 6 task with no DONE check at all
+python3 - "$TMP/clean.md" "$TMP/d6.md" <<'PY'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("- [ ] **6. Money parsing module**",
+  "- [ ] **97. No gate here** — this task states an intention and never says how it is checked.\n- [ ] **6. Money parsing module**", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY
+red "task with no DONE check" "$TMP/d6.md"
+
+echo
+echo "=================================="
+echo "passed $pass, failed $fail"
+[ "$fail" -eq 0 ] || exit 1
