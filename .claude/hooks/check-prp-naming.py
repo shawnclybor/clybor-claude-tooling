@@ -55,6 +55,33 @@ def parse_front(text):
     return fm
 
 
+# A slug under PRPs is a BUILD, and a build starts with a PRD. Without this, any
+# artifact kind can conjure a slug just by naming one, which turns the tree into a
+# filing cabinet for whatever had nowhere else to go. A `_`-prefixed directory is the
+# escape hatch for something that is deliberately not a build.
+SLUG_SEED = {"prd.md", "index.md", "log.md", "NAMING.md", "README.md"}
+
+
+def slug_has_prd(slug_dir):
+    try:
+        return any(f == "prd.md" or f.startswith("prd-")
+                   for f in os.listdir(slug_dir) if f.endswith(".md"))
+    except OSError:
+        return False
+
+
+def slug_problem(slug_dir, base):
+    """None when the write is allowed to land in this slug."""
+    slug = os.path.basename(os.path.normpath(slug_dir))
+    if slug.startswith("_") or base in SLUG_SEED or base.startswith("prd-"):
+        return None
+    if slug_has_prd(slug_dir):
+        return None
+    return (f"'{slug}/' holds no PRD, so it is not a build. A slug under .claude/PRPs/ "
+            f"earns its place with a PRD — write that first (build-prd), or put this in "
+            f"a '_'-prefixed directory if it is deliberately not a build.")
+
+
 def placement_problem(path):
     """Where a file sits is as much the convention as what it is called. The pipeline
     fixed names belong at the slug root because build-* reads them there; every other
@@ -272,10 +299,13 @@ def audit(root):
             print(f"FAIL {p}")
             for x in probs:
                 print(f"     - {x}")
+    sprob = slug_problem(root, "")
+    if sprob:
+        print(f"FAIL {root}\n     - {sprob}")
     iprobs = index_problems(root)
     for x in iprobs:
         print(f"FAIL {os.path.join(root, INDEX_NAME)}\n     - {x}")
-    total = failed + len(iprobs)
+    total = failed + len(iprobs) + (1 if sprob else 0)
     print(f"\n{'FAIL' if total else 'PASS'}: {failed} file(s) with problems, "
           f"{len(iprobs)} index problem(s)")
     return 1 if total else 0
@@ -349,7 +379,11 @@ def main():
     tail = path.split("/.claude/PRPs/", 1)[1].split("/")
     if not (len(tail) == 2 or (len(tail) == 3 and tail[1] in KIND_TYPES)):
         sys.exit(0)                                     # deeper => opaque subdirectory
+    slug_dir = path.rsplit("/.claude/PRPs/", 1)[0] + "/.claude/PRPs/" + tail[0]
     probs = check(path, ti.get("content", "") or "")
+    sp = slug_problem(slug_dir, os.path.basename(path))
+    if sp:
+        probs.insert(0, sp)
     if probs:
         print("BLOCKED (PRP naming convention — .claude/prp-naming.md)\n"
               + "\n".join(f"  - {p}" for p in probs)
