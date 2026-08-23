@@ -50,8 +50,11 @@ def parse_tasks(text):
         h = re.search(r"^#{2,4} ", chunk, re.M)
         if h:
             chunk = chunk[: h.start()]
-        m = re.search(r"\bDONE\b", chunk)
-        body, done = (chunk[: m.start()], chunk[m.start():]) if m else (chunk, "")
+        # The DONE clause is the LAST "DONE:" in the task — a task body may legitimately
+        # mention the word (e.g. "Task 50's own DONE requires..."), and splitting on the first
+        # occurrence swallows half the body into the DONE and mis-attributes its references.
+        ms = list(re.finditer(r"\bDONE:", chunk)) or list(re.finditer(r"\bDONE\b", chunk))
+        body, done = (chunk[: ms[-1].start()], chunk[ms[-1].start():]) if ms else (chunk, "")
         out.append((num, title.strip(), body, done))
     return out
 
