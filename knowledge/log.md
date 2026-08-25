@@ -7,6 +7,52 @@ gate scans staged content.
 
 ---
 
+## 2026-08-25 — availability gate promoted: the rule and the hook, together
+
+**What.** A PreToolUse Write|Edit validator that fires when text asserts something is blocked,
+unreachable, missing, or owed by someone else without probe evidence nearby, plus the
+Pre-Flight-Checklist rule it enforces. Both were live in a client repo; neither existed here.
+
+**Why it is universal.** "Do not record an unavailability claim you never tested" is not
+domain-specific. The failure it prevents recurred four times in one week on one engagement, always
+the same shape: an assumption never probed, surviving because it kept being copied forward. Two of
+the four were caught only because a human challenged the premise. **None were caught by review** —
+a confident unavailability claim reads exactly like a finding, and reviewers check prose, not
+whether a probe ran. That is what makes it worth a mechanical gate rather than a habit.
+
+**Generalised on the way in:**
+- Incident examples de-identified — the shapes are kept because they teach the pattern; the names
+  are not needed to teach it.
+- The probe-evidence list hardcoded two of that project's gate-script names. Widened to
+  `(verify|check)[-_]\w+`, which matches any project's own gate scripts and is the more honest
+  rule anyway — the signal is "a gate script ran", not which one.
+- Connector tool names (`sharepoint_search`, `outlook_email_search`, `notion-fetch`, …) were kept.
+  They are standard across anyone using those connectors and are the strongest probe signal;
+  the anti-pattern is porting project *IDs*, not tool names.
+
+**Ships report-only.** `REPORT_ONLY = True` until backtested against a real corpus. A gate that
+fires wrongly on day one gets disabled on day two.
+
+**Wired, not just added:** `settings.json.template` PreToolUse Write|Edit, the hooks README, and the
+Availability-gate rule in `routing-protocol.md`. A hook without its rule is an enforcement mechanism
+nobody can explain.
+
+**Validated behaviourally, six cases:** a bare claim flags; a claim with probe evidence nearby
+passes; `NOT PROBED` passes (it is the compliant form); the `<!-- probe-ok: -->` override passes;
+an exempt vendored path passes; and a generic gate-script name passes, exercising the widened
+pattern.
+
+⚠️ **Two checker blind spots surfaced while doing this.** `check-promotion.sh` scans
+`.claude/{skills,hooks,commands,agents}` — **`.claude/rules/` is not scanned at all**, so rule
+drift between master and a consuming repo is invisible. Separately, it skips any skill the master
+carries as an asset. Neither is wrong on its own terms; together they cover more ground than the
+"tooling drift is checked" framing suggests. Not changed here.
+
+**Downstream:** repos initialised before today do not auto-update. Any repo wanting this gate needs
+the hook file, the `settings.json` wiring, and the rule text.
+
+---
+
 ## 2026-08-25 — check-knowledge.sh parsed frontmatter with a fixed line count
 
 **The bug.** Wiki frontmatter was extracted with `head -n 12`. A folded `description: >-` block

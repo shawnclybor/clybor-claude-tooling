@@ -43,6 +43,10 @@ Before the first write, emit a Pre-Flight Checklist as explicit ticked items in 
 
 **Iteration gate (applies to any v(N+1) of a deliverable):** If a prior version exists and new source material has arrived, do an adversarial diff against v(N) before drafting v(N+1). The diff IS the new version's rationale.
 
+**Availability gate (applies to any claim that something is blocked, unavailable, missing, or owed by someone else):** Run the probe before writing the claim. An unavailability assertion is a *finding* and carries the search that produced it — tool, filter, date — recorded beside it. Cannot probe → write **"NOT PROBED"** and name what would settle it. Never inherit an unavailability claim from an earlier document as if it were measured, and **re-probe any inherited claim whose access conditions have changed** since it was written. Dependencies also classify as **retrievable** (it exists somewhere — go probe it) or **decisional** (only a human can rule); a retrievable dependency filed as decisional is the failure this gate exists for. Enforced by `.claude/hooks/availability-claim-validator.py` (PreToolUse on Write|Edit; ships report-only until backtested on your corpus).
+
+**⚠ A probe only counts if it could SEE its target.** Recursive `grep` skips gitignored paths and exits as though the corpus were clean — hiding exactly the directories an "is X here?" probe most needs. A recursive-grep zero over an ignored path is **unmeasured, not absent**. The obvious fix can be a second false zero: where `grep` is shimmed to `ugrep`, `--no-ignore` is not a valid option — it exits 2, matches nothing, and prints `0`, reading exactly like a clean corpus. The working flag is `--no-ignore-files`. Two defences that always hold: name the ignored directory as the search root, or walk it in Python.
+
 **Extraction gate (applies to extracting from transcripts, attachments, or fetched documents that will feed a client-facing deliverable):** Run a second-pass adversarial re-read against the source after the first synthesis. First-pass extraction satisfices and routinely misses 15–25%.
 
 If a checklist item can't be answered "yes," fix the gap before writing.
