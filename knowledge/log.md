@@ -7,6 +7,31 @@ gate scans staged content.
 
 ---
 
+## 2026-08-25 — check-knowledge.sh parsed frontmatter with a fixed line count
+
+**The bug.** Wiki frontmatter was extracted with `head -n 12`. A folded `description: >-` block
+pushes later keys past that window, so a well-formed article was rejected for a missing key that
+was present two lines below the cutoff. It fails **closed**, so nothing bad shipped — but a gate
+that rejects correct input teaches people to reach for `--no-verify`, and a gate routinely
+overridden is not a gate.
+
+**The fix.** Extract the block between the opening `---` and its closing `---`. Four fixtures ran
+before the patch: long frontmatter with description ahead of sources passes; a genuinely missing
+key fails; a key present only in the BODY fails; no frontmatter at all fails. The third fixture is
+the one that matters — it proves the fix is not a whole-file grep, which would have made the gate
+pass files whose keys are merely mentioned in prose.
+
+**Generalisable.** Any parser with a hardcoded window over variable-length structured text has this
+bug latent. The tell is a constant chosen from what the data looked like on the day it was written.
+Prefer the delimiter the format actually defines.
+
+**Discovered from a consuming repo, not here.** The defect existed identically in both copies, which
+is the second time in one session that shared tooling was found broken in both places at once. The
+promotion check compares copies, so it cannot see a defect they agree on. Worth remembering when
+judging what that check does and does not cover.
+
+---
+
 ## 2026-08-25 — notion-governance drops token fill entirely; the overlay writes itself
 
 **Supersedes the 2026-08-05 decision below.** That change moved the six shared workspace database

@@ -28,7 +28,10 @@ if [ -d knowledge/wiki ]; then
   shopt -s nullglob
   for f in knowledge/wiki/*.md; do
     base="$(basename "$f" .md)"
-    fm="$(head -n 12 "$f")"
+    # Frontmatter is the block between the opening --- and its closing ---, never a fixed
+    # line count: a folded `description: >-` pushes later keys past any window, and the file
+    # is then rejected as malformed when it is well-formed. Body text cannot satisfy these.
+    fm="$(awk 'NR==1 && $0!="---"{exit} NR==1{next} /^---[[:space:]]*$/{exit} {print}' "$f")"
     printf '%s\n' "$fm" | grep -q '^status:'  || err "wiki/$base.md missing 'status:' frontmatter"
     printf '%s\n' "$fm" | grep -q '^sources:' || err "wiki/$base.md missing 'sources:' frontmatter"
     printf '%s\n' "$fm" | grep -q '^updated:' || err "wiki/$base.md missing 'updated:' frontmatter"
