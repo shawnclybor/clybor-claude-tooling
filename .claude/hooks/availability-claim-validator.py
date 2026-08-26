@@ -30,8 +30,20 @@ import json
 import re
 import sys
 
-# Report-only until the backtest says the false-positive rate is acceptable.
-# Flip to False to let the PreToolUse tier warn loudly / precommit block.
+# ⚠ THIS HOOK NEVER BLOCKS. Every path ends in sys.exit(0); REPORT_ONLY only controls whether
+# the stderr message carries a "[report-only]" prefix. It is an advisory, not a gate. Real
+# enforcement would need a permissionDecision:"deny" payload — a deliberate, separate change.
+# Do not describe flipping this flag as "turning enforcement on."
+#
+# BEFORE TREATING OUTPUT AS SIGNAL, MEASURE THE FIRE RATE against the repo's real files:
+#   for f in <corpus>; do  ... | python3 availability-claim-validator.py; done
+# A gate that fires on a large share of writes trains the reader to ignore it, which is
+# indistinguishable from having no gate. Measured once at ~47% on a mature prose-heavy repo,
+# driven mostly by the broad legacy patterns ("unreachable", "does not exist", "owed by")
+# that a since-removed escape hatch had been suppressing. Tighten those, or scope the scan to
+# the changed hunk, before relying on it.
+#
+# Leave True in a fresh repo. Flip to False only after measuring.
 REPORT_ONLY = True
 
 EXEMPT_PATHS = (
@@ -58,11 +70,25 @@ CLAIM_PATTERNS = [
     (r"\bwaiting on\b",                      "waiting on"),
     (r"\bawaiting\b",                        "awaiting"),
     (r"\bnot found\b",                       "not found"),
+    # Phrasings that assert absence WITHOUT using the vocabulary above. Every one of these
+    # slipped past a real session; the claim was identical, only the wording differed.
+    (r"\bno (golden|source|original|transcript|copy|text)\b", "no <thing> available"),
+    (r"\bnothing to (compare|diff|score) against\b",         "nothing to compare against"),
+    (r"\bno (diff|comparison) is possible\b",                "no diff possible"),
+    (r"\b(cell|field|column) is empty\b",                    "cell is empty"),
+    (r"\bempty \(0 chars?\)",                                "empty (0 chars)"),
+    (r"^\s*\w*_?available:\s*false\s*$",                     "frontmatter *_available: false"),
+    (r"\bnone exists?\b",                                    "none exists"),
+    (r"\bnot (lifted|preserved)\b",                          "not lifted"),
+    (r"\bgenerate-only\b",                                   "generate-only"),
 ]
 
 # --- Probe markers: evidence the claim was actually tested ---------------------
 PROBE_PATTERNS = [
-    r"NOT PROBED",
+    # These caps forms are the COMPLIANT disclosure, not an absence claim. Flagging them
+    # punishes the correct behaviour.
+    r"NOT PROBED", r"NOT CAPTURED", r"NOT LOCATED", r"NOT AVAILABLE",
+    r"NOT REACHED", r"NOT VERIFIED",
     # tool names — the strongest signal that a probe ran
     r"\bsharepoint_(search|folder_search)\b", r"\bread_resource\b",
     r"\boutlook_(email|calendar)_search\b", r"\bchat_message_search\b",
@@ -77,8 +103,10 @@ PROBE_PATTERNS = [
     # real tool results
     r"\bHTTP \d{3}\b", r"\b(403|404|406)\b", r"\bFORBIDDEN\b", r"\bAccessDenied\b",
     r"\btwo strikes\b",
-    # a date stamp adjacent to the claim implies a dated observation
-    r"\b20\d\d-\d\d-\d\d\b",
+    # ⚠ A BARE DATE IS NOT A PROBE. Frontmatter, changelogs and log entries carry dates written
+    # for unrelated reasons, so any claim sitting near one excused itself automatically. A date
+    # counts only when attached to a probe verb.
+    r"\b(probed|verified|searched|checked|read|confirmed|enumerated)\s+\S{0,12}\s*20\d\d-\d\d-\d\d\b",
 ]
 CLAIM_RE = [(re.compile(p, re.I), label) for p, label in CLAIM_PATTERNS]
 PROBE_RE = [re.compile(p, re.I) for p in PROBE_PATTERNS]

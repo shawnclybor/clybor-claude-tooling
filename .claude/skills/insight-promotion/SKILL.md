@@ -61,7 +61,27 @@ Use `Edit` on the target file. For Known Issues tables, append a row. For new se
 
 ### Step 6 — Cross-reference
 
-If the promoted insight came from `docs/insights/`, add a `promoted_to:` field to the insight's frontmatter pointing at the new governance location. Otherwise the insight becomes stale.
+**Every promoted rule has an insight behind it. No exceptions.**
+
+- **Came from the insights directory** → add a `promoted_to:` field to that insight's frontmatter
+  pointing at the new governance location, or it goes stale.
+- **Came from conversation** → **file the insight first**, then promote, then cross-reference. Do not
+  skip this because the rule is small.
+
+⚠ **Do not make this step conditional on the insight existing.** A conversation-born rule satisfies
+such a condition vacuously: the step does not fail, it never runs, and a step that never runs looks
+identical to one that passed. That is how a rule reaches an always-on file with no evidence behind
+it.
+
+**Why it matters:** insights are where knowledge lives; rules are where knowledge is enforced. A rule
+with no insight behind it is enforcement without knowledge — unauditable, impossible to re-evaluate
+when its evidence expires, and charging always-on context with no recoverable justification. A
+*missing* rule is visible; a rule missing its *provenance* reads exactly like a well-founded one.
+
+Writing the insight is what forces the evidence to be stated. That is the point, not the overhead.
+
+**The generalisable form:** any governance step phrased *"if X, then record Y"* deserves re-reading
+when **X is itself the artifact being checked for.** That is not a guard, it is an opt-out.
 
 If a routing row was added, verify the routing source-of-truth (`CLAUDE.md`) reflects it.
 
@@ -74,7 +94,7 @@ Before promoting any insight:
 3. Have I drafted the exact text, not just a summary of the idea?
 4. Have I confirmed with the user before editing?
 5. Does the entry match the target file's existing format?
-6. If the insight came from `docs/insights/`, have I updated the source frontmatter with `promoted_to:`?
+6. Does an insight exist for this rule? If it came from conversation, have I filed one **before** promoting? Is `promoted_to:` set on it?
 
 ## Append formats
 
