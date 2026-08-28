@@ -27,6 +27,14 @@ Per-stage skills, invokable independently or in sequence. Each has explicit pass
 | 6. Evaluate impl | **quality-review** | No Critical findings on the built artifact |
 | 7. Iterate or close | — | Return to Stage 4 with narrower scope, or write a closure note |
 
+## Working method
+
+- **ooda** — Boyd's decision cycle as a working protocol for tasks whose conditions change mid-flight. Requires a named Orientation Block before any decision commits, and loops back to Observe after acting. Explicit invocation only; it never selects itself.
+
+## Reporting
+
+- **session-output** — Reports what a working session actually did, in two modes: a self-contained HTML dashboard (default) or plain prose (`/session-output simplify`). Measured outcomes only, never invented. Ships `assets/template.html` and `scripts/session_file_check.py`.
+
 ## Knowledge capture
 
 - **insight-crystallizer** — Captures valuable analyses into `docs/insights/*.md`. Cites via `evidence-auditor`; synthesizes multi-source claims via `research-analyst`.

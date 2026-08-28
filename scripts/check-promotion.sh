@@ -86,6 +86,50 @@ if [ "${#candidates[@]}" -gt 0 ]; then
   for c in "${candidates[@]}"; do echo "  + $c   →  scripts/promote.sh $c"; done
 fi
 
+# ---- Packaged plugin bundles ------------------------------------------------
+# Cowork plugin skills frequently live ONLY inside a packaged .plugin (a zip) and
+# never as loose files on disk, so list_files() above cannot see them. That is not
+# a hypothetical: the bundles are where shared skills actually diverge, because a
+# loose-file scan of plugin SOURCE folders finds only plugin-local skills that have
+# no master counterpart — all noise, no signal.
+#
+# So read the bundles directly, and compare ONLY skills whose name also exists in
+# the master. A plugin-local skill has no counterpart and is not a candidate.
+#
+# Reported, never blocking. A working repo legitimately specialises its own copy of
+# a shared skill (see the promote-to-tooling skill) — divergence here is information
+# for a human, not a verdict. Blocking on it would fire on intentional specialisation
+# and train --no-verify, which costs the real drift checks their teeth.
+bundle_drift=()
+if command -v unzip >/dev/null 2>&1; then
+  for p in cowork/*.plugin; do
+    [ -e "$p" ] || continue
+    case "$p" in *.bak-*) continue ;; esac
+    while IFS= read -r sname; do
+      [ -n "$sname" ] || continue
+      canon_skill="$CANON/.claude/skills/$sname/SKILL.md"
+      [ -f "$canon_skill" ] || continue
+      brel="$p::skills/$sname/SKILL.md"
+      bskip=0
+      for g in ${IGNORE_GLOBS+"${IGNORE_GLOBS[@]}"}; do
+        # shellcheck disable=SC2254
+        case "$brel" in $g) bskip=1 ;; esac
+      done
+      [ "$bskip" = 1 ] && continue
+      if ! unzip -p "$p" "skills/$sname/SKILL.md" 2>/dev/null \
+           | diff -q - "$canon_skill" >/dev/null 2>&1; then
+        bundle_drift+=("$brel")
+      fi
+    done < <(unzip -Z1 "$p" 2>/dev/null | grep -E '^skills/[^/]+/SKILL\.md$' | cut -d/ -f2 | sort -u)
+  done
+fi
+
+if [ "${#bundle_drift[@]}" -gt 0 ]; then
+  echo "~ packaged plugin skills differ from clybor-claude-tooling (informational, not blocking):" >&2
+  for d in "${bundle_drift[@]}"; do echo "    ~ $d" >&2; done
+  echo "  Reconcile with the promote-to-tooling skill, or keep the local version deliberately." >&2
+fi
+
 if [ "$MODE" = "--gate" ] && [ "${#drift[@]}" -gt 0 ]; then
   echo "Promoted tooling has drifted. Run: $CANON/scripts/promote.sh <file>  (or 'git commit --no-verify')." >&2
   exit 1

@@ -28,6 +28,8 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Something failed unexpectedly, retry-blind temptation | `five-whys` skill |
 | Explaining WHY an agent/tool behaved as it did — a framing diagnostic where the chain ends at a silent assumption, not a fixable root (pairs with `five-whys`) | `why-diagnostic` skill |
 | Client-facing prose, deliverables, emails ≥3 sentences | `writing-quality` skill |
+| An explicitly-requested decision cycle on long multi-stage work whose conditions move — "run OODA", "give this a method". Never self-selects. | `ooda` skill |
+| Reporting what a work session did — HTML dashboard by default, plain prose via `/session-output simplify` | `session-output` skill |
 | Autonomous walk-away iteration on a single prompt until done | `ralph-loop` skill / `/ralph-loop` command (Stop-hook, completion-promise) |
 | Validating a skill against a target repo | `skill-validator` skill (specialized ralph) |
 | Writing a PRD with binary success criteria | `prd-writer` skill (Stage 1) |
@@ -108,7 +110,7 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/agents/code/` | Code agents — code-reviewer, debugger, code-analyzer, security-auditor |
 | `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
 | `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
-| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling, why-diagnostic |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling, why-diagnostic, ooda, session-output |
 | `scripts/` (this repo) | `check-knowledge.sh`, `check-context-budget.sh` — installed by the scaffold; both run from the repo root |
 | `.claude/knowledge-check.conf` | Optional knobs for `check-knowledge.sh` (watched paths, skill-router gate). Defaults apply when absent |
 | `TOOLING.md` | Manifest of catalog assets installed into this repo |
