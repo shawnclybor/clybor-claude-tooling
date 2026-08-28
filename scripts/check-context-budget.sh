@@ -2,7 +2,8 @@
 # check-context-budget.sh — size gate for always-on context.
 # Enforces CLAUDE.md Hard Rule 7 (Governance Placement) via Hard Rule 12 (scripts as gates).
 # Budgets: CLAUDE.md <= 2200 words; each .claude/rules/*.md <= 250 lines;
-#          docs/project-registry.md longest line <= 1400 chars (Status-field refatten guard).
+#          docs/project-registry.md longest line <= 3000 chars (Status-field refatten guard;
+#          recalibrated 1400 -> 3000 on 2026-08-14 — see the comment above the check_maxline call).
 # Exit 0 = within budget. Exit 2 = over budget — trim narrative to KB pointers
 # or move domain-specific content into a plugin skill.
 
