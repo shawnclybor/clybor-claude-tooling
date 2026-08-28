@@ -30,6 +30,17 @@ Identify groups that can run concurrently without contended writes or output dep
 |---|---|---|
 | [N] | [Specific failure mode] | [How it is prevented or handled] |
 
+## Estimated effort
+
+Produced by the `build-estimate` skill, never typed. Write the spec (tasks by kind and status, fixed
+gates, process profile, calendar with real holidays, target date), run
+`python3 .claude/skills/build-estimate/estimate.py project <spec>`, and paste the full output here —
+including the `rate per task unit … [MEASURED|ASSUMED]` line and the *assumptions carried* block.
+Re-run and replace whenever tasks land or the target moves; date each paste. After the build passes
+evaluation, `estimate.py calibrate` with the measured actuals and promote the ledger.
+
+{estimate.py output, dated}
+
 ---
 
 **How to use:** copy this file to `docs/PRDs/<feature-slug>-plan.md` and fill it in. The `task-plan` skill produces this from a PRD; `ralph-implement` consumes it at Stage 4 of the dev loop.

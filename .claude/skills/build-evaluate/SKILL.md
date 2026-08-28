@@ -126,6 +126,14 @@ Skill(skill="insight-promotion", args="source=.claude/PRPs/{slug}/ evaluate=PASS
 
 The skill decides whether anything is promotion-worthy (per its own criteria — pattern recurred ≥2 times, prevents a known failure, etc.). If yes, it surfaces the candidate; user decides whether to codify. The pipeline learns from itself.
 
+**Then calibrate the estimator — mandatory, not optional.** Count the build's actuals from evidence (iteration-report timestamps, tasks flipped in `state.json`, hours at the keyboard with overnight and meeting gaps excluded), write the record, and run:
+
+```
+python3 .claude/skills/build-estimate/estimate.py calibrate .claude/PRPs/{slug}/estimate/actuals-{YYYY-MM-DD}.json
+```
+
+then promote `.claude/skills/build-estimate` so the canonical ledger carries the record. A build that is not calibrated leaves the next plan estimating from one data point. See the `build-estimate` skill for the record shape.
+
 ### If FAIL — invoke five-whys (don't just report; diagnose)
 
 ```

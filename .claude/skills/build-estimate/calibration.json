@@ -1,0 +1,50 @@
+{
+  "_readme": "Calibration ledger for build-estimate. `records` are MEASURED runs — append one per finished build via `estimate.py calibrate`. `profiles` name the process a build runs under; a profile with no record scales from another by an ASSUMED multiplier and the tool says so. `task_kinds` and `task_status` are the unit scalars; each carries its basis. Canonical copy: ~/gits/clybor-claude-tooling/.claude/skills/build-estimate/calibration.json — promote after every calibrate.",
+  "profiles": {
+    "intensive": {
+      "description": "build-execute loop: mandatory adversarial review on every iteration, mutation harness, per-iteration report, staged-then-landed with diff -rq. The high end of process cost.",
+      "scales_from": null,
+      "multiplier": 1.0
+    },
+    "standard": {
+      "description": "review per batch of tasks rather than per iteration; tests but no mutation harness; no per-iteration report.",
+      "scales_from": "intensive",
+      "multiplier": 0.6,
+      "basis": "assumed — no measured record yet"
+    },
+    "light": {
+      "description": "no review loop; write, run the test, move on. Prototypes and throwaway scripts.",
+      "scales_from": "intensive",
+      "multiplier": 0.35,
+      "basis": "assumed — no measured record yet"
+    }
+  },
+  "task_kinds": {
+    "decision-doc": {"units": 0.5, "basis": "settlement-verifier build: doc/tracker-only iterations (22, 32) ran ~half a task"},
+    "test-layer": {"units": 1.0, "basis": "settlement-verifier build: fixtures, assertions, comparator (Tasks 18, 50, 54) — the median task"},
+    "check-logic": {"units": 1.5, "basis": "settlement-verifier build: a verifier rule plus its fixtures (Tasks 34, 52) drew 2–3 review rounds"},
+    "driver": {"units": 2.0, "basis": "settlement-verifier build: shell driver with negative controls (Task 11); bash 3.2 and gate ordering cost a round"},
+    "harness": {"units": 2.5, "basis": "settlement-verifier build: mutation sections where each mutation names the flag it must raise (Task 41 scale)"},
+    "new-module": {"units": 2.5, "basis": "settlement-verifier build: entry point / cite_sources (Tasks 49, 61)"},
+    "extraction-ocr": {"units": 4.0, "uncertainty": 1.5, "basis": "settlement-verifier build: every OCR/reading-order item (Task 14 reruns, extractor) overran and reversed a headline; low confidence"},
+    "integration-run": {"units": 3.0, "uncertainty": 1.3, "basis": "settlement-verifier build: a real-matter end-to-end run (extract on host, author record, check, read flags); environment unknowns"}
+  },
+  "task_status": {
+    "not-started": {"remaining": 1.0, "basis": "nothing staged"},
+    "staged": {"remaining": 0.4, "basis": "settlement-verifier build: with code staged and the suite green, review + repair + land was ~40% of an iteration"},
+    "in-review": {"remaining": 0.25, "basis": "review opened; repairs and landing remain"}
+  },
+  "records": [
+    {
+      "project": "legal-client-a",
+      "slug": "settlement-verifier",
+      "process": "intensive",
+      "window": "2026-08-27T15:52 -> 2026-08-28T16:57, overnight excluded (~7.2 h + ~8.3 h)",
+      "iterations": 23,
+      "tasks": 21,
+      "hours": 15.5,
+      "task_minutes": {"low": 30, "high": 75},
+      "note": "Iterations 14-36 of a 66-task plan, single operator (Shawn) driving build-execute with Claude Code. Every iteration ran mandatory adversarial review; most were BLOCKed at least once and repaired in-iteration. Tasks were verification-layer work (check logic, fixtures, comparators, harness) — no UI, no external integration. low = evening stretch of small test-layer tasks (iterations 20-24); high = Task 52 (three review rounds) and Task 34 (two iterations). Counted from iteration-report mtimes on 2026-08-28."
+    }
+  ]
+}

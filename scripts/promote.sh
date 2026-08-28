@@ -13,8 +13,17 @@ for rel in "$@"; do
   [ -e "$src" ] || { echo "skip (missing): $rel" >&2; continue; }
   dst="$CANON/$rel"
   mkdir -p "$(dirname "$dst")"
-  cp -R "$src" "$dst"
-  [ -f "$dst" ] && [ -x "$src" ] && chmod +x "$dst"
+  if [ -d "$src" ]; then
+    # Copy the directory's CONTENTS. `cp -R dir existing_dir` nests a second copy inside the
+    # first on every re-promote, so the top-level files never update and the drift gate keeps
+    # firing on a copy that looks promoted.
+    mkdir -p "$dst"
+    cp -R "$src"/. "$dst"/
+    find "$dst" -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null
+  else
+    cp "$src" "$dst"
+    [ -x "$src" ] && chmod +x "$dst"
+  fi
   echo "promoted: $rel  →  $CANON/$rel"
 done
 

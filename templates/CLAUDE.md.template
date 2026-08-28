@@ -34,6 +34,7 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Validating a skill against a target repo | `skill-validator` skill (specialized ralph) |
 | Writing a PRD with binary success criteria | `prd-writer` skill (Stage 1) |
 | Decomposing an accepted PRD into a task plan | `task-plan` skill (Stage 2) |
+| A plan's *Estimated effort* section, "will this fit by <date>", reassessing the calendar mid-build, or recording a finished build's actuals | `build-estimate` skill — `estimate.py project <spec>` from the calibration ledger; never a hand-typed number. `calibrate` after every passing evaluation, then promote the ledger. |
 | Validating the plan before implementation | `quality-review` skill (Stage 3) |
 | Running the implementation loop against a task plan | `ralph-implement` skill (Stage 4) |
 | Running the verification gate against PRD criteria | `verify` skill (Stage 5) |

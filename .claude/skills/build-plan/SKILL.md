@@ -93,7 +93,7 @@ Copy `.claude/PRPs/_templates/plan-template.md` to `.claude/PRPs/{slug}/plan.md`
 - **Dependency order**: the real edges, not the task numbering. Flag any DONE that cannot be evaluated until a later task lands.
 - **Acceptance test**: how build-evaluate will measure success. Reference the PRD's anchor case explicitly.
 - **Anti-patterns to avoid**: from the profile, plus anything specific to this build.
-- **Estimated effort**: rough order — minutes, hours, days. Helps execute pick the right caps.
+- **Estimated effort**: **produced by the `build-estimate` skill, not typed.** Write the spec (`.claude/PRPs/{slug}/estimate/estimate-<date>.json`: tasks by kind and status, fixed gates, process profile, calendar), run `estimate.py project`, paste the output. The section must carry the tool's `rate per task unit … [MEASURED|ASSUMED]` line so a reader can see what the number rests on. Helps execute pick the right caps.
 
 ## Phase 6: SAFETY CHECK
 
