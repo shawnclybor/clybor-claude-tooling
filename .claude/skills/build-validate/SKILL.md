@@ -10,15 +10,56 @@ argument-hint: "<slug> matching an existing plan"
 
 Read-only validation gate. Spawns reviewers in parallel and synthesizes their findings.
 
+## The rubric — read this BEFORE briefing any reviewer
+
+**Gates catch breakage, not findings** (repo `CLAUDE.md` Hard Rule 9). This gate stops a plan that is
+*broken*. It does not enumerate what a careful reader could improve.
+
+**`must-fix` has exactly one definition:**
+
+> it produces a **wrong result a human relies on**, or it lets the tool **claim something it has not
+> verified**.
+
+Everything else is a **note**, however well-measured. A finding can be perfectly true and still not worth
+the build's time. **"True" is not "important"** — conflating them is how a review loop runs forever. Brief
+every reviewer with this definition explicitly; without it they default to "anything I can justify."
+
+**Never in scope as a finding:** calendar, effort, hours, or any estimate (Hard Rule 8). Schedule is the
+human's call, per instance.
+
 ## When to use
 
 - A plan exists at `.claude/PRPs/{slug}/plan.md` and you're about to invoke build-execute.
 - Re-validating after a major plan revision.
 
-## When NOT to use
+## When NOT to use — the stage rule
 
 - Mid-execute prompt tweaks — that's build-execute's per-iteration adversarial review step, not this skill.
 - The plan is still drafting (PRD status ≠ `planning` or `approved`). Finish build-plan first.
+- ⚠ **The system already runs and carries a live test suite.** This gate earns its cost on greenfield,
+  where nothing runs and mistakes compound. Once the guardrails exist and the suite is green, **rapid
+  build/test rounds catch more per hour than another reviewer panel** — the harness is the reviewer. Run
+  the thing dozens of times instead. A clean git tree makes revert cheap, which is what licenses the speed.
+- ⚠ **The work is hardening, not shipping.** "PASS = zero must-fix" against a large plan of optional
+  polish is unpassable by construction: a careful reader always finds a success condition a hypothetical
+  careless implementer could game. Use the consequence test above, or don't run this gate.
+
+## ⚠ Stop rule — three FAILs is a process defect, not a target defect
+
+If this skill has returned FAIL **twice** on the same target, do **not** run a third panel. Stop, report
+that the gate itself is suspect, and put the scope to the human. Run `.claude/hooks/review-drift.py check
+<target>` first and **heed its verdict rather than logging past it** — it catches ratchet, inflation,
+self-inflicted findings and re-grades.
+
+Distinguish two shapes before recommending anything, because the fixes are opposite:
+- **Ratchet** — *new* complaints each pass. Fix: stop reviewing.
+- **Persistent identical findings** — the same items surviving verbatim. Fix: go repair, or cut the scope.
+
+Worked example, `build-a-yellow-sheet` rounds 7–9 (2026-08-30): three FAILs, 17 → 17 → 24 must-fix, on a
+build already running end to end on two real client matters with a green 475-assertion suite. **Not one of
+the 24 changed a figure, a flag, or anything a reader of the sheet sees.** Resolution was neither "stop
+reviewing" nor "go repair" — it was **cut the scope**, seven tasks to two. Full account:
+`mem:gate_philosophy`.
 
 ## Phase 1: PARSE + PARALLEL LOAD + PRIOR-FAIL DISCOVERY
 
@@ -166,7 +207,13 @@ Write `.claude/PRPs/{slug}/validate.md`:
 ### Verdict
 {PASS / FAIL}
 
-PASS = zero must-fix. FAIL = ≥1 must-fix; do not proceed to execute until addressed.
+PASS = zero must-fix **under the consequence test at the top of this skill** — a wrong result a human
+relies on, or the tool claiming something it has not verified. Findings that fail that test are notes and
+do **not** block. FAIL = ≥1 must-fix that meets it; do not proceed to execute until addressed.
+
+⚠ If the must-fix list is long and none of its items changes a figure, a flag, or anything a user sees,
+the verdict is **PASS with notes** and the finding to report is that **the scope is too large for the
+value** — not that the plan is broken.
 
 ### Per-agent verdicts
 - Adversarial: {N} must-fix
