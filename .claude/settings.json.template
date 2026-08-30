@@ -23,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/session-context.sh"
+            "command": "h=.claude/hooks/session-context.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"session-context.sh: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
           }
         ]
       }
@@ -34,15 +34,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/kiss-yagni-reminder.py"
+            "command": "h=.claude/hooks/kiss-yagni-reminder.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec python3 \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec python3 \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"kiss-yagni-reminder.py: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/no-postmortem-validator.py"
+            "command": "h=.claude/hooks/no-postmortem-validator.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec python3 \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec python3 \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"no-postmortem-validator.py: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/availability-claim-validator.py"
+            "command": "h=.claude/hooks/availability-claim-validator.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec python3 \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec python3 \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"availability-claim-validator.py: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
           }
         ]
       }
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "input=$(cat); if echo \"$input\" | grep -qE 'CLAUDE\\.md|\\.claude/rules/'; then bash scripts/check-context-budget.sh 1>&2; fi"
+            "command": "input=$(cat); echo \"$input\" | grep -qE 'CLAUDE\\.md|\\.claude/rules/' || exit 0; h=scripts/check-context-budget.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\" 1>&2; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\" 1>&2; p=$(dirname \"$p\"); done; exit 0"
           }
         ]
       }
@@ -64,7 +64,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/compact-recovery.sh",
+            "command": "h=.claude/hooks/compact-recovery.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"compact-recovery.sh: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0",
             "statusMessage": "Re-injecting ROADMAP after compaction..."
           }
         ]
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/ralph-stop.sh",
+            "command": "h=.claude/hooks/ralph-stop.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"ralph-stop.sh: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0",
             "statusMessage": "Ralph loop hook checking state..."
           }
         ]
