@@ -38,8 +38,11 @@ echo "seeded defects — each must turn the checker red"
 python3 - "$TMP/clean.md" "$TMP/d1.md" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8").read()
-s = s.replace("- [ ] **6. Money parsing module**",
-  "- [ ] **99. Bogus task** — this body contains the phrase quantum-marmalade-token. DONE: `grep -q \"quantum-marmalade-token\" out.md` hits.\n- [ ] **6. Money parsing module**", 1)
+import re
+_m = re.search(r"^- \[[ x]\] \*\*6\. Money parsing module\*\*", s, re.M)
+assert _m, "seed needle for Task 6 no longer matches the live plan -- the selftest cannot seed this defect"
+s = s.replace(_m.group(0),
+  "- [ ] **99. Bogus task** — this body contains the phrase quantum-marmalade-token. DONE: `grep -q \"quantum-marmalade-token\" out.md` hits.\n" + _m.group(0), 1)
 open(sys.argv[2], "w", encoding="utf-8").write(s)
 PY
 red "self-satisfying DONE" "$TMP/d1.md"
@@ -77,8 +80,11 @@ red "undefined task in dependency order" "$TMP/d4.md"
 python3 - "$TMP/clean.md" "$TMP/d5.md" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8").read()
-s = s.replace("- [ ] **6. Money parsing module**",
-  "- [ ] **7. Duplicate of seven** — filler. DONE: nothing.\n- [ ] **6. Money parsing module**", 1)
+import re
+_m = re.search(r"^- \[[ x]\] \*\*6\. Money parsing module\*\*", s, re.M)
+assert _m, "seed needle for Task 6 no longer matches the live plan -- the selftest cannot seed this defect"
+s = s.replace(_m.group(0),
+  "- [ ] **7. Duplicate of seven** — filler. DONE: nothing.\n" + _m.group(0), 1)
 open(sys.argv[2], "w", encoding="utf-8").write(s)
 PY
 red "duplicate task number" "$TMP/d5.md"
@@ -87,8 +93,11 @@ red "duplicate task number" "$TMP/d5.md"
 python3 - "$TMP/clean.md" "$TMP/d6.md" <<'PY'
 import sys
 s = open(sys.argv[1], encoding="utf-8").read()
-s = s.replace("- [ ] **6. Money parsing module**",
-  "- [ ] **97. No gate here** — this task states an intention and never says how it is checked.\n- [ ] **6. Money parsing module**", 1)
+import re
+_m = re.search(r"^- \[[ x]\] \*\*6\. Money parsing module\*\*", s, re.M)
+assert _m, "seed needle for Task 6 no longer matches the live plan -- the selftest cannot seed this defect"
+s = s.replace(_m.group(0),
+  "- [ ] **97. No gate here** — this task states an intention and never says how it is checked.\n" + _m.group(0), 1)
 open(sys.argv[2], "w", encoding="utf-8").write(s)
 PY
 red "task with no DONE check" "$TMP/d6.md"

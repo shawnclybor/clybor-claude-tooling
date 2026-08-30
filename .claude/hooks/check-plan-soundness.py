@@ -26,10 +26,10 @@ import sys
 
 TASK_RE = re.compile(
     r"^- \[[ x]\] \*\*(?P<num>(?:\d+[a-z]?|T[\w-]+))[.\s]\s*(?P<title>.*?)\*\*", re.M)
-PCRIT_RE = re.compile(r"^- \[ \] (?P<id>P\d+)\s+(?P<text>.*)$", re.M)
-CRIT_RE = re.compile(r"^- \[ \] (?P<num>\d+)\s+(?P<text>.*)$", re.M)
+PCRIT_RE = re.compile(r"^- \[[ xX]\] (?P<id>P\d+)\s+(?P<text>.*)$", re.M)
+CRIT_RE = re.compile(r"^- \[[ xX]\] (?P<num>\d+)\s+(?P<text>.*)$", re.M)
 PRD_ROW_RE = re.compile(r"^\|\s*(?P<num>\d+)\s*\|(?P<rest>.*)\|\s*$", re.M)
-PRD_CHECK_RE = re.compile(r"^- \[ \] (?P<num>\d+):\s*(?P<text>.*)$", re.M)
+PRD_CHECK_RE = re.compile(r"^- \[[ xX]\] (?P<num>\d+):\s*(?P<text>.*)$", re.M)
 # a filename we care about: name.ext, optionally with directories
 FILE_RE = re.compile(r"[\w./-]+\.(?:py|sh|json|md|docx|js|txt|xlsx)\b")
 # strings a DONE greps for
