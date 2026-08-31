@@ -24,10 +24,27 @@ KNOWN="$CACHE_DIR/known-names.txt"   # optional manually-curated allowlist, one 
 
 mkdir -p "$CACHE_DIR"
 
+# Weekday and month tokens. A candidate containing ANY of these in ANY position is a
+# date fragment, not a name — "Tue Sep" (from "call MOVED → Tue Sep 1"), "Dana Sep",
+# "Alex Mon Aug". Added 2026-08-31 after the weekly sweep: the shape `[A-Z][a-z]{2,}`
+# matches every abbreviated weekday and month, so any Status line carrying a date bred a
+# false positive, and a gate that cries wolf weekly is a gate you learn to --accept blind.
+# Measured on the live registry: 125 candidates → 109, all 16 dropped were date fragments,
+# no real name lost (the people behind "Dana Sep" etc. survive as proper First+Last
+# pairs elsewhere, or only ever appear as a single token this regex never matched).
+# NOTE (public copy): the example names above are ANONYMIZED. The life-crm original
+# cites real client-side people and is blocked here by the denylist gate — do not
+# "resync" this comment from life-crm verbatim, it will re-leak. Logic is identical.
+# KNOWN TRADE-OFF: a person actually named June, May, or August is now skipped. If that
+# ever happens, narrow this list — do NOT reach for .cache/known-names.txt, which only
+# suppresses names you have already seen and cannot surface one this filter ate.
+DATEWORDS='Mon|Tue|Tues|Wed|Weds|Thu|Thur|Thurs|Fri|Sat|Sun|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December'
+
 # Extract candidate person names: Capitalized First Last pairs, minus obvious non-names.
 extract_names() {
   grep -oE '\b[A-Z][a-z]{2,}( [A-Z][a-z]{2,}){1,2}\b' "$REGISTRY" \
     | grep -vE '^(The|New|Full|Open|Active|Local|Notion|Google|Drive|Client|Project|Status|Memory|Head|Series|Best|Inc|Law|Firm|Group|Task|Note|Day|Window|Phase|Invoice|Harvest|Slack|Gmail|Docker|Semantic|Layer|Quarterly|Boot|Camp|Champion|Builder|Track|Service|Agreement|Federal|Governance|Discovery|Business|Development|Knowledge|Base|Contact|Database|Registry|Automotive|Insurance|Education|Consulting|Solutions|Strategies|Leadership|Impact|Elevate|Innovating|Curriculum|Chatbot|Mentor|Dashboard|Eval|Framework|Custom|Build|Absence|Management|Automation|Clinical|Trial|Platform|Advertising|Medical|Research|Studies|Miami|Boston|Atlanta|Pittsburgh|Jacksonville|Delray|Beach|Syracuse|Amsterdam|Urbandale)' \
+    | grep -vE "(^|[[:space:]])($DATEWORDS)([[:space:]]|\$)" \
     | sort -u
 }
 
