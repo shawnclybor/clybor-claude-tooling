@@ -272,7 +272,11 @@ def check(plan_path, prd_path=None, quiet=False):
         reported.add(base)
         # pre-existing hub/infra files are not authored by this plan
         if base in ("run_all_gates.sh", "validate-skill.py", "check-tracker.py", "phi-scan.py",
-                    "vendor-untrusted-block.py", "phi-scan.py", "SkillsHub.xlsx"):
+                    "vendor-untrusted-block.py", "phi-scan.py", "SkillsHub.xlsx",
+                    # yellow-sheet case-folder tools: an acceptance test INVOKES these, it does
+                    # not build them. Naming one is not a promise that a task authors it.
+                    "check_record.py", "verify_extraction.py", "extract_sources.py",
+                    "namematch.py", "import_yellow_sheet.py", "new-case.sh"):
             continue
         bad("unauthored", "%s is used by the acceptance test / checklist but no task authors it" % base)
 
