@@ -1,15 +1,6 @@
 ---
 name: writing-quality
-description: >
-  Audit and rewrite content to remove AI writing patterns ("AI-isms") from deliverables,
-  emails, and any written output. Use this skill whenever generating deliverable content
-  (Phase 1 curation in any client deliverable skill), drafting client emails longer than
-  3 sentences, writing proposals or SOWs, creating reports, or when the user says "clean
-  up the writing", "remove AI-isms", "make this sound less like AI", "audit the writing",
-  "check for AI patterns", or "writing quality check". Also invoke automatically before
-  any deliverable formatting step — do not skip. If you just wrote or curated content
-  that will go to a client, run this skill on it before finalizing. Adapted from
-  conorbronsdon/avoid-ai-writing v3.3.0 (MIT license).
+description: Audit and rewrite content to remove AI writing patterns ("AI-isms") from deliverables, emails, and any written output. Use this skill whenever generating deliverable content (Phase 1 curation in any client deliverable skill), drafting client emails longer than 3 sentences, writing proposals or SOWs, creating reports, or when the user says "clean up the writing", "remove AI-isms", "make this sound less like AI", "audit the writing", "check for AI patterns", or "writing quality check". Also invoke automatically before any deliverable formatting step — do not skip. If you just wrote or curated content that will go to a client, run this skill on it before finalizing. Adapted from conorbronsdon/avoid-ai-writing v3.3.0 (MIT license).
 ---
 
 # Writing Quality — AI-ism Audit & Rewrite

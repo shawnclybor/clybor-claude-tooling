@@ -1,16 +1,6 @@
 ---
 name: search-governance
-description: >
-  Governance layer for all web search operations in the life-crm workflow.
-  Enforces the mandatory use of Brave Search (`brave_web_search` via MCP) and
-  blocks the built-in `WebSearch` tool. Use this skill whenever you are about
-  to perform a web search, look something up online, search for documentation,
-  find current information, or any request that involves querying the web —
-  even if the user just says "look up", "search for", "find out", "google",
-  or "what is the latest on." Also use when you instinctively reach for
-  WebSearch or WebFetch — this skill redirects you to the correct tool. If in
-  doubt about whether a web lookup is involved, use this skill — it's cheap to
-  consult and expensive to use the wrong search tool.
+description: Governance layer for all web search operations in the life-crm workflow. Enforces the mandatory use of Brave Search (`brave_web_search` via MCP) and blocks the built-in `WebSearch` tool. Use this skill whenever you are about to perform a web search, look something up online, search for documentation, find current information, or any request that involves querying the web — even if the user just says "look up", "search for", "find out", "google", or "what is the latest on." Also use when you instinctively reach for WebSearch or WebFetch — this skill redirects you to the correct tool. If in doubt about whether a web lookup is involved, use this skill — it's cheap to consult and expensive to use the wrong search tool.
 ---
 
 # Search Governance Rules
