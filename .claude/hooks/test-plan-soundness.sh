@@ -102,6 +102,33 @@ open(sys.argv[2], "w", encoding="utf-8").write(s)
 PY
 red "task with no DONE check" "$TMP/d6.md"
 
+# 7 T-prefixed task ids must produce dependency edges too. TASK_RE accepts `T3a`
+# and `TR7-1`; if the edge parser does not, a T-id plan yields ZERO edges and the
+# cycle / undefined-task / premature-DONE checks silently pass on anything.
+python3 - "$TMP/clean.md" "$TMP/d7.md" <<'PY2'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("### Dependency order, explicitly",
+              "### Dependency order, explicitly\n\n`T9z → T8y` · `T8y → T9z`\n", 1)
+s = s.replace("## Test authorship map",
+  "- [ ] **T8y Filler eight** — filler. DONE: exits 0.\n"
+  "- [ ] **T9z Filler nine** — filler. DONE: exits 0.\n\n## Test authorship map", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY2
+red "dependency cycle among T-prefixed task ids" "$TMP/d7.md"
+
+# 8 a T-prefixed edge naming a task that does not exist must still be caught
+python3 - "$TMP/clean.md" "$TMP/d8.md" <<'PY2'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("### Dependency order, explicitly",
+              "### Dependency order, explicitly\n\n`T8y → T404-nope`\n", 1)
+s = s.replace("## Test authorship map",
+  "- [ ] **T8y Filler eight** — filler. DONE: exits 0.\n\n## Test authorship map", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY2
+red "undefined T-prefixed task in dependency order" "$TMP/d8.md"
+
 echo
 echo "=================================="
 echo "passed $pass, failed $fail"

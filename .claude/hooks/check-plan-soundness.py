@@ -71,14 +71,20 @@ def dep_edges(text):
         parts = [p.strip() for p in chain.split("→")]
 
         def nodes(tok):
+            # Accept the SAME id forms TASK_RE parses (`12`, `12a`, `T3a`, `TR7-1`).
+            # A form the task regex accepts but this one drops yields ZERO edges and
+            # silently disarms the cycle, undefined-task and premature-DONE checks --
+            # the plan reads gated and is not. The T-branch is guarded out of the
+            # numeric-range expansion because `TR7-1` contains a `7-1` that would
+            # otherwise expand to task 7 under an `all of` group.
             tok = tok.strip().strip("{}")
             out = []
             for x in tok.split(","):
-                x = x.strip()
+                x = x.strip().strip("`")
                 rng = re.search(r"(\d+)\s*-\s*(\d+)", x)
-                if rng and "all of" in tok.lower():
+                if rng and "all of" in tok.lower() and not x.startswith("T"):
                     out += [str(i) for i in range(int(rng.group(1)), int(rng.group(2)) + 1)]
-                elif re.fullmatch(r"\d+[a-z]?", x):
+                elif re.fullmatch(r"\d+[a-z]?|T[\w-]+", x):
                     out.append(x)
             return out
 
@@ -214,8 +220,9 @@ def check(plan_path, prd_path=None, quiet=False):
     # A plan may declare tasks that land in ONE commit; ordering among them is moot.
     # Syntax anywhere in the plan:  <!-- soundness: same-commit 24,47,55 -->
     same = set()
-    for m in re.finditer(r"<!--\s*soundness:\s*same-commit\s+([\d,\sab]+)-->", text):
-        grp = {x.strip() for x in m.group(1).split(",") if x.strip()}
+    for m in re.finditer(r"<!--\s*soundness:\s*same-commit\s+(.+?)\s*-->", text):
+        grp = {x.strip() for x in m.group(1).split(",")
+               if re.fullmatch(r"\d+[a-z]?|T[\w-]+", x.strip())}
         same |= {(a, b) for a in grp for b in grp if a != b}
 
     authors = author_map(tasks)
