@@ -44,18 +44,25 @@ human's call, per instance.
   polish is unpassable by construction: a careful reader always finds a success condition a hypothetical
   careless implementer could game. Use the consequence test above, or don't run this gate.
 
-## ⚠ Stop rule — three FAILs is a process defect, not a target defect
+## ⚠ Stop rule — the SECOND FAIL is a process defect, not a target defect
 
-If this skill has returned FAIL **twice** on the same target, do **not** run a third panel. Stop, report
-that the gate itself is suspect, and put the scope to the human. Run `.claude/hooks/review-drift.py check
-<target>` first and **heed its verdict rather than logging past it** — it catches ratchet, inflation,
-self-inflicted findings and re-grades.
+**This is the `Two Strikes` hard rule in `CLAUDE.md` applied to review panels — CLAUDE.md holds the one
+true copy; this section only says what "the same op" means here.** Do not restate Two Strikes' reasoning
+below — a second copy drifts from the first, and a heading that disagrees with its own body sends a
+skimmer one panel past the stop.
+
+**The op is one panel run against one target. Two FAILs on the same target = Two Strikes = STOP.**
+So after the **second** FAIL, do **not** run a third panel. Stop, report that the gate itself is suspect,
+and put the scope to the human. Run `.claude/hooks/review-drift.py check <target>` first and **heed its
+verdict rather than logging past it** — it catches ratchet, inflation, self-inflicted findings and
+re-grades. That drift check is this domain's substitute for Two Strikes' "research before you report" step.
 
 Distinguish two shapes before recommending anything, because the fixes are opposite:
 - **Ratchet** — *new* complaints each pass. Fix: stop reviewing.
 - **Persistent identical findings** — the same items surviving verbatim. Fix: go repair, or cut the scope.
 
-Worked example, `build-a-yellow-sheet` rounds 7–9 (2026-08-30): three FAILs, 17 → 17 → 24 must-fix, on a
+Worked example — note this is the rule being **violated**, which is how it was found; the stop should have
+come after the second FAIL. `build-a-yellow-sheet` rounds 7–9 (2026-08-30): three FAILs, 17 → 17 → 24 must-fix, on a
 build already running end to end on two real client matters with a green 475-assertion suite. **Not one of
 the 24 changed a figure, a flag, or anything a reader of the sheet sees.** Resolution was neither "stop
 reviewing" nor "go repair" — it was **cut the scope**, seven tasks to two. Full account:
