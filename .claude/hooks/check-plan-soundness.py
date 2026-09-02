@@ -5,7 +5,8 @@ Honor-System Gates Fail — Codify as Scripts. build-plan requires DONE checks b
 *binary*; it has no rule that they be *falsifiable*, and plan-template.md offers
 "a string that grep finds" as a sanctioned form. Three validate rounds on
 build-a-yellow-sheet each cleared ~30 findings and introduced 2-3 more, all from
-six mechanical classes. This catches those six in seconds.
+six mechanical classes. This catches those, plus two added 2026-09-01 after a
+plan cited a sibling slug that a concurrent session rewrote mid-flight.
 
 Usage:
   check-plan-soundness.py <plan.md> [--prd <prd.md>]   exit 1 if any check fails
@@ -19,6 +20,10 @@ Checks:
                             the PRD criteria table / PRD checklist / plan checklist
   5 dependency graph      — cycles, and edges naming tasks that do not exist
   6 duplicate task number
+  7 unpinned citation     — cites another slug's plan/prd by TASK NUMBER with no
+                            sources.lock; that file can be rewritten underneath this plan
+  8 prose-named artifact  — a DONE depends on "the runner"/"the manifest" and names no
+                            file, so check 3 cannot see it
 """
 import os
 import re
@@ -139,6 +144,20 @@ AUTHOR_VERB = (r"(?:author|write|writes|create|creates|add|adds|new|produce|prod
 # this plan's idiom is "**N. Title** — `path/file.ext`, what it does": the file in
 # subject position, with no verb. Treat the head of the body as authorship.
 SUBJECT_WINDOW = 200
+
+# ---- checks 7-8 vocabulary ---------------------------------------------------
+# Artifacts a DONE names in prose rather than by filename, defeating premature-DONE.
+PROSE_ARTIFACT = ("runner", "manifest", "driver", "harness", "producer", "reader",
+                  "extractor", "renderer", "checker", "baseline", "fixture")
+
+# NOT IMPLEMENTED, deliberately: an "unwritten field" check -- the acceptance test asserts
+# a record field that no task writes. Tried 2026-09-01 and REMOVED: it fired 32 times on a
+# plan that was mechanically sound, because most asserted fields are ones the system already
+# writes and this plan need not. Distinguishing "new field" from "existing field" needs a
+# schema baseline the gate does not have. That failure class is caught instead by authoring
+# the acceptance driver RED FIRST (build-plan) -- a driver that cannot see a populated cell
+# goes red on the first run, which no static check can match. Do not re-add without a
+# baseline; a gate that cries wolf gets ignored, which is worse than no gate.
 
 
 def author_map(tasks):
@@ -276,7 +295,12 @@ def check(plan_path, prd_path=None, quiet=False):
                     # yellow-sheet case-folder tools: an acceptance test INVOKES these, it does
                     # not build them. Naming one is not a promise that a task authors it.
                     "check_record.py", "verify_extraction.py", "extract_sources.py",
-                    "namematch.py", "import_yellow_sheet.py", "new-case.sh"):
+                    "namematch.py", "import_yellow_sheet.py", "new-case.sh",
+                    # the DOS Breakdown renderer and its driver, built and evaluated under
+                    # `yellow-sheet-excel-renderer`. A plan that CONSUMES the renderer asserts
+                    # its sha is unchanged; requiring an authoring task would force every such
+                    # plan to claim it rebuilds a file it must not touch.
+                    "render_dos_breakdown.py", "run_dos_golden.sh"):
             continue
         bad("unauthored", "%s is used by the acceptance test / checklist but no task authors it" % base)
 
@@ -308,6 +332,32 @@ def check(plan_path, prd_path=None, quiet=False):
                                ", ".join(n for n, f in
                                          (("PRD table", in_t), ("PRD checklist", in_p), ("plan checklist", in_l))
                                          if f)))
+
+    # ---- 7 unpinned citation ---------------------------------------------------
+    # A plan that cites another slug's plan.md/prd.md by TASK NUMBER is citing a moving
+    # target. Measured 2026-09-01: a sibling slug was cut from 14 tasks to 10 by a
+    # concurrent session mid-plan, and six of seven citations silently changed meaning.
+    for m in re.finditer(r"`?([\w./-]*(?:PRPs)/[\w./-]+/(?:plan|prd)\.md)`?[^\n]{0,80}?"
+                         r"\b(?:Tasks?|T)\s*\d", text):
+        cited = m.group(1)
+        if "probes/sources.lock" in text or "sources.lock" in text:
+            continue
+        bad("unpinned-citation",
+            "cites task bodies in %s with no sources.lock entry — that file can be "
+            "rewritten underneath this plan (run build-probe to pin it)" % cited)
+        break
+
+    # ---- 8 prose-named artifact in a DONE --------------------------------------
+    # The premature-DONE check above matches artifacts by filename. A DONE that names its
+    # artifact in prose ("the runner", "the manifest") escapes it entirely. Measured
+    # 2026-09-01: two reversed dependency edges passed this gate for exactly that reason.
+    for num, _title, _body, done in tasks:
+        for phrase in PROSE_ARTIFACT:
+            if re.search(r"\bthe %s\b" % phrase, done, re.I) and not FILE_RE.search(done):
+                bad("prose-named-artifact",
+                    "task %s DONE depends on %r but names no file — the premature-DONE "
+                    "check cannot see it; name the artifact" % (num, "the " + phrase))
+                break
 
     # ---- report --------------------------------------------------------------
     by_kind = {}

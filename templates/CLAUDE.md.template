@@ -35,14 +35,14 @@ Every non-trivial request: **Classify → Load → Think → Pre-flight Checklis
 | Writing a PRD with binary success criteria | `prd-writer` skill (Stage 1) |
 | Decomposing an accepted PRD into a task plan | `task-plan` skill (Stage 2) |
 | A plan's *Estimated effort* section, "will this fit by <date>", reassessing the calendar mid-build, or recording a finished build's actuals | `build-estimate` skill — `estimate.py project <spec>` from the calibration ledger; never a hand-typed number. `calibrate` after every passing evaluation, then promote the ledger. |
-| Validating the plan before implementation | `quality-review` skill (Stage 3) |
+| Validating the plan before implementation | `quality-review` skill (Stage 3) — ⚠️ in the `build-*` pipeline this is NOT a plan review: `build-probe` proves the facts, `check-plan-soundness.py` gates the structure, and `build-validate` reviews only the premises |
 | Running the implementation loop against a task plan | `ralph-implement` skill (Stage 4) |
 | Running the verification gate against PRD criteria | `verify` skill (Stage 5) |
 | Evaluating the built implementation | `quality-review` skill (Stage 6) |
 | A valuable insight or decision from this session worth keeping | `insight-crystallizer` skill |
 | An insight that should be always-on governance, not just retrievable | `insight-promotion` skill |
 | A tooling improvement (skill, script, rule, hook) worth porting back to the master template | `promote-to-tooling` skill |
-| **Build pipeline** — a new build where "done" needs a verifiable definition | `build-prd` → `build-plan` → `build-validate` → `build-execute` → `build-evaluate` (in `.claude/skills/`). ⚠️ Overlaps the `prd-writer` / `task-plan` / `ralph-implement` / `verify` rows above — two pipelines cover the same six stages under different names. Pick one per repo; do not interleave. |
+| **Build pipeline** — a new build where "done" needs a verifiable definition | `build-prd` → `build-probe` → `build-validate` → `build-plan` → `build-estimate` → `build-execute` → `build-evaluate` (in `.claude/skills/`). ⚠️ **Order changed 2026-09-01: probe before validate, validate before plan.** Probes turn the PRD's asserted numbers into emitted ones, so validate only ever sees judgment; validate reviews PREMISES, once, and never a task list. `build-estimate` is optional and never a gate. ⚠️ Overlaps the `prd-writer` / `task-plan` / `ralph-implement` / `verify` rows above — pick one per repo; do not interleave. |
 | Whether every file in a `deliverables/` folder is logged on its tracker page | `scripts/check-deliverables.sh <pages-dir>` — exact-basename match, plus stem match for `.skill`/`.zip` on a delivery-surface log. Matching is presence-in-page, so **write caveats without exact filenames** or a hold clears its own gate. |
 | Work that is a fixed sequence of steps with a human review gate between each | copy `templates/stage-pipeline/` from the master; see `task-plan` |
 | Cowork plugin edits queuing in `cowork/_pending-edits/` / scheduled drain of the plugin-rebuild queue | copy `templates/scheduled-tasks/plugin-rebuild-queue.md` from the master — gated-rebuild queue-drain pattern |
@@ -113,7 +113,7 @@ The three lenses are non-overlapping. `quality-review` runs them in parallel.
 | `.claude/agents/code/` | Code agents — code-reviewer, debugger, code-analyzer, security-auditor |
 | `.claude/agents/orchestration/` | 8 orchestration agents for multi-agent and multi-stage workflows |
 | `.claude/agents/research/` | research-analyst, search-specialist, evidence-auditor, metadata-fetcher |
-| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling, why-diagnostic, ooda, session-output, adversarial-review, build-prd, build-plan, build-validate, build-execute, build-evaluate, build-estimate |
+| `.claude/skills/` | quality-review, five-whys, writing-quality, ralph-loop, skill-validator, prd-writer, task-plan, ralph-implement, verify, insight-crystallizer, insight-promotion, promote-to-tooling, why-diagnostic, ooda, session-output, adversarial-review, build-prd, build-probe, build-validate, build-plan, build-execute, build-evaluate, build-estimate |
 | `scripts/` (this repo) | `check-knowledge.sh`, `check-context-budget.sh`, `check-deliverables.sh` — installed by the scaffold; all run from the repo root. `check-context-budget.sh` skips the registry check in repos with no `docs/project-registry.md`. |
 | `.claude/knowledge-check.conf` | Optional knobs for `check-knowledge.sh` (watched paths, skill-router gate). Defaults apply when absent |
 | `TOOLING.md` | Manifest of catalog assets installed into this repo |

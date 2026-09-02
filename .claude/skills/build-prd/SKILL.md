@@ -1,6 +1,6 @@
 ---
 name: build-prd
-description: Capture what you're building BEFORE writing it. Question-driven discovery that locks the target, success criteria, anchor case (one concrete example with expected outcome), and out-of-scope BEFORE any code, plan, or scaffolding. Output is `.claude/PRPs/{slug}/prd.md`. Use when starting a new skill, plugin, scorer, integration, deliverable template, or any artifact where "done" needs a verifiable definition. Triggers — "PRD for X", "spec out X", "let's plan a new skill/plugin", "build pipeline for X", "what are we actually building", or before any non-trivial build where you've caught yourself about to write code without a target. Pairs with build-plan (next), build-validate, build-execute, build-evaluate.
+description: Capture what you're building BEFORE writing it. Question-driven discovery that locks the target, success criteria, anchor case (one concrete example with expected outcome), and out-of-scope BEFORE any code, plan, or scaffolding. Output is `.claude/PRPs/{slug}/prd.md`. Use when starting a new skill, plugin, scorer, integration, deliverable template, or any artifact where "done" needs a verifiable definition. Triggers — "PRD for X", "spec out X", "let's plan a new skill/plugin", "build pipeline for X", "what are we actually building", or before any non-trivial build where you've caught yourself about to write code without a target. Pairs with build-probe (next), build-validate, build-plan, build-execute, build-evaluate.
 allowed-tools: AskUserQuestion, Read, Grep, Glob, Write, Edit, Bash, Agent, Skill, mcp__sequential-thinking__sequentialthinking
 user-invocable: true
 argument-hint: "<slug> e.g. clybor-skill-discovery-research"
@@ -108,7 +108,8 @@ If any box is `[ ]`, edit the PRD before exiting. Surface unresolved items to th
 **Anchor case:** {one-line summary}
 
 ### Next step
-Generate the implementation plan: `build-plan {slug}` — offer to dispatch via `Skill(skill="build-plan", args="{slug}")` if user confirms.
+Prove the PRD's numbers before anyone plans against them: `build-probe {slug}` — offer to dispatch via `Skill(skill="build-probe", args="{slug}")` if user confirms.
+Sequence: **prd → probe → validate → plan → estimate → build → evaluate**.
 ```
 
 ## Guidelines

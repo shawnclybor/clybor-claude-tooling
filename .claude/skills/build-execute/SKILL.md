@@ -1,6 +1,6 @@
 ---
 name: build-execute
-description: Bounded execution loop for a validated build plan. Hard caps on iterations, edits, and (where applicable) spend prevent runaway loops. Each iteration runs MANDATORY adversarial review on the proposed change (iterative-bounded shape), applies the edit, measures via parallel fixture runs, and auto-invokes five-whys on stagnation or regression. Calls writing-quality on prose edits. Stops on success, on cap hit, on stagnation, or on regression. Use after build-validate PASSes, before build-evaluate. Triggers — "execute the build", "build it", "iterate the X", "implement the plan". Refuses to start if validate has not PASSed or if hard preconditions from the profile are unmet.
+description: Bounded execution loop for a validated build plan. Hard caps on iterations, edits, and (where applicable) spend prevent runaway loops. Each iteration runs a CONDITIONAL adversarial review (only when the change touches a contract, a pinned constant, a refusal limb, or an unmutated path), applies the edit, measures via parallel fixture runs, and auto-invokes five-whys on stagnation or regression. Calls writing-quality on prose edits. Stops on success, on cap hit, on stagnation, or on regression. Use after build-validate PASSes, before build-evaluate. Triggers — "execute the build", "build it", "iterate the X", "implement the plan". Refuses to start if validate has not PASSed or if hard preconditions from the profile are unmet.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, Skill, AskUserQuestion, mcp__sequential-thinking__sequentialthinking
 user-invocable: true
 argument-hint: "<slug> [--max-iterations N] [--dry-run] [--autonomous]"
@@ -86,11 +86,34 @@ Use `mcp__sequential-thinking__sequentialthinking` to synthesize and pick the wi
 
 Capture the current state of the acceptance metric. If the profile names >1 fixture, run them in parallel via concurrent Bash calls (one per fixture in a single message). For single-shot / pipeline / wrapper shapes, skip this step.
 
-### Step 4 — ADVERSARIAL REVIEW (MANDATORY for iterative-bounded; optional otherwise)
+### Step 4 — ADVERSARIAL REVIEW (CONDITIONAL — see the trigger list)
 
-For **iterative-bounded shape, this is mandatory** — the whole point of bounded iteration is catching bad edits before they apply. Spawn the profile's per-iteration adversarial reviewer on the proposed change BEFORE applying. Must-fix blocks the iteration; the change goes back to Step 2 with the finding added to the candidate set.
+⚠ **This was MANDATORY on every iteration until 2026-09-01 and is now conditional.** Reviewing every
+line change is the same pathology as re-panelling every plan revision, one scale down: it manufactures
+findings proportional to the edits it just reviewed, and on a build with a mutation-backed suite it
+re-derives what the mutations already prove. Once the harness can fail, **the harness is the reviewer**.
 
-For single-shot / pipeline / wrapper shapes, it's optional — skip if the profile doesn't define one.
+Run the per-iteration adversarial review when — and only when — the proposed change does one of:
+
+- **changes a contract** — what a field means, what a function promises, what a writer may emit
+- **moves a pinned constant** — a threshold, a hash pin, a closed enum, a blocking-type set, an
+  assertion floor
+- **adds a refusal limb**, or changes the conditions of an existing one
+- **touches a path with no mutation covering it** — if nothing would go red when this is broken,
+  a reviewer is the only detector you have
+
+Otherwise **skip it and go straight to apply-and-measure.** A change that adds a case to a covered
+path, adjusts a message, or extends a fixture is already guarded; the suite plus the mutation run is
+a stronger signal than an opinion about a diff, and it costs seconds.
+
+Record which branch each iteration took in the iteration report. An iteration that skipped the
+review says so — never silently.
+
+When it does run: spawn the profile's reviewer on the proposed change BEFORE applying. Must-fix
+blocks the iteration; the change goes back to Step 2 with the finding added to the candidate set.
+
+⚠ **If the suite has no mutation harness proving it can fail, every iteration takes the review.**
+An unfalsifiable green suite is not a reviewer, and the conditional above assumes one that is.
 
 ### Step 4.5 — WRITING QUALITY PASS (if edit touches prose)
 

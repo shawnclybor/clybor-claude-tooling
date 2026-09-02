@@ -129,6 +129,39 @@ open(sys.argv[2], "w", encoding="utf-8").write(s)
 PY2
 red "undefined T-prefixed task in dependency order" "$TMP/d8.md"
 
+# 9 citing another slug's task bodies by NUMBER, with no sources.lock, is unpinned.
+#   Added 2026-09-01: a plan folded task bodies from a sibling slug while a concurrent
+#   session cut that slug 14 tasks -> 10. Six of seven citations changed meaning silently.
+python3 - "$TMP/clean.md" "$TMP/d9.md" <<'PY2'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("## Mandatory reading",
+  "## Mandatory reading\n\n| `.claude/PRPs/other-slug/plan.md` | Tasks 1-11 | bodies cited, not copied |\n", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY2
+red "unpinned citation of a sibling slug's tasks" "$TMP/d9.md"
+
+# 9b the same citation WITH a sources.lock reference must pass — the pin is the fix,
+#    so the check must be satisfiable, not merely loud.
+python3 - "$TMP/d9.md" "$TMP/d9b.md" <<'PY2'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("## Mandatory reading",
+  "Citations pinned in `probes/sources.lock`.\n\n## Mandatory reading", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY2
+green "pinned citation passes" "$TMP/d9b.md"
+
+# 10 a DONE depending on "the runner" with no filename defeats the premature-DONE check
+python3 - "$TMP/clean.md" "$TMP/d10.md" <<'PY2'
+import sys
+s = open(sys.argv[1], encoding="utf-8").read()
+s = s.replace("## Test authorship map",
+  "- [ ] **T9z Filler nine** — filler. DONE: the runner reports it by name and exits 0.\n\n## Test authorship map", 1)
+open(sys.argv[2], "w", encoding="utf-8").write(s)
+PY2
+red "DONE names an artifact only in prose" "$TMP/d10.md"
+
 echo
 echo "=================================="
 echo "passed $pass, failed $fail"
