@@ -51,6 +51,7 @@ Probe first. What survives is judgment, and judgment is all `build-validate` sho
 ```
 .claude/PRPs/{slug}/probes/
   run.sh            runs every probe, diffs emitted vs expected, verifies the lock, exits non-zero on any mismatch
+  lock.sh           adds/refreshes sources.lock entries WITHOUT dropping existing ones
   expected.tsv      probe_id <TAB> expected_value <TAB> what it proves     (one line per claim)
   p-<id>.sh         one probe per claim. Prints ONE value on stdout and nothing else.
   sources.lock      path <TAB> sha256 <TAB> size    for every file the PRD cites
@@ -113,8 +114,14 @@ happened; a plan was folded from a sibling slug's task bodies while a concurrent
 slug from 14 tasks to 10, and every citation silently pointed at different work.
 
 ```bash
-while read -r p; do printf '%s\t%s\t%s\n' "$p" "$(shasum -a 256 "$p" | cut -d' ' -f1)" "$(wc -c <"$p")"; done < cited-paths.txt > sources.lock
+bash probes/lock.sh <path> [<path> ...]
 ```
+
+⚠ **Never build the lock by truncating it.** `: > sources.lock` in a loop is the obvious way and it
+silently destroys pins someone else added — measured 2026-09-02, a concurrent session had pinned
+three cited sibling plans and a probe repoint took those pins with it. Nothing detected it, because
+a lock with *fewer* entries still verifies clean. `lock.sh` merges, and refuses to re-pin a source
+whose hash has changed: re-pinning a moved file is a decision, never a side effect of adding one.
 
 ## Phase 4: RUN and report
 
