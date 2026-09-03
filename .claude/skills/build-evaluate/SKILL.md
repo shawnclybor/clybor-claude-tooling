@@ -43,35 +43,41 @@ Anchor case PASS = output matches the PRD's expected outcome (exact OR fuzzy per
 
 Spawn cold-readers **in one message**. Each has NOT seen the iteration history; each looks from a different angle. This catches "we iterated ourselves into a corner" cases the cold-read agent in build-execute can't see.
 
-### Cold-reader 1 — Fresh-eyes (profile-defined if present, else general-purpose)
+Each cold-reader is a **named agent**, not `general-purpose` — the three angles below are three agents' standing lenses, and a generic reader invents its own. Every prompt is findings-only: this skill does not edit the artifact under test.
 
-If the profile defines `evaluate_cold_read_agent`, use it. Otherwise generic:
+### Cold-reader 1 — Fresh-eyes (profile-defined if present, else `adversarial-reviewer`)
+
+If the profile defines `evaluate_cold_read_agent`, use it. Otherwise:
 
 ```
 Agent(
-  subagent_type="general-purpose",
+  subagent_type="adversarial-reviewer",
   description="Fresh-eyes cold-read of finished artifact",
-  prompt="Read the artifact at <path> for the first time. Do NOT read iteration history. PRD: <paste>. Answer: (1) what does this artifact actually do, in your words? (2) match/drift/mismatch vs PRD 'What this is'? (3) obvious gaps or undefined references? Findings only — no edits."
+  prompt="Read the artifact at <path> for the first time. Do NOT read iteration history. PRD: <paste>. Answer: (1) what does this artifact actually do, in your words? (2) match/drift/mismatch vs PRD 'What this is'? (3) obvious gaps or undefined references? The question is whether the artifact supports the claim the PRD makes about it — not whether the PRD is a good idea. Findings only — no edits."
 )
 ```
 
-### Cold-reader 2 — Anti-scope-creep (general-purpose)
+### Cold-reader 2 — Anti-scope-creep (`simplifier`)
+
+Growth past the stated scope is the KISS/YAGNI lens, which is this agent's whole charter.
 
 ```
 Agent(
-  subagent_type="general-purpose",
+  subagent_type="simplifier",
   description="Audit artifact against PRD out-of-scope list",
-  prompt="Read the artifact at <path>. PRD out-of-scope list: <paste>. For each out-of-scope item, scan the artifact for accidental inclusion. Flag matches with the specific artifact line/section. Findings only."
+  prompt="Read the artifact at <path>. PRD out-of-scope list: <paste>. For each out-of-scope item, scan the artifact for accidental inclusion and flag matches with the specific artifact line/section. Then flag anything the artifact does that no PRD criterion asked for. Do not propose removing in-scope features — scope creep only. Findings only."
 )
 ```
 
-### Cold-reader 3 — Drift-vs-mirror (general-purpose)
+### Cold-reader 3 — Drift-vs-mirror (`code-analyzer`)
+
+Structural divergence across two files is a tracing job. Applies to code and to structured prose alike — the check is the shape, not the language.
 
 ```
 Agent(
-  subagent_type="general-purpose",
+  subagent_type="code-analyzer",
   description="Audit artifact against mirror target structure",
-  prompt="Read the artifact at <path> and the mirror target at <mirror path>. Find places the artifact diverges from the mirror's pattern without justification. Drift may be intentional (note it) or accidental (must-fix). Findings only."
+  prompt="Read the artifact at <path> and the mirror target at <mirror path>. Find places the artifact diverges from the mirror's pattern without justification, citing file and line on both sides. Drift may be intentional (note it) or accidental (must-fix). Do not grade the mirror itself. Findings only."
 )
 ```
 
@@ -157,7 +163,7 @@ then promote `.claude/skills/build-estimate` so the canonical ledger carries the
 Skill(skill="five-whys", args="trigger=evaluate_fail slug={slug} verdict=<which criteria failed>")
 ```
 
-The root-cause output goes into `evaluate.md` under a `### Root cause (five-whys)` section. Future builds with similar slugs will pick this up via build-validate's anti-pattern auditor.
+The root-cause output goes into `evaluate.md` under a `### Root cause (five-whys)` section. Phase 1 globs prior `evaluate.md` files, so a later build on a similar slug reads this root cause directly — `build-validate` does not carry it, having no anti-pattern auditor.
 
 ## Phase 7: USER VERDICT GATE (REVIEW GATE — skip with `--autonomous`)
 

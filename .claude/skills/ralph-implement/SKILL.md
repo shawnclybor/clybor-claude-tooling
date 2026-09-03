@@ -47,13 +47,41 @@ for task in plan.unchecked_tasks():
         stop_task() and escalate(task)
 ```
 
-## Agent integration
+## The two agents the loop calls
 
-- **`code-reviewer`** — runs on every completed task before marking done. Catches issues the task check itself does not (correctness, type safety, security, structure). A Critical finding sends the task back into the loop.
-- **`debugger`** — invoked on the first same-failure-mode repeat (not after two strikes — earlier). Reproduction-first, evidence-driven hypothesis narrowing. Sister skill to `five-whys`.
-- **`five-whys`** — invoked only if `debugger` cannot surface a root cause. The protocol path; halts the task.
-- **`error-coordinator`** — invoked when 2+ parallel tasks fail in the same run. Correlates symptoms to find a shared cause (upstream dependency, shared config, environmental issue).
-- **`multi-agent-coordinator`** — orchestrates parallel task spawns. Reads the plan's "Parallelizable groups" section and coordinates the concurrent runs with partial-failure handling.
+The loop above names these at the two points that matter. Both are gates, not commentary.
+
+### `code-reviewer` — on every task whose check just passed, before it is marked done
+
+A Critical finding sends the task back into the loop with the findings as input. The task check is a gate; it is not the only gate.
+
+```
+Agent(
+  subagent_type="code-reviewer",
+  description="Review task {N} before marking done",
+  prompt="Review the changed files at <paths> — diff scope only, not the whole repo. Task: <task title and its one-line scope>. Its check command already passed: <command>. Do NOT re-report what the check covers. Report correctness bugs, type-safety gaps, blast-radius misses beyond the changed files, and structural debt, each with file and line, marked Critical / High / Medium / Low. Read-only, no edits."
+)
+```
+
+### `debugger` — on the FIRST same-failure-mode repeat, not after the third
+
+Earlier than the two-strike halt on purpose: the point is to investigate before a blind retry, not after one.
+
+```
+Agent(
+  subagent_type="debugger",
+  description="Reproduce and narrow the repeated failure on task {N}",
+  prompt="Task: <task title>. Check command: <command>. It has now failed twice with the same failure mode. Attempt 1 output: <paste>. Attempt 2 output: <paste>. Changes made between them: <paste diff>. Reproduce the failure first, then narrow to a root cause with evidence — a log line, a code path, or a test output. Return the root cause and the SMALLEST fix, or state plainly that you cannot reproduce it. Do not implement the fix."
+)
+```
+
+If `debugger` returns a root cause, apply the minimal fix and retry once. If it cannot reproduce or cannot find a root cause, invoke `five-whys` and halt the task — a blind third retry is worse than a clean failure.
+
+### Also referenced by this skill
+
+- **`five-whys`** — the protocol path when `debugger` comes back empty. Halts the task.
+- **`error-coordinator`** — when 2+ parallel tasks fail in the same run, correlates symptoms to a shared cause (upstream dependency, shared config, environment) before the group is stopped.
+- **`multi-agent-coordinator`** — reads the plan's "Parallelizable groups" section and runs those tasks concurrently with partial-failure handling.
 
 ## Parallel task groups
 

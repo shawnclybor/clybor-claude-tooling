@@ -105,22 +105,53 @@ a bar.
 
 ## Phase 3: REVIEW (2-3 agents, one message)
 
-Brief every reviewer with the rubric and the scope. Then:
+Spawn in a single message. Every reviewer gets the pass condition from Phase 2, the scope line, and
+`premises.md` with the probe run's `UNPROVABLE` entries already carried in.
 
-**Agent 1 — Premise auditor.** *"Here is the design and its stated premises. Which premises is this
-design relying on that are NOT stated? For each, say what breaks if it is false."* This finds the
-unstated frame, which is the failure mode that matters.
+Each reviewer is a **named agent**, not `general-purpose`. Each of the three questions below is one
+agent's standing lens, and this stage runs exactly once — there is no later round to correct a
+reviewer that improvised its own frame.
 
-**Agent 2 — Falsifier.** *"For each stated premise, find evidence in the source material that
-contradicts it. Read the documents and the code. Report CONTRADICTED / SUPPORTED / NO EVIDENCE."*
+### Agent 1 — Premise auditor (`adversarial-reviewer`, Opus)
 
-**Agent 3 — Oracle auditor** (only when the build produces a value a human will act on). *"What
-makes this output right, and how would we know if it were subtly wrong? Is the correctness check a
-property of the module, or of the thing a person reads?"* This is the frame problem's home: a
+Finds the unstated frame, which is the failure mode that matters.
+
+```
+Agent(
+  subagent_type="adversarial-reviewer",
+  description="Surface unstated premises in {slug}",
+  prompt="Scope: premises only. The plan, its task list and its ordering are OUT of scope. Design: <paste PRD 'What this is' + anchor case>. Stated premises: <paste premises.md>. Which premises is this design relying on that are NOT stated? For each, write it as a one-sentence claim about the world and say what in the build becomes incoherent if it is false. Do not report numbers, counts, filenames or line references — build-probe owns those. Findings only, no edits."
+)
+```
+
+### Agent 2 — Falsifier (`evidence-auditor`)
+
+Its output contract is already CONTRADICTED / SUPPORTED / NO EVIDENCE against a source.
+
+```
+Agent(
+  subagent_type="evidence-auditor",
+  description="Falsify each stated premise against the sources",
+  prompt="Scope: the stated premises only. Premises with their Evidence lines: <paste premises.md>. Sources to read: <paste paths — documents, code, probe output>. For EACH premise report exactly one of CONTRADICTED / SUPPORTED / NO EVIDENCE, naming the file and line that decides it. NO EVIDENCE is a valid and useful verdict — do not upgrade it to SUPPORTED because the premise sounds reasonable. Findings only, no edits."
+)
+```
+
+### Agent 3 — Oracle auditor (`chaos-engineer`)
+
+Only when the build produces a value a human will act on. This is the frame problem's home: a
 criterion satisfiable by a module that behaves honestly while the deliverable stays useless.
 
+```
+Agent(
+  subagent_type="chaos-engineer",
+  description="Audit the correctness oracle for {slug}",
+  prompt="Scope: the correctness oracle, not the code and not the plan. Design: <paste PRD 'What this is' + anchor case>. Premises: <paste premises.md>. What makes this output right, and how would we know if it were subtly wrong? Is the correctness check a property of the module, or of the thing a person reads? Name one concrete case where every stated criterion passes and the output is still wrong for its reader. Findings only, no edits."
+)
+```
+
 No pattern auditor, no completeness auditor, no anti-pattern auditor — mechanical checks own those
-now. No fact-checker; `build-probe` owns facts.
+now. No fact-checker; `build-probe` owns facts. Adding a fourth lens re-opens the spiral this stage
+was scoped to avoid.
 
 ## Phase 4: RECORD AND REPORT
 
