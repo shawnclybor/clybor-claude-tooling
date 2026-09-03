@@ -14,14 +14,24 @@ import sys
 
 try:
     data = json.load(sys.stdin)
-except json.JSONDecodeError:
+except (json.JSONDecodeError, ValueError):
+    sys.exit(0)
+if not isinstance(data, dict):
     sys.exit(0)
 
 tool = data.get("tool_name", "")
 if tool not in ("Write", "Edit"):
     sys.exit(0)
 
-path = data.get("tool_input", {}).get("file_path", "")
+# A present-but-null key returns None from .get(<default>), and None.endswith raises.
+# A reminder that crashes is worse than no reminder: the traceback reads as a real
+# failure and the checkpoint never prints. Coerce, don't assume.
+tool_input = data.get("tool_input") or {}
+if not isinstance(tool_input, dict):
+    sys.exit(0)
+path = tool_input.get("file_path") or ""
+if not isinstance(path, str):
+    sys.exit(0)
 
 CODE_EXTS = (
     ".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
