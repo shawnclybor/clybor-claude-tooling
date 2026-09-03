@@ -1,6 +1,15 @@
 ---
 name: writing-quality
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms") from deliverables, emails, and any written output. Use this skill whenever generating deliverable content (Phase 1 curation in any client deliverable skill), drafting client emails longer than 3 sentences, writing proposals or SOWs, creating reports, or when the user says "clean up the writing", "remove AI-isms", "make this sound less like AI", "audit the writing", "check for AI patterns", or "writing quality check". Also invoke automatically before any deliverable formatting step — do not skip. If you just wrote or curated content that will go to a client, run this skill on it before finalizing. Adapted from conorbronsdon/avoid-ai-writing v3.3.0 (MIT license).
+description: >
+  Audit and rewrite content to remove AI writing patterns ("AI-isms") from deliverables,
+  emails, and any written output. Use this skill whenever generating deliverable content
+  (Phase 1 curation in any client deliverable skill), drafting client emails longer than
+  3 sentences, writing proposals or SOWs, creating reports, or when the user says "clean
+  up the writing", "remove AI-isms", "make this sound less like AI", "audit the writing",
+  "check for AI patterns", or "writing quality check". Also invoke automatically before
+  any deliverable formatting step — do not skip. If you just wrote or curated content
+  that will go to a client, run this skill on it before finalizing. Adapted from
+  conorbronsdon/avoid-ai-writing v3.3.0 (MIT license).
 ---
 
 # Writing Quality — AI-ism Audit & Rewrite
@@ -23,13 +32,15 @@ Trigger detect mode when the user says "detect," "flag only," "audit only," "jus
 ## In rewrite mode:
 1. Audit and identify every AI-ism, citing specific text
 2. Rewrite to remove all AI-isms
-3. Return the cleaned text with a brief summary of major changes
-4. If the user corrects the result, log it: `bash scripts/log-correction.sh "<pattern-slug>" "<project>"` — a REPEAT alert (exit 2) means propose the source-level fix (voice guide, template, this skill's rules), not another draft fix
+3. If the content cites external sources, run the citation check below before returning it
+4. Return the cleaned text with a brief summary of major changes
+5. If the user corrects the result, log it: `bash scripts/log-correction.sh "<pattern-slug>" "<project>"` — a REPEAT alert (exit 2) means propose the source-level fix (voice guide, template, this skill's rules), not another draft fix
 
 ## In detect mode:
 1. Audit and identify every AI-ism, citing specific text
 2. Group by severity (P0, P1, P2)
 3. Note which flags are clear problems vs. judgment calls
+4. If the content cites external sources, run the citation check below
 
 ---
 
@@ -63,6 +74,7 @@ client deliverable). All rules apply at full strength.
 
 ---
 
+<!-- empty-prose: off -->
 ## What to Remove or Fix
 
 ### Formatting
@@ -304,6 +316,79 @@ If the text has 5+ flagged vocabulary hits across multiple categories, 3+ distin
 categories triggered, and uniform sentence/paragraph length — patching won't fix it. The
 structure itself is AI-generated. State the core point in one sentence, then rebuild.
 
+<!-- empty-prose: on -->
+---
+
+## Empty Prose — the sentence that reads fine and says nothing
+
+⚠ **This is a different defect from an AI-ism, and every rule above will miss it.** AI-isms are
+stylistic tics — "delve", "it's not just X, it's Y", dash overuse. Empty prose is grammatical,
+sounds like a person wrote it, and carries no content:
+
+<!-- empty-prose: off -->
+> "We check the spec against reality."
+<!-- empty-prose: on -->
+
+Nothing there is machine-flavoured. It is still slop, because a reader cannot say what would be
+different if it were true. (Caught 2026-09-02: one draft carried 13 of these. That was the worst.)
+
+### THE ONE QUESTION
+
+Read the sentence with **no surrounding context**, then ask:
+
+> **Could a reader say what would be different if this were true?**
+
+If not, it is empty, and the fix is always the same shape: **replace the abstraction with the
+operation it stands for.** `Check the spec against reality` becomes "a script opens the file,
+prints the real number, and you compare it to the number typed in the spec."
+
+This question catches emptiness no word list ever will. Slop regenerates — ban "leverage" and
+you get "harness".
+
+### Five families, and the move for each
+
+| Family | Looks like | The move |
+|---|---|---|
+| **Slogan** | `against reality`, `at its core`, `first principles` | Name the concrete operation |
+| **Grandiosity** | `revolutionize`, `seamless`, `best-in-class` | Delete, or state the measured result |
+| **Filler** | `a number of`, `it is worth noting that` | Delete — it survives deletion intact |
+| **Flourish** | `truly`, `a testament to`, `lies at the heart of` | Drop the ornament, keep the claim |
+| **Insider term** | a filename, a tool id, a gate output, in text a reader reads | Say what it does, or move it into code formatting |
+
+### Lead with a scene, not a definition
+
+Added 2026-09-02 after a draft came back twice. An explanation that opens by *defining* its
+subject ("a spec is full of statements of fact") makes the reader assemble the situation
+themselves. One that opens with a **specific scenario already in motion** does not:
+
+> We're doing X. Then Y happens. Here is what breaks, and here is how we handle it.
+
+Test it by reading your opening and asking the reader's questions back at it: *what specifically?
+whose? why would that matter to me?* If the paragraph does not already answer them, it is a
+definition wearing a narrative coat.
+
+### The mechanical half
+
+The script catches recurring offenders — five classes, under a second, same answer every run.
+Its limits are deliberate and stated in its own source:
+
+- It catches **yesterday's** offenders only. A phrase list cannot see novel emptiness; that is
+  what THE ONE QUESTION is for, and the test suite asserts that limit on purpose (case K1).
+- Code spans, fenced blocks, a file's `---` header block and HTML attributes are exempt. An insider term is only
+  a defect in prose somebody reads.
+- **False positives are the failure mode.** Patterns are narrow by design. A gate that cries wolf
+  gets clicked through, and then it is not a gate.
+
+```
+python3 .claude/hooks/check-empty-prose.py <file>   # exit 1 on any finding
+bash    .claude/hooks/test-empty-prose.sh           # 11 cases, both directions
+python3 .claude/hooks/mutate-empty-prose.py         # 9 mutations; proves the suite can fail
+```
+
+**Grow the lists from prose actually caught in review** — never from words that merely sound bad.
+When a correction lands, log it; a REPEAT alert is the signal to add the phrase to the list,
+rather than to fix that one draft again.
+
 ---
 
 ## Severity Tiers
@@ -386,6 +471,28 @@ a flagged word is clearly the right choice in context, preserve it.
 
 ---
 
+## Citations — the one pattern this skill cannot see
+
+Every rule above is about how the prose *sounds*. A fabricated or misattributed citation sounds
+perfect — that is the whole problem, and no amount of reading the text catches it.
+
+**When the content cites an external source — a URL, a paper, a statistic, a claim attributed to a
+named third party — run `evidence-auditor` before the rewritten version ships.** Client-facing work
+with a citation that does not trace is worse than client-facing work that reads like a machine.
+
+```
+Agent(
+  subagent_type="evidence-auditor",
+  description="Verify citations trace before the rewrite ships",
+  prompt="Content: <paste the text with its citations>. Sources available: <paste paths or URLs>. For EACH citation, quote, statistic and claim attributed to a named third party, report TRACES / MISATTRIBUTED / UNVERIFIABLE, naming the source location that decides it. Judge only whether the claim traces to its source — the prose style is out of scope. Do not rewrite anything."
+)
+```
+
+Anything back as MISATTRIBUTED or UNVERIFIABLE is fixed or cut before the content ships. Do not
+soften it into a hedge — a hedged fabrication is still a fabrication.
+
+---
+
 ## Integration Points
 
 Run this skill automatically in these cases:
@@ -397,6 +504,3 @@ Run this skill automatically in these cases:
 ---
 
 *Adapted from [conorbronsdon/avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) v3.3.0 (MIT license).*
-## Agent integration
-
-- **`evidence-auditor`** — invoked when the content under audit cites external sources (URLs, papers, claims attributed to third parties). Confirms each citation traces accurately before the rewritten version ships. Catches the AI-ism category that this skill itself cannot detect: fabricated or misattributed citations.
