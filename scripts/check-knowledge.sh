@@ -79,6 +79,21 @@ if [ "$SKILL_ROUTER_CHECK" = "1" ] && [ -f CLAUDE.md ] && [ -d .claude/skills ];
   done
 fi
 
+# 5. Memory index gate: every Serena memory must be named in mem:index.
+#    Same failure as #4, one layer up. CLAUDE.md carried a SECOND list of memories until
+#    2026-09-03; it drifted to 15 of 19, and one memory was added to one index and not the
+#    other within the hour. There is now ONE index and this is what keeps it honest.
+#    ⚠ .serena/ is gitignored, so this is a LOCAL consistency check -- it cannot run on a
+#    fresh clone, and it no-ops there rather than failing. Disable with MEMORY_INDEX_CHECK=0.
+if [ "${MEMORY_INDEX_CHECK:-1}" = "1" ] && [ -f .serena/memories/index.md ]; then
+  while IFS= read -r m; do
+    rel="${m#.serena/memories/}"; rel="${rel%.md}"
+    [ "$rel" = "index" ] && continue
+    grep -q "mem:$rel\b" .serena/memories/index.md \
+      || err "mem:index does not name memory '$rel' — add a row (an unindexed memory is unreachable)"
+  done < <(find .serena/memories -name '*.md' | sort)
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "knowledge invariants FAILED (see ✗ above). Fix, or override once with: git commit --no-verify" >&2
   exit 1
