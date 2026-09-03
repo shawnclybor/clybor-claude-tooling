@@ -37,6 +37,11 @@ import sys
 # PROVENANCE_HINTS and the inline override marker.
 EXEMPT_PATHS = (
     "/knowledge/log.md",    # append-only running log — diff-against-past is its job
+    # A build_state memory is a DATED LOG, not a spec. It records what was measured WHEN,
+    # including the entries a later one supersedes and the reasoning behind a cut — which is
+    # the value of a memory and the opposite of what forward-only prose asks for. Same warrant
+    # as knowledge/log.md above. Other memories stay in scope; they ARE specs.
+    "/.serena/memories/yellow_sheet/build_state.md",
     "/knowledge/raw/",      # unedited captures
     "/docs/reference/",     # client source converted verbatim — not our prose to police
     "/node_modules/", "/.git/", "/_archived/",
