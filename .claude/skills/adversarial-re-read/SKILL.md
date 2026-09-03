@@ -29,7 +29,7 @@ Triggered by:
 - Trivial Q&A or formatting fixes
 ## The procedure
  
-Five steps. None skippable.
+Five steps. None skippable. Step 3b is conditional on its own trigger — the condition is not optional, the step is.
  
 ### 1. Bound the source explicitly
  
@@ -56,6 +56,28 @@ Open your existing synthesis next to the source. For each section of the source 
  
 This is the adversarial step. The mindset is: "I'm trying to find what I missed, not confirm what I got." If everything reflects, the synthesis is solid. If items are missing, list them.
  
+### 3b. Check the other direction — when the synthesis carries quotes or attributed claims
+
+Steps 1–3 look for **omission**: what the source says that the synthesis dropped. They cannot catch
+the opposite defect — a claim in the synthesis that traces to nothing, or to the wrong speaker. A
+fabricated quote survives every step above, because nothing in the source contradicts it; it simply
+is not there.
+
+**Run this when the synthesis contains a direct quote, a figure, a date, or a claim attributed to a
+named person.** Skip it when the synthesis is your own summary prose with nothing attributed.
+
+```
+Agent(
+  subagent_type="evidence-auditor",
+  description="Verify the synthesis's claims trace to the source",
+  prompt="Synthesis: <paste>. Source: <paths, with the line bound from step 1>. Work synthesis-to-source, the opposite direction from a completeness check: for EACH direct quote, figure, date and claim attributed to a named person, report TRACES / MISATTRIBUTED / NOT IN SOURCE, naming the source line that decides it. A quote that is close but not verbatim is MISATTRIBUTED, not TRACES. Do not report anything the synthesis omitted — that is already covered. No edits."
+)
+```
+
+Anything back as MISATTRIBUTED or NOT IN SOURCE is corrected against the source or cut before the
+synthesis moves on. A wrong attribution is not a smaller error than a miss — it is the one a reader
+cannot detect.
+
 ### 4. Categorize each missed item
  
 For every item the diff surfaces:
@@ -70,6 +92,7 @@ Before declaring extraction complete, state:
  
 - What the source bound was (line count, image dims, page count)
 - What the diff produced (Nothing missed / N items found, categorized)
+- Whether step 3b ran, and what it returned (or why its trigger did not apply)
 - Whether any items required deliverable-shape changes or new tasks (and which)
 This is short — 3–5 lines in the working doc or chat. Its purpose is leaving a trace so future-you (or a fresh session) can tell the second pass actually happened, vs. was claimed.
  
