@@ -2,6 +2,19 @@
 
 Nineteen subagents in four lanes, spawned with the Agent tool. Every file carries `name`, `description` and `model` in its frontmatter; none restricts `tools`, so each agent has whatever the session has. Read-only by convention: an agent reports, and the skill that spawned it decides what lands.
 
+## Model tiers
+
+The frontmatter uses the aliases `fable`, `opus`, `sonnet`, `haiku`, which resolve to the newest model of each tier: Fable 5.1, Opus 5, Sonnet 5, Haiku 4.5. The rule for picking one:
+
+| Tier | Use it for | Why |
+|---|---|---|
+| **Fable 5.1** | A verdict that is wrong expensively and reached once per round: is this claim true, is this surface secure | The most capable model available. Its cost is per call, and these agents run once per review, not once per task |
+| **Opus 5** | Nothing here today | Every job that wanted Opus wanted it for judgment, and Fable is the better judge at that price |
+| **Sonnet 5** | Structured work with a clear procedure: a lens with one question, a code review against a checklist, a reproduction, a synthesis, a citation check | Fast, cheap enough to run three in parallel, and the procedure carries the quality |
+| **Haiku 4.5** | One question, one cited answer | A lookup does not need judgment |
+
+Two agents run on Fable: `adversarial-reviewer` and `security-auditor`. Both were on Opus; the change is the tier, not the job. Everything else stays where it was.
+
 An agent that no skill, command or hook names does not get used. Sessions reach for the tools a skill puts in front of them, not for a roster. So the useful column below is **Called by**, measured on 2026-09-04 by grepping every skill, command and hook in this repo for the agent's name. Four agents are called by nothing; they are listed last, on purpose, and are the first candidates to cut.
 
 ## Quality (`quality/`)
@@ -10,27 +23,27 @@ Three non-overlapping lenses. Each gets one question, and a finding outside its 
 
 | Agent | Model | Owns | Called by |
 |---|---|---|---|
-| `adversarial-reviewer` | Opus | **Is it true?** Claims unsupported by evidence, reasoning that does not follow, a conclusion the cited source does not carry | `adversarial-review`, `quality-review`, `build-validate` (as the premise auditor), `build-evaluate`, `insight-promotion`; `/adversarial`, `/adversarial-review`, `/quality-review` |
-| `chaos-engineer` | Sonnet | **What breaks it?** Failure modes, malformed input, empty and boundary states, ordering hazards, fail-open shapes | `adversarial-review`, `quality-review`, `build-validate` (as the oracle auditor), `insight-promotion`, `ooda`; `/chaos`, `/adversarial-review`, `/quality-review` |
-| `simplifier` | Sonnet | **Is it more than it needs to be?** Over-engineering, premature abstraction, scope beyond the stated requirement | `adversarial-review`, `quality-review`, `build-evaluate`, `insight-promotion`; `/simplify`, `/adversarial-review`, `/quality-review` |
+| `adversarial-reviewer` | Fable 5.1 | **Is it true?** Claims unsupported by evidence, reasoning that does not follow, a conclusion the cited source does not carry | `adversarial-review`, `quality-review`, `build-validate` (as the premise auditor), `build-evaluate`, `insight-promotion`; `/adversarial`, `/adversarial-review`, `/quality-review` |
+| `chaos-engineer` | Sonnet 5 | **What breaks it?** Failure modes, malformed input, empty and boundary states, ordering hazards, fail-open shapes | `adversarial-review`, `quality-review`, `build-validate` (as the oracle auditor), `insight-promotion`, `ooda`; `/chaos`, `/adversarial-review`, `/quality-review` |
+| `simplifier` | Sonnet 5 | **Is it more than it needs to be?** Over-engineering, premature abstraction, scope beyond the stated requirement | `adversarial-review`, `quality-review`, `build-evaluate`, `insight-promotion`; `/simplify`, `/adversarial-review`, `/quality-review` |
 
 ## Code (`code/`)
 
 | Agent | Model | Does | Called by |
 |---|---|---|---|
-| `code-reviewer` | Sonnet | Read-only review of a diff or file set: correctness, blast radius, type safety, observability, security, naming | `ralph-implement`, `ralph-loop`, `skill-validator`, `verify` |
-| `debugger` | Sonnet | Reproduces a failure, narrows the cause with evidence, proposes the minimal fix. `five-whys` is the protocol; this is the executor | `five-whys`, `why-diagnostic`, `ralph-implement`, `ralph-loop`, `skill-validator`; `/ralph-loop` |
-| `code-analyzer` | Sonnet | Cross-file investigation: how does this actually work, where does it break. Investigation, not grading | `build-evaluate`, `verify` |
-| `security-auditor` | Opus | OWASP-style audit of input handling, secrets, auth, injection, dependencies, crypto | `ralph-loop`, `verify` |
+| `code-reviewer` | Sonnet 5 | Read-only review of a diff or file set: correctness, blast radius, type safety, observability, security, naming | `ralph-implement`, `ralph-loop`, `skill-validator`, `verify` |
+| `debugger` | Sonnet 5 | Reproduces a failure, narrows the cause with evidence, proposes the minimal fix. `five-whys` is the protocol; this is the executor | `five-whys`, `why-diagnostic`, `ralph-implement`, `ralph-loop`, `skill-validator`; `/ralph-loop` |
+| `code-analyzer` | Sonnet 5 | Cross-file investigation: how does this actually work, where does it break. Investigation, not grading | `build-evaluate`, `verify` |
+| `security-auditor` | Fable 5.1 | OWASP-style audit of input handling, secrets, auth, injection, dependencies, crypto | `ralph-loop`, `verify` |
 
 ## Research (`research/`)
 
 | Agent | Model | Does | Called by |
 |---|---|---|---|
-| `evidence-auditor` | Sonnet | Checks every quote, citation and figure in a document against its source. CONTRADICTED / SUPPORTED / NO EVIDENCE, with the file and line that decides it | `adversarial-re-read`, `build-validate` (as the falsifier), `writing-quality`, `insight-crystallizer`, `prd-writer`, `ralph-loop` |
-| `research-analyst` | Sonnet | Multi-source synthesis with cited claims and disagreements preserved | `prd-writer`, `insight-crystallizer` |
-| `search-specialist` | Haiku | One question, one cited answer: an API signature, an error code, an exact quote | `prd-writer` |
-| `metadata-fetcher` | Haiku | Mechanical lookups: bibliographic data, DOIs, package versions, licences | `prd-writer` |
+| `evidence-auditor` | Sonnet 5 | Checks every quote, citation and figure in a document against its source. CONTRADICTED / SUPPORTED / NO EVIDENCE, with the file and line that decides it | `adversarial-re-read`, `build-validate` (as the falsifier), `writing-quality`, `insight-crystallizer`, `prd-writer`, `ralph-loop` |
+| `research-analyst` | Sonnet 5 | Multi-source synthesis with cited claims and disagreements preserved | `prd-writer`, `insight-crystallizer` |
+| `search-specialist` | Haiku 4.5 | One question, one cited answer: an API signature, an error code, an exact quote | `prd-writer` |
+| `metadata-fetcher` | Haiku 4.5 | Mechanical lookups: bibliographic data, DOIs, package versions, licences | `prd-writer` |
 
 `evidence-auditor` is the most-called agent outside the quality lane. It is the second pass behind every extraction: the build pipeline's premise round uses it to falsify each stated premise against the sources, and `adversarial-re-read` uses it because a first extraction misses a fifth of what is there.
 
@@ -38,19 +51,19 @@ Three non-overlapping lenses. Each gets one question, and a finding outside its 
 
 | Agent | Model | Does | Called by |
 |---|---|---|---|
-| `multi-agent-coordinator` | Sonnet | Tracks state across parallel agents, handles partial failure, coordinates handoffs | `quality-review`, `ralph-implement`, `ralph-loop` |
-| `task-distributor` | Sonnet | Splits a task list into groups that can run in parallel without contended writes | `task-plan`, `ralph-implement`, `ralph-loop` |
-| `error-coordinator` | Sonnet | Correlates failures across parallel agents to one root cause | `five-whys`, `ralph-implement`, `skill-validator` |
-| `knowledge-synthesizer` | Sonnet | Folds several agents' reports into one, keeping disagreements visible | `quality-review`, `insight-crystallizer` |
+| `multi-agent-coordinator` | Sonnet 5 | Tracks state across parallel agents, handles partial failure, coordinates handoffs | `quality-review`, `ralph-implement`, `ralph-loop` |
+| `task-distributor` | Sonnet 5 | Splits a task list into groups that can run in parallel without contended writes | `task-plan`, `ralph-implement`, `ralph-loop` |
+| `error-coordinator` | Sonnet 5 | Correlates failures across parallel agents to one root cause | `five-whys`, `ralph-implement`, `skill-validator` |
+| `knowledge-synthesizer` | Sonnet 5 | Folds several agents' reports into one, keeping disagreements visible | `quality-review`, `insight-crystallizer` |
 
 ## Called by nothing
 
 | Agent | Model | Was meant to |
 |---|---|---|
-| `workflow-orchestrator` | Sonnet | Sequence multi-stage workflows with gates between stages. The build pipeline does this in skills, stage by stage, with `state.json` as the record |
-| `agent-organizer` | Sonnet | Pick which agents fit a task. Every skill names its agents directly, so the choice is never open |
-| `context-manager` | Sonnet | Curate shared context across handoffs. Skills pass what each agent needs in its prompt |
-| `performance-monitor` | Sonnet | Surface agents that time out, retry or escalate. Nothing consumes the report |
+| `workflow-orchestrator` | Sonnet 5 | Sequence multi-stage workflows with gates between stages. The build pipeline does this in skills, stage by stage, with `state.json` as the record |
+| `agent-organizer` | Sonnet 5 | Pick which agents fit a task. Every skill names its agents directly, so the choice is never open |
+| `context-manager` | Sonnet 5 | Curate shared context across handoffs. Skills pass what each agent needs in its prompt |
+| `performance-monitor` | Sonnet 5 | Surface agents that time out, retry or escalate. Nothing consumes the report |
 
 They stay in the repo until a skill wants one. A project that needs a smaller roster removes them and lists its `agents/README.md` in `.claude/promotion-ignore`, since that README then describes the project's roster rather than this one.
 
@@ -61,7 +74,7 @@ The build pipeline calls agents in exactly two places, both bounded. `build-vali
 ## Adding an agent
 
 1. One lens. If its question overlaps an existing agent's column, it is a prompt for that agent, not a new file.
-2. `model` in the frontmatter. Opus for judgment (adversarial-reviewer, security-auditor); Sonnet for the rest; Haiku for lookups.
+2. `model` in the frontmatter, by the tier table above: `fable` for a once-per-round verdict that is expensive to get wrong, `sonnet` for procedure-carried work, `haiku` for lookups. Reach for `opus` only with a reason the table does not cover.
 3. Read-only unless its purpose requires writes, and then the description says so.
 4. Name the skill or command that will call it, in the same commit. An agent with no caller joins the table above.
 5. Description under 1,024 characters.
