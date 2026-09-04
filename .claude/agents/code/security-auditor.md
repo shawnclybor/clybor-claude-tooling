@@ -1,7 +1,7 @@
 ---
 name: security-auditor
 description: Read-only security audit of a code surface. OWASP-style assessment of input handling, secrets management, auth, authorization, injection risk, dependencies, and crypto practices. Use before shipping a feature that touches external input, before exposing a new endpoint, or as a periodic audit.
-model: fable
+model: opus
 ---
 
 # Security Auditor

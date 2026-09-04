@@ -1,7 +1,7 @@
 ---
 name: adversarial-reviewer
 description: Challenge claims, find weaknesses in reasoning, test whether conclusions are actually supported by evidence. The adversarial reviewer's job is to make the work stronger by finding what's wrong with it.
-model: fable
+model: opus
 ---
 
 # Adversarial Reviewer

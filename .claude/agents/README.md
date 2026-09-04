@@ -8,12 +8,12 @@ The frontmatter uses the aliases `fable`, `opus`, `sonnet`, `haiku`, which resol
 
 | Tier | Use it for | Why |
 |---|---|---|
-| **Fable 5.1** | A verdict that is wrong expensively and reached once per round: is this claim true, is this surface secure | The most capable model available. Its cost is per call, and these agents run once per review, not once per task |
-| **Opus 5** | Nothing here today | Every job that wanted Opus wanted it for judgment, and Fable is the better judge at that price |
+| **Opus 5** | A verdict that is wrong expensively: is this claim true, is this surface secure | Judgment work. Two agents run on it: `adversarial-reviewer` and `security-auditor` |
+| **Fable 5.1** | No agent by default | The most capable model available, and priced for it. Reviews run three agents a round and rounds repeat, so a default here compounds. When one verdict warrants it, pass `model: "fable"` on that Agent call and leave the file alone |
 | **Sonnet 5** | Structured work with a clear procedure: a lens with one question, a code review against a checklist, a reproduction, a synthesis, a citation check | Fast, cheap enough to run three in parallel, and the procedure carries the quality |
 | **Haiku 4.5** | One question, one cited answer | A lookup does not need judgment |
 
-Two agents run on Fable: `adversarial-reviewer` and `security-auditor`. Both were on Opus; the change is the tier, not the job. Everything else stays where it was.
+The frontmatter is the default for every project that inits from here, so it stays at the tier a routine round can afford.
 
 An agent that no skill, command or hook names does not get used. Sessions reach for the tools a skill puts in front of them, not for a roster. So the useful column below is **Called by**, measured on 2026-09-04 by grepping every skill, command and hook in this repo for the agent's name. Four agents are called by nothing; they are listed last, on purpose, and are the first candidates to cut.
 
@@ -23,7 +23,7 @@ Three non-overlapping lenses. Each gets one question, and a finding outside its 
 
 | Agent | Model | Owns | Called by |
 |---|---|---|---|
-| `adversarial-reviewer` | Fable 5.1 | **Is it true?** Claims unsupported by evidence, reasoning that does not follow, a conclusion the cited source does not carry | `adversarial-review`, `quality-review`, `build-validate` (as the premise auditor), `build-evaluate`, `insight-promotion`; `/adversarial`, `/adversarial-review`, `/quality-review` |
+| `adversarial-reviewer` | Opus 5 | **Is it true?** Claims unsupported by evidence, reasoning that does not follow, a conclusion the cited source does not carry | `adversarial-review`, `quality-review`, `build-validate` (as the premise auditor), `build-evaluate`, `insight-promotion`; `/adversarial`, `/adversarial-review`, `/quality-review` |
 | `chaos-engineer` | Sonnet 5 | **What breaks it?** Failure modes, malformed input, empty and boundary states, ordering hazards, fail-open shapes | `adversarial-review`, `quality-review`, `build-validate` (as the oracle auditor), `insight-promotion`, `ooda`; `/chaos`, `/adversarial-review`, `/quality-review` |
 | `simplifier` | Sonnet 5 | **Is it more than it needs to be?** Over-engineering, premature abstraction, scope beyond the stated requirement | `adversarial-review`, `quality-review`, `build-evaluate`, `insight-promotion`; `/simplify`, `/adversarial-review`, `/quality-review` |
 
@@ -34,7 +34,7 @@ Three non-overlapping lenses. Each gets one question, and a finding outside its 
 | `code-reviewer` | Sonnet 5 | Read-only review of a diff or file set: correctness, blast radius, type safety, observability, security, naming | `ralph-implement`, `ralph-loop`, `skill-validator`, `verify` |
 | `debugger` | Sonnet 5 | Reproduces a failure, narrows the cause with evidence, proposes the minimal fix. `five-whys` is the protocol; this is the executor | `five-whys`, `why-diagnostic`, `ralph-implement`, `ralph-loop`, `skill-validator`; `/ralph-loop` |
 | `code-analyzer` | Sonnet 5 | Cross-file investigation: how does this actually work, where does it break. Investigation, not grading | `build-evaluate`, `verify` |
-| `security-auditor` | Fable 5.1 | OWASP-style audit of input handling, secrets, auth, injection, dependencies, crypto | `ralph-loop`, `verify` |
+| `security-auditor` | Opus 5 | OWASP-style audit of input handling, secrets, auth, injection, dependencies, crypto | `ralph-loop`, `verify` |
 
 ## Research (`research/`)
 
@@ -74,7 +74,7 @@ The build pipeline calls agents in exactly two places, both bounded. `build-vali
 ## Adding an agent
 
 1. One lens. If its question overlaps an existing agent's column, it is a prompt for that agent, not a new file.
-2. `model` in the frontmatter, by the tier table above: `fable` for a once-per-round verdict that is expensive to get wrong, `sonnet` for procedure-carried work, `haiku` for lookups. Reach for `opus` only with a reason the table does not cover.
+2. `model` in the frontmatter, by the tier table above: `opus` for a verdict that is expensive to get wrong, `sonnet` for procedure-carried work, `haiku` for lookups. Never `fable` in a file; it is a per-call override.
 3. Read-only unless its purpose requires writes, and then the description says so.
 4. Name the skill or command that will call it, in the same commit. An agent with no caller joins the table above.
 5. Description under 1,024 characters.
