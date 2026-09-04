@@ -172,7 +172,7 @@
         "governance",
         "task-management"
       ],
-      "summary": "Notion read/write governance for a build repo: the record-type-to-database mapping (decision / lesson / event / commitment), per-database title conventions (KB type-first, Note scope-first), the relation-replace trap, retrieval routing (enumerate/locate/comprehend), trailing-space property traps, and pre-write checklist. Ships NO IDs and needs no token fill: per-repo Project/Client and data-source IDs live in the consuming repo\u0027s .claude/notion-project-ids.md, which the skill writes on first use if absent.",
+      "summary": "Notion read/write governance for a build repo: the record-type-to-database mapping (decision / lesson / event / commitment), per-database title conventions (KB type-first, Note scope-first), the relation-replace trap, retrieval routing (enumerate/locate/comprehend), trailing-space property traps, and pre-write checklist. Ships NO IDs and needs no token fill: per-repo Project/Client and data-source IDs live in the consuming repo's .claude/notion-project-ids.md, which the skill writes on first use if absent.",
       "source": {
         "repo": "life-crm-governance plugin (trimmed for build repos)",
         "harvested": "2026-08-04"
@@ -188,6 +188,33 @@
       "targets": [
         "claude-code",
         "cowork"
+      ]
+    },
+    {
+      "id": "yellow-sheet-corpus",
+      "type": "skill",
+      "tier": "B",
+      "domains": [
+        "testing",
+        "verification",
+        "document-extraction",
+        "corpus"
+      ],
+      "summary": "Run a document-extraction chain end to end over every matter in a corpus from the original documents, and read the result honestly: count the cells a human would act on and the leads to chase, never 'output written'; keep the STRUCTURAL-versus-UNREAD refusal split; onboard a new matter as a declared-intake file, not a code change",
+      "source": {
+        "repo": "client build repo (yellow-sheet chain)",
+        "harvested": "2026-09-04"
+      },
+      "requires": {
+        "mcp": [],
+        "env": [],
+        "assets": []
+      },
+      "adaptation_points": [
+        "{{CLIENT}}"
+      ],
+      "targets": [
+        "claude-code"
       ]
     }
   ]
