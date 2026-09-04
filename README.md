@@ -29,8 +29,6 @@ The build is seven stages with a gate between each. This is for non-deterministi
 | 6 | `build-execute` | Bounded iteration with hard caps; adversarial review only on a contract, a pinned constant, a refusal limb or an unmutated path |
 | 7 | `build-evaluate` | Binary verdict against the anchor case; five-whys on FAIL, insight-promotion on PASS |
 
-Why it is shaped this way: measured across 21 review rounds on 7 builds, a freshly written plan carried about 12 must-fix findings regardless of care, 45% of later findings were introduced by the previous round's own repairs, and only 3 of 15 findings in a typical round needed judgment. Facts go to probes, plan structure goes to a mechanical checker, and human-style review is spent on premises only.
-
 A lighter flow alternative for small work: `prd-writer` → `task-plan` → `/quality-review` → `ralph-implement` → `verify`.
 
 ## Adversarial Review
