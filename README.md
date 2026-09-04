@@ -1,110 +1,156 @@
 # clybor-claude-tooling
 
-Standardized Claude Code bootstrap for new projects. Drop-in `.claude/` tree + `CLAUDE.md` template + adversarial review team + ralph-loop skill validator.
+The canonical home for reusable Claude Code tooling: a drop-in `.claude/` tree, a `CLAUDE.md` router template, a measured build pipeline, an adversarial review system with drift detection, write-time and commit-time gates with their negative controls, and a sanitized catalog of skills harvested from real projects.
+
+A project bootstraps from here with `scripts/init.sh`. When a project improves something reusable, it promotes the change back with `scripts/promote.sh`, and a global pre-commit gate keeps every project's copy byte-identical to the canonical one.
 
 ## Install / use
 
-1. Clone this repo: `git clone https://github.com/shawnclybor/clybor-claude-tooling.git ~/gits/clybor-claude-tooling`
-2. Create the target project dir (if it doesn't exist): `mkdir -p ~/gits/my-new-project`
-3. Run init: `bash ~/gits/clybor-claude-tooling/scripts/init.sh ~/gits/my-new-project "My New Project"`
+1. Clone: `git clone <this repository> ~/gits/clybor-claude-tooling`
+2. Create the target project dir: `mkdir -p ~/gits/my-new-project`
+3. Init: `bash ~/gits/clybor-claude-tooling/scripts/init.sh ~/gits/my-new-project "My New Project"`
 4. `cd ~/gits/my-new-project` and start Claude Code
 
-The project-facing router template lives at [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template). `scripts/init.sh` copies it into the target project and substitutes `{{PROJECT_NAME}}`.
+The router template is [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template). `init.sh` copies the `.claude/` tree, fills `{{PROJECT_NAME}}`, makes hooks executable and prints next steps. Re-running it after a template change overwrites `.claude/` but leaves a project's own `CLAUDE.md` alone (it writes `CLAUDE.md.new` to diff against).
 
-## What you get
+For the promotion gate on every machine you commit from: `bash scripts/install-global.sh` sets the global `core.hooksPath` and installs the SessionStart detector that lists promotable and drifted tooling at the start of each session.
 
-**Lane 1 — Quality review team (3 agents)**
+## The build pipeline
 
-| Agent | Model | Lens | Asks |
-|---|---|---|---|
-| `adversarial-reviewer` | Opus | Evidence and reasoning | *Is this the right thing?* |
-| `simplifier` | Sonnet | KISS / YAGNI | *Is this the simplest way?* |
-| `chaos-engineer` | Sonnet | Robustness and edge cases | *What breaks this?* |
+Seven stages with a gate between each. The sequence is fixed: `prd → probe → validate → plan → estimate → build → evaluate`.
 
-The three lenses are non-overlapping. `quality-review` runs them in parallel and synthesizes findings.
-
-**Lane 2 — Code (4 agents)**
-
-| Agent | Model | Role |
+| Stage | Skill | What it does |
 |---|---|---|
-| `code-reviewer` | Sonnet | Read-only review of a diff or file set |
-| `debugger` | Sonnet | Reproduction-first bug diagnosis |
-| `code-analyzer` | Sonnet | Cross-file logic-flow analysis |
-| `security-auditor` | Opus | OWASP-style threat audit |
+| 1 | `build-prd` | Locks the target, binary success criteria, one anchor case, and the out-of-scope list before any code |
+| 2 | `build-probe` | Turns every asserted number, count, filename and line reference in the PRD into an emitted one: one executable probe per claim plus a `sources.lock` pinning every cited file. Re-runs in seconds at every later stage |
+| 3 | `build-validate` | Reviews the three to five premises the design rests on, once. Not the plan. Skipped and recorded when no premise is contested |
+| 4 | `build-plan` | Decomposes into one runnable increment with the acceptance driver written red first; gated by `check-plan-soundness.py`, not by a panel |
+| 5 | `build-estimate` | Projects remaining effort from a calibration ledger of measured builds, never a typed number. Optional, never a gate |
+| 6 | `build-execute` | Bounded iteration with hard caps; adversarial review only on a contract, a pinned constant, a refusal limb or an unmutated path |
+| 7 | `build-evaluate` | Binary verdict against the anchor case; five-whys on FAIL, insight-promotion on PASS |
 
-**Lane 3 — Orchestration (8 agents)**
+Why it is shaped this way: measured across 21 review rounds on 7 builds, a freshly written plan carried about 12 must-fix findings regardless of care, 45% of later findings were introduced by the previous round's own repairs, and only 3 of 15 findings in a typical round needed judgment. Facts go to probes, plan structure goes to a mechanical checker, and human-style review is spent on premises only.
 
-| Agent | Model | Role |
-|---|---|---|
-| `workflow-orchestrator` | Sonnet | Sequences multi-stage workflows |
-| `multi-agent-coordinator` | Sonnet | Tracks parallel agent state; handles partial failures |
-| `agent-organizer` | Sonnet | Picks which agents fit a task |
-| `task-distributor` | Sonnet | Splits work across parallel agents safely |
-| `context-manager` | Sonnet | Manages shared context across handoffs |
-| `error-coordinator` | Sonnet | Correlates failures to find shared root causes |
-| `knowledge-synthesizer` | Sonnet | Combines multi-agent outputs |
-| `performance-monitor` | Sonnet | Surfaces hotspots in agent runtime |
+The lighter flow still ships for small work: `prd-writer` → `task-plan` → `/quality-review` → `ralph-implement` → `verify`.
 
-**Lane 4 — Research (4 agents)**
+## Review
 
-| Agent | Model | Role |
-|---|---|---|
-| `research-analyst` | Sonnet | Multi-source synthesis with cited claims |
-| `search-specialist` | Haiku | Quick precision lookups |
-| `evidence-auditor` | Sonnet | Verifies quotes and citations |
-| `metadata-fetcher` | Haiku | Mechanical metadata lookups |
-
-
-**Skills — adversarial review**
-
-- `quality-review` — orchestrates the 3-agent team against a plan, PRD, file, or proposal
-- `five-whys` — root-cause analysis when something breaks unexpectedly
-
-**Skills — ralph loops**
-
-- `ralph-loop` — canonical Stop-hook ralph. Single prompt + completion-promise. Use for autonomous walk-away iteration. `/ralph-loop` command.
-- `ralph-implement` — task-driven sibling. Reads a task plan, supports parallel groups, structured escalation.
-- `skill-validator` — ralph specialized for validating SKILL.md files.
-
-**Skills — development flow** (run in sequence; each stage standalone)
-
-| Stage | Skill |
+| Skill or command | Use |
 |---|---|
-| 1. PRD | `prd-writer` (uses `templates/prd-template.md`) |
-| 2. Plan | `task-plan` (uses `templates/plan-template.md`) |
-| 3. Validate plan | `quality-review` |
-| 4. Implement | `ralph-implement` |
-| 5. Verify | `verify` |
-| 6. Evaluate impl | `quality-review` |
-| 7. Iterate or close | (decision, no skill) |
+| `adversarial-review` / `/adversarial-review` | Three lenses in parallel (chaos, simplifier, adversarial-reviewer) against a fixed rubric loaded before any agent runs. Runs the mechanical checker first, checks for review drift second, caps at three rounds. For anything that will be reviewed more than once |
+| `quality-review` / `/quality-review` | The same three agents with no rubric and no memory. For a one-off look |
+| `/adversarial`, `/simplify`, `/chaos` | One lens each |
+| `adversarial-re-read` | Mandatory second pass over source material against the extraction it produced; first-pass extraction misses 15 to 25% of what is there |
+| `five-whys` / `/five-whys` | Root-cause protocol, triggered by Two Strikes |
+| `why-diagnostic` | A framing diagnostic for "why did this happen" moments before reaching for five-whys |
+| `verify` | Deterministic gate against a PRD's success criteria |
 
-**Skills — other**
+`review-drift.py` records each round and flags four ways a review ratchets: never coming back clean, counts rising on an unchanged target, self-inflicted findings, and re-grades against unchanged text.
 
-- `writing-quality` — strip AI-isms from client-facing prose
-- `insight-crystallizer` — captures valuable analyses into `docs/insights/*.md` so they survive past the chat session
-- `insight-promotion` — promotes a crystallized insight into always-on governance
+## Agents
 
-**Slash commands**
+Nineteen subagents in four lanes, spawned by the skills above. Read-only by default.
 
-- `/quality-review` — full 3-agent review
-- `/adversarial`, `/simplify`, `/chaos` — single-lens reviews
-- `/five-whys` — debug protocol
-- `/ralph-loop` — start a Stop-hook-driven autonomous ralph loop
+**Quality:** `adversarial-reviewer` (Opus, is this true), `simplifier` (Sonnet, is this the simplest way), `chaos-engineer` (Sonnet, what breaks this). Non-overlapping by construction.
 
-**Rules** (auto-loaded)
+**Code:** `code-reviewer`, `debugger`, `code-analyzer` (Sonnet), `security-auditor` (Opus).
 
-- `routing-protocol.md` — 5-step Classify→Load→Think→Pre-flight→Validate ritual
-- `kiss-yagni.md` — principles, Two Strikes, Blocker Protocol, Cascade Re-Scope
+**Orchestration:** `workflow-orchestrator`, `multi-agent-coordinator`, `agent-organizer`, `task-distributor`, `context-manager`, `error-coordinator`, `knowledge-synthesizer`, `performance-monitor`.
 
-**Hooks**
+**Research:** `research-analyst`, `evidence-auditor` (Sonnet), `search-specialist`, `metadata-fetcher` (Haiku).
 
-- `compact-recovery.sh` — re-injects ROADMAP and recent commits after context-window compaction
-- `kiss-yagni-reminder.py` — prints a one-line KISS / YAGNI checkpoint to stderr when writing code files (reminder, not block)
-- `ralph-stop.sh` — Stop hook for the Ralph Loop. Reads `.ralph-loop/state.json`, scans transcript for completion-promise, blocks exit + re-feeds prompt or allows exit
+Full table in [`.claude/agents/README.md`](.claude/agents/README.md).
+
+## Other skills
+
+**Ralph loops.** `ralph-loop` / `/ralph-loop` is the Stop-hook loop: one prompt re-fed until Claude emits the completion promise or the iteration cap. `ralph-implement` is the task-driven sibling. `skill-validator` is the ralph specialised for validating a SKILL.md.
+
+**Prose and knowledge.** `writing-quality` strips AI-isms and empty prose from anything a person will read. `session-output` writes the report of what a session did. `insight-crystallizer` files a decision so it survives the chat; `insight-promotion` turns one into an always-on rule. `promote-to-tooling` reviews a tooling change in a working repo and promotes the universal part here. `ooda` runs Boyd's decision cycle on a task you ask to work that way.
+
+**Governance.** `notion-governance`, `search-governance` and `excel-connector-governance` are domain-governance skills for the workspaces they name. The pattern they follow is `assets/skills/governance-skill-template/`; project-specific governance belongs in the project.
+
+## Hooks
+
+Every gate ships with a negative control (`test-*.sh`) that proves it can fail, and where the gate is a list, a mutator (`mutate-*.py`) that proves the control catches a broken gate. A gate that cannot fail proves nothing.
+
+**Wired by default** in `settings.json.template`:
+
+| Hook | Event | Does |
+|---|---|---|
+| `session-context.sh` | SessionStart | Loads the project rule and recent knowledge log into context |
+| `kiss-yagni-reminder.py` | PreToolUse Write/Edit | One-line KISS / YAGNI checkpoint on code files. Reminds, never blocks |
+| `no-postmortem-validator.py` | PreToolUse Write/Edit | Denies change-narration in operational prose: words that describe a prior state, strikethrough, headings that narrate what changed. Provenance-named files and an inline marker are exempt |
+| `availability-claim-validator.py` | PreToolUse Write/Edit | Denies a claim that something is blocked, missing or owed by someone else without the evidence beside it |
+| `compact-recovery.sh` | Stop (compact) | Re-injects the roadmap and recent commits after context compaction |
+| `ralph-stop.sh` | Stop | Drives the Ralph loop from `.ralph-loop/state.json` |
+
+**Shipped, wire per project:**
+
+| Hook | Does |
+|---|---|
+| `check-zsh-safety.py` | PreToolUse on Bash. The tool runs `zsh -c`; a word beginning with `=` aborts the whole script and an unquoted glob makes a command silently not run. Blocks both |
+| `check-document-claims.py` | PreToolUse on Write/Edit. An absolute, uncited claim about a specific document is denied; a claim about the paper carries the line it rests on |
+| `check-empty-prose.py` | Prose that reads fluently and says nothing: slogans, flourish, filler, insider terms. A different defect from AI-isms |
+| `check-prp-naming.py` | Naming, frontmatter and placement of build artifacts; also regenerates each build's index |
+| `check-plan-soundness.py` | Eight mechanical checks on a build plan: self-satisfying DONEs, unauthored artifacts, premature DONEs, criterion drift, cycles, duplicate ids, unpinned citations, prose-named artifacts. Under a second |
+| `review-drift.py` | The review ledger described under Review |
+| `no-postmortem-precommit.py` | The commit-time backstop for the write-time validator |
+
+## Slash commands
+
+`/adversarial-review`, `/quality-review`, `/adversarial`, `/simplify`, `/chaos`, `/five-whys`, `/ralph-loop`, and `/daily-review` (a Notion, Gmail and Calendar review that needs those connectors). Commands are thin; the logic lives in the skill each one invokes.
+
+## Scripts
+
+**Promotion.** `promote.sh <path>` copies a file or directory from the current project to the same path here. `check-promotion.sh --surface` lists promotable and drifted tooling; `--gate` blocks a commit on drift and is what every managed project's pre-commit runs. A project opts a file out with `.claude/promotion-ignore`. `install-global.sh` wires the global pre-commit and the SessionStart detector.
+
+**Public-repo gates.** `verify-clean.py --staged` runs on every commit here and denies client names, people, identifiers and home paths from `scripts/denylist.local.json` (gitignored, never ships) plus regex classes for UUIDs, IPs and emails. `scrub.py` replaces the same terms with `{{TOKEN}}`s. `check-knowledge.sh` fails a commit when a Serena memory on disk is missing from the memory index, or a skill is installed but not routed.
+
+**Repo hygiene.** `check-okf.sh` (frontmatter drift), `check-backlinks.sh`, `check-root-strays.sh`, `check-context-budget.sh` (size of always-on context), `check-new-names.sh`, `check_grep_blindspots.py` (probe visibility), `scan-large-payload.sh`, `check-deliverables.sh`, `log-correction.sh`, `sync-scheduled-tasks.sh`, `rebuild-plugin.sh`, `new-project.sh`.
+
+## Catalog
+
+`assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Eight today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`.
+
+A skill lands in `assets/` rather than `.claude/skills/` when a project's filled copy legitimately differs from the canonical one (client paths, matter names). `check-promotion.sh` skips a project's copy of any catalog asset, so the filled copy never reads as drift. To set up a new project from the catalog, invoke `project-bootstrap`: it profiles the project, proposes an install set, copies assets, fills tokens and writes a `TOOLING.md` manifest.
+
+## Rules and templates
+
+`.claude/rules/routing-protocol.md` (Classify → Load → Think → Pre-flight → Validate) and `kiss-yagni.md` (KISS, YAGNI, Two Strikes, Blocker Protocol, Cascade Re-Scope) load in every project.
+
+`templates/` carries the router (`CLAUDE.md.template`), the PRD and plan templates, a gitignore, a `knowledge-check.conf`, the three-stage research → draft → final pipeline (`stage-pipeline/`), and a scheduled-task template. `global/` holds the snippet for a user-level `CLAUDE.md` and the global pre-commit and session detector that `install-global.sh` installs. `knowledge/log.md` is this repo's own decision log, newest first.
+
+## Not in the template
+
+Domain governance for a specific workspace, document generators, and source-handling rules for a particular client live in that project's own `.claude/`. The port-header pattern (a skill naming which of its upstream routes are unreachable from a given repo) is reusable; the ported skills are not.
+
+## Layout
+
+```
+clybor-claude-tooling/
+├── README.md
+├── catalog.json                    # index of assets/, with adaptation points
+├── .claude/
+│   ├── agents/                     # quality/ code/ orchestration/ research/ (19)
+│   ├── skills/                     # 27 skills: build-* pipeline, review, ralph loops, governance, prose
+│   ├── commands/                   # 8 slash commands
+│   ├── hooks/                      # gates, each with its test-*.sh negative control
+│   ├── rules/                      # routing-protocol.md, kiss-yagni.md
+│   └── settings.json.template      # the default hook wiring
+├── assets/skills/                  # tokenised catalog skills (8)
+├── scripts/                        # init, promote, check-promotion, verify-clean, scrub, gates
+├── templates/                      # CLAUDE.md, PRD, plan, gitignore, stage-pipeline, scheduled-tasks
+├── global/                         # user-level CLAUDE.md snippet, global pre-commit, session detector
+└── knowledge/log.md                # this repo's decision log
+```
+
+## Updating
+
+This repo is the source of truth. Change it here, commit through the gates, then either re-run `init.sh` against a project or copy the single file across. Never edit a project's copy of shared tooling without promoting the change back; the drift gate will stop the project's next commit until you do.
 
 ## User journeys
 
-Five scenarios showing how the pieces compose.
+Five scenarios showing how the pieces compose in the lighter flow.
 
 ### 1. New feature, full dev cycle
 
