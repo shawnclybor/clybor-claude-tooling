@@ -154,168 +154,52 @@ This repo is the source of truth. Change it here, commit through the gates, then
 
 ## User journeys
 
-Five scenarios showing how the pieces compose in the lighter flow.
+Six scenarios, as the tooling runs today.
 
-### 1. New feature, full dev cycle
+### 1. A build, start to finish
 
-> *"I need to add rate limiting to the public API. Walk me through the right way."*
+> *"Build the thing the client asked for on Tuesday."*
 
-**Step 1 — Write the PRD.** You invoke `prd-writer`. It asks for the problem statement, then walks you through writing success criteria that are binary — *"P95 latency on `/api/*` stays under 200ms across 100 test requests"* rather than *"make it fast."* If the original problem cites external claims (a vendor's rate-limit doc, a research paper), `research-analyst` and `evidence-auditor` run first so the PRD has verified citations. Output lands in `docs/PRDs/rate-limiting.md`.
+**Stage 1, `build-prd`.** Question-driven discovery that locks four things before any code: the target, success criteria that are binary, one anchor case with its expected outcome, and the out-of-scope list. The PRD lands at `.claude/PRPs/<slug>/prd.md`. Two anchors, never merged: a CRITERIA anchor (one concrete input, what comes out) and an OPERATIONAL anchor (the whole corpus, exit codes, counts).
 
-**Step 2 — Plan the work.** `task-plan` reads the PRD and decomposes it into one-pass-completable tasks: schema/config first, then middleware, then tests, then docs. `task-distributor` analyzes the list and identifies which tasks can run safely in parallel (the tests for endpoint A and endpoint B can; the schema and the middleware that reads the schema cannot). The plan lands in `docs/PRDs/rate-limiting-plan.md`.
+**Stage 2, `build-probe`.** Every number, count, filename and line reference the PRD asserts becomes a small script that prints one value, with the expected value in `expected.tsv` and every cited file pinned by hash in `sources.lock`. `run.sh` passes only when every probe emits what the PRD says and no source has moved. A mismatch means fix the PRD or fix the probe; editing the expected value to match is what turns the gate into a mirror. Claims a script cannot decide are marked UNPROVABLE and carried to the next stage. This re-runs in seconds at every later stage.
 
-**Step 3 — Validate the plan.** `/quality-review` spawns three agents in parallel via `multi-agent-coordinator`. `simplifier` asks "is this the simplest decomposition?" — maybe a config flag is overkill for the first version. `adversarial-reviewer` challenges the plan's assumptions — "the PRD says burst tolerance is needed; the plan doesn't address it." `chaos-engineer` asks "what breaks this?" — clock skew, distributed counter races, header spoofing. `knowledge-synthesizer` combines the three reports into one. Critical findings go back to Step 2. High findings get addressed in the plan or explicitly accepted with rationale.
+**Stage 3, `build-validate`.** One page, `premises.md`: the three to five claims about the world the design rests on, each with what becomes incoherent if it is false and who can settle it. The pass condition is written into `validate.md` before any agent runs. Three named agents, one message, once: a premise auditor (what is the design relying on that the page does not say), a falsifier (CONTRADICTED / SUPPORTED / NO EVIDENCE per premise against the sources), an oracle auditor (name one case where every criterion passes and the output is still wrong for its reader). A premise the owner settles is closed and never reopened. When nothing is contested, skip the stage and record the skip.
 
-**Step 4 — Implement task-by-task.** `ralph-implement` works through the plan. For each task: it implements the smallest change that addresses the task, runs the per-task check (unit test, type check, lint), and on green invokes `code-reviewer` to catch issues the check itself doesn't — type-safety gaps, observability holes, structural debt. If a task fails twice with the same error, the loop stops and calls `debugger`, which reproduces the failure and narrows the cause with evidence before patching. If `debugger` can't find a root cause, `five-whys` halts the task and surfaces it to you. Parallel task groups get spawned via `multi-agent-coordinator`; `error-coordinator` correlates failures across them when they happen.
+**Stage 4, `build-plan`.** One runnable increment, no more. The acceptance driver is written first and red. `check-plan-soundness.py` gates the plan in under a second: DONE checks that grep a string the task itself wrote, artifacts the test uses that no task authors, DONEs depending on later tasks, criterion drift across documents, cycles, duplicate ids, unpinned citations, prose-named artifacts. No panel.
 
-**Step 5 — Verify against PRD criteria.** `verify` runs every PRD success criterion through its corresponding check command. The latency criterion runs the perf test. The "API returns 429 on threshold breach" criterion runs the integration test. The security criterion fires `security-auditor` against the rate-limit middleware. If a PRD criterion has no check, the verdict is PARTIAL — you either write the check or strike the criterion before continuing.
+**Stage 5, `build-estimate`.** Optional. Projects the remaining effort from the calibration ledger of measured builds. Never a gate and never an argument for scope.
 
-**Step 6 — Evaluate the implementation.** `/quality-review` runs again, this time against the built code rather than the plan. Same three agents, different question: did we build the right thing well? Critical findings send a narrower task list back into `ralph-implement`. Clean → close with a short note in `docs/PRDs/rate-limiting-closure.md`: what shipped, what was deferred, follow-ups.
+**Stage 6, `build-execute`.** Bounded iteration with hard caps. Adversarial review runs only when a change touches a contract, a pinned constant, a refusal limb or a path no mutation covers. Each increment adds its mutation rows and runs only those; the full mutation table runs once, at evaluate. Once a build runs and carries a suite that can fail, the harness is the reviewer.
 
-### 2. Autonomous overnight task
+**Stage 7, `build-evaluate`.** Binary verdict against the anchor cases, with cold-read agents fanned out. FAIL calls five-whys; PASS with a new pattern calls insight-promotion. `state.json` records the stage, which detectors each round ran, every decision the owner made, and what is still awaiting a human.
 
-> *"Build the user-profile CRUD endpoints with tests. I'll check it in the morning."*
+### 2. Autonomous overnight grind
 
-**Step 1 — Frame the prompt.** The Ralph loop only knows when to stop if you tell it. Write the prompt with a clear completion criterion: every endpoint implemented, every test passing, then emit the exact string `COMPLETE`. Include what to do if stuck — *"after 25 iterations document what's blocking and emit BLOCKED."*
+> *"Iterate this regex ruleset against the fixture corpus until every fixture passes."*
 
-**Step 2 — Launch the loop.**
+`/ralph-loop` with the prompt, a completion promise and an iteration cap. The Stop hook re-feeds the same prompt until the promise appears in the transcript or the cap is hit; deleting `.ralph-loop/state.json` cancels. This is for rote work with a deterministic check. Never run it on the same task as `build-execute`, and never on work that needs a judgment call between iterations.
 
-```
-/ralph-loop "Implement the four CRUD endpoints in routes/profile/.
-             Write integration tests for each. Run the suite each iteration
-             and fix what fails. Output <promise>COMPLETE</promise> when all
-             tests pass." --completion-promise "COMPLETE" --max-iterations 30
-```
+### 3. Something failed twice
 
-This writes `.ralph-loop/state.json` and starts Claude working on the task.
+> *"The same command failed twice with the same error."*
 
-**Step 3 — The loop runs itself.** Each time Claude tries to exit the session, the `ralph-stop.sh` Stop hook fires. It reads the state file, scans the last 200 lines of the transcript for the exact string `COMPLETE`. Not found → increment iteration counter, block the exit, re-feed the original prompt. Claude wakes up to the same prompt, sees its previous work in files, and continues. Iteration after iteration.
+Two Strikes. No third blind retry. `why-diagnostic` first if the framing is unclear; then `/five-whys`, which refuses to advance without a precise problem statement. `debugger` reproduces the failure and narrows the cause with evidence; `code-analyzer` traces the blast radius across files. The fix is the smallest change that addresses the root cause. Then the part that stops it recurring: `insight-promotion` writes the lesson as a rule and, wherever a script can check it, as a hook with a negative control. A rule nobody enforces gets skipped; a gate does not.
 
-**Step 4 — The loop exits.** Three paths: Claude emits `COMPLETE` (hook clears state, allows exit), the counter hits 30 (hook clears state, allows exit with a halt message), or you delete `.ralph-loop/state.json` mid-run to cancel. No external bash loop. No tabs to monitor.
+### 4. A document that will be reviewed more than once
 
-**Step 5 — Morning checkout.** You open the repo, read the closing transcript, scan the git history (one commit per substantive iteration), run the test suite to confirm it's green. If something went sideways, the transcript is the audit trail.
+> *"Tear this plan apart before I commit to it."*
 
-### 3. Production bug investigation
+`/adversarial-review`. The rubric loads before the target is read, so severity is a property of the finding and not of the round: must-fix means a false pass, a wrong deliverable or wasted days, and a finding that cannot name which is a note. The mechanical checker runs first and stops the review if it fails. `review-drift.py` checks whether earlier rounds have been ratcheting. Three lenses in one message, each with one question and told which classes are already machine-checked. Synthesis dedups, re-grades every claimed must-fix, and counts self-inflicted findings separately. The round is recorded; three rounds is the cap, and a fourth needs a written reason. Remaining doubt is resolved by building and running, not by reading again.
 
-> *"The dedup job is silently skipping records. I've retried it twice with the same failure."*
+### 5. Prose a person will act on
 
-**Step 1 — Two strikes triggers the protocol.** Same operation failing twice with the same signal is the Two Strikes rule from `kiss-yagni.md`. You stop retrying and invoke `/five-whys`. It refuses to advance until you write a precise problem statement: *"the dedup job processed 1,000 input rows, wrote 982 output rows, logged no errors, and there's no record of which 18 were skipped."*
+> *"Draft the memo the settlement team will work from."*
 
-**Step 2 — Walk the why-chain with Sequential Thinking.** Each "why" is one thought. Why are 18 rows missing? → Because the dedup predicate returned the same hash for them. Why? → Because the hash uses a field that's nullable. Why? → Because the schema migration didn't reject null on that field. Why? → Because the validation step was disabled for the migration window and never re-enabled. Root cause: validation flag left disabled.
+`writing-quality` strips AI-isms. The write-time gates catch what reads fine and is still wrong: `check-empty-prose.py` denies slogans, flourish and filler; `check-document-claims.py` denies an absolute claim about a document that does not carry the line it rests on; `no-postmortem-validator.py` denies prose that narrates what changed instead of stating what is; `availability-claim-validator.py` denies "blocked" or "missing" without the evidence beside it. If the draft came from source material, `adversarial-re-read` runs a second pass against the source, because a first extraction misses a fifth of what is there, and `evidence-auditor` checks every quote and figure against where it came from. A decision worth keeping goes through `insight-crystallizer` so it survives the chat.
 
-**Step 3 — Reproduce before patching.** `debugger` takes the root-cause hypothesis and reproduces it: synthesize 1,000 input rows with the null field on row 17, run the job, confirm row 17 (and 17 more like it) silently drops. Cited evidence: specific line in `dedup/hash.py:42` where the null hashes to the same value as an empty string, and the migration log showing the validation flag never flipped back.
+### 6. Promoting tooling back here
 
-**Step 4 — Trace the surface.** `code-analyzer` maps the cross-file logic flow to confirm no other consumer relies on the disabled flag. It surfaces one more silent path: a separate report job uses the same field for filtering. So the fix needs to cover both consumers.
+> *"That hook I built in the client repo is reusable."*
 
-**Step 5 — Fix and promote.** The minimal fix is two lines: re-enable the validation flag and guard the hash function against null. But the lesson is bigger: validation flags should never be disabled without an automated re-enable check. `insight-promotion` runs that proposed rule through the 3-agent quality team, then adds it to `.claude/rules/` so the next session that touches a migration sees the rule before disabling anything.
-
-### 4. Pre-merge audit on a sensitive change
-
-> *"This PR touches the auth middleware. I don't want to ship without a hard look."*
-
-**Step 1 — Code-level review first.** You point `code-reviewer` at the diff. It walks the checklist — correctness, type-safety, error handling, resource management, observability. Specific findings come back numbered, with file:line citations: "line 47 catches the JWT decode error but never logs the cause; failure mode is silent denial-of-access," "line 89 reads `req.user` before the auth check completes."
-
-**Step 2 — Security review on the same diff.** `security-auditor` (Opus tier) walks a different axis: input validation, injection risk, secret handling, auth flow integrity, dependency surface. It models the attack scenario for each finding — "an attacker submits a forged JWT with an empty signature; the verify call short-circuits to true; full account takeover."
-
-**Step 3 — Design review on the bigger choice.** Even if the diff is clean, the *approach* might be wrong. `/quality-review` runs the 3-agent team on the design itself. `simplifier` asks whether a built-in library would replace the custom middleware. `adversarial-reviewer` asks whether the chosen JWT lifetime contradicts the threat model the PRD assumed. `chaos-engineer` asks what happens under clock drift, key rotation, replay attacks. `knowledge-synthesizer` combines the three.
-
-**Step 4 — Merge gate.** The merge rule is "no Critical findings; High findings either addressed in this PR or explicitly accepted with rationale logged in the PR description." Critical-level security findings always block. The findings table from each agent is the documentation of why this merged or didn't.
-
-### 5. Research-backed decision doc
-
-> *"Should we switch from polling to webhooks for the third-party integration? Write me the decision."*
-
-**Step 1 — Cast the net.** `research-analyst` reads the vendor's documentation, scans community threads about reliability, pulls public incident reports about webhook delivery guarantees, and synthesizes it into a structured claims table — every claim with a citation, every disagreement between sources preserved rather than smoothed over.
-
-**Step 2 — Precision lookups for the specific quirks.** `search-specialist` handles the targeted questions: what's the exact retry policy in the vendor's webhook API? What's the maximum payload size? Is signature verification mandatory? Each lookup returns the exact quote plus the URL plus a retrieval date.
-
-**Step 3 — Audit the citations.** Before any of this lands in a decision doc, `evidence-auditor` walks the claims table and verifies each citation actually says what it's claimed to say. Fabricated URLs, paraphrased "quotes," and out-of-context excerpts get flagged. Anything FLAGGED gets fixed or struck before the doc moves forward.
-
-**Step 4 — Draft the decision.** With the cited claims locked in, you draft the recommendation. `writing-quality` audits the draft for AI-isms — drops "leverage," "robust," "comprehensive"; flattens the rule-of-three patterns; rewrites the formulaic conclusion. The output sounds like a competent human wrote it.
-
-**Step 5 — Make it persistent.** A decision that lives only in chat history will be re-litigated in three months when someone forgets why it was made. `insight-crystallizer` files the decision to `docs/insights/<date>-webhooks-vs-polling.md` with the rationale, the sources, the trade-offs that were considered, and the conditions under which the conclusion would change. Future sessions searching this directory find the answer instead of re-running the research.
-
-## Init a new project
-
-```bash
-bash /path/to/clybor-claude-tooling/scripts/init.sh /path/to/new-project "My Project Name"
-```
-
-That copies the `.claude/` tree, fills the `{{PROJECT_NAME}}` placeholder in `CLAUDE.md`, makes hooks executable, and prints next steps.
-
-If you re-run init after updating the template, it overwrites `.claude/` files but leaves a project's own `CLAUDE.md` in place (creates `CLAUDE.md.new` instead so you can diff).
-
-## Not in the template
-
-- Domain governance (database, messaging, storage, calendar) — lives per project
-- Document generators (docx, pptx, xlsx) — bundle per project
-- Source-handling, research-integrity rules — bundle per project that needs them
-
-Add anything project-specific to that project's own `.claude/`, not here.
-
-## Updating the template
-
-This is git-controlled. Make changes here, commit, then re-run `init.sh` against any project that should pick up the change.
-
-For long-running projects that have customized rules, prefer copying individual files (`cp .claude/agents/quality/chaos-engineer.md /target/.claude/agents/quality/`) so you don't clobber project-specific edits.
-
-## Layout
-
-```
-clybor-claude-tooling/
-├── README.md
-├── .claude/
-│   ├── agents/
-│   │   ├── README.md
-│   │   ├── quality/             # adversarial-reviewer, simplifier, chaos-engineer
-│   │   ├── code/                # code-reviewer, debugger, code-analyzer, security-auditor
-│   │   ├── orchestration/       # 8 orchestration agents
-│   │   └── research/            # research-analyst, search-specialist, evidence-auditor, metadata-fetcher
-│   ├── skills/
-│   │   ├── README.md
-│   │   ├── quality-review/SKILL.md
-│   │   ├── five-whys/SKILL.md
-│   │   ├── writing-quality/SKILL.md
-│   │   ├── ralph-loop/SKILL.md
-│   │   ├── ralph-implement/SKILL.md
-│   │   ├── skill-validator/SKILL.md
-│   │   ├── prd-writer/SKILL.md
-│   │   ├── task-plan/SKILL.md
-│   │   ├── verify/SKILL.md
-│   │   ├── insight-crystallizer/SKILL.md
-│   │   └── insight-promotion/SKILL.md
-│   ├── commands/
-│   │   ├── README.md
-│   │   ├── quality-review.md
-│   │   ├── adversarial.md
-│   │   ├── simplify.md
-│   │   ├── chaos.md
-│   │   ├── five-whys.md
-│   │   └── ralph-loop.md
-│   ├── hooks/
-│   │   ├── README.md
-│   │   ├── compact-recovery.sh
-│   │   ├── kiss-yagni-reminder.py
-│   │   └── ralph-stop.sh
-│   ├── rules/
-│   │   ├── README.md
-│   │   ├── routing-protocol.md
-│   │   └── kiss-yagni.md
-│   └── settings.json.template
-├── scripts/
-│   └── init.sh
-└── templates/
-    ├── CLAUDE.md.template
-    ├── prd-template.md
-    └── plan-template.md
-```
-
-## Catalog (assets/ + catalog.json)
-
-Sanitized, reusable tooling harvested from real projects — indexed in `catalog.json`,
-PII-gated by `scripts/verify-clean.py` (pre-commit). To set up a NEW project from the
-catalog, invoke the `project-bootstrap` skill (assets/skills/project-bootstrap/) — it
-profiles the project, proposes an install set, copies assets, fills adaptation tokens,
-and writes a TOOLING.md manifest. Rebuilds of the catalog itself: scrub with
-`scripts/scrub.py`, verify with `scripts/verify-clean.py` (token mode enforces that
-every {{TOKEN}} is declared in catalog.json adaptation_points).
+Every session starts with `check-promotion.sh --surface` listing tooling in the project that is not here yet, or has drifted from the copy that is. `promote.sh <path>` copies it across at the same relative path. In this repo the commit runs `verify-clean.py --staged`, which denies client names, people, identifiers and home paths; a hit is scrubbed at the source in the project first, so the two copies stay byte-identical and the project's drift gate stays quiet. A skill that is reusable as a pattern but filled with client specifics goes to `assets/` through `scrub.py`, which tokenises it, with a `catalog.json` entry declaring its tokens; the project's filled copy is then skipped by the drift check by design. Commit here, then the project's next commit passes its own gate.
