@@ -15,9 +15,9 @@ The router template is [`templates/CLAUDE.md.template`](templates/CLAUDE.md.temp
 
 For the promotion gate on every machine you commit from: `bash scripts/install-global.sh` sets the global `core.hooksPath` and installs the SessionStart detector that lists promotable and drifted tooling at the start of each session.
 
-## The build pipeline
+## The Build Pipeline
 
-Seven stages with a gate between each. The sequence is fixed: `prd → probe → validate → plan → estimate → build → evaluate`.
+The build is seven stages with a gate between each. This is for non-deterministic work. Use Ralph loops for rote code projects. The sequence of build is fixed: `prd → probe → validate → plan → estimate → build → evaluate`.
 
 | Stage | Skill | What it does |
 |---|---|---|
@@ -31,9 +31,11 @@ Seven stages with a gate between each. The sequence is fixed: `prd → probe →
 
 Why it is shaped this way: measured across 21 review rounds on 7 builds, a freshly written plan carried about 12 must-fix findings regardless of care, 45% of later findings were introduced by the previous round's own repairs, and only 3 of 15 findings in a typical round needed judgment. Facts go to probes, plan structure goes to a mechanical checker, and human-style review is spent on premises only.
 
-The lighter flow still ships for small work: `prd-writer` → `task-plan` → `/quality-review` → `ralph-implement` → `verify`.
+A lighter flow alternative for small work: `prd-writer` → `task-plan` → `/quality-review` → `ralph-implement` → `verify`.
 
-## Review
+## Adversarial Review
+
+The suite of adversarial review agents, skills, and hooks. Blends mechanical, deterministic checks with inferential, nondeterministic natural-language workflows.
 
 | Skill or command | Use |
 |---|---|
@@ -45,11 +47,11 @@ The lighter flow still ships for small work: `prd-writer` → `task-plan` → `/
 | `why-diagnostic` | A framing diagnostic for "why did this happen" moments before reaching for five-whys |
 | `verify` | Deterministic gate against a PRD's success criteria |
 
-`review-drift.py` records each round and flags four ways a review ratchets: never coming back clean, counts rising on an unchanged target, self-inflicted findings, and re-grades against unchanged text.
+`review-drift.py` records each round and flags four ways a review ratchets: never coming back clean, counts rising on an unchanged target, self-inflicted findings, and re-grades against unchanged text. The logic underlying this is that agents do a terrible job assessing things over multiple iterations, due to the underlying imperatives of their system prompts and engineering. Mechanical checks keep standards consistent and prevent mission creep.
 
 ## Agents
 
-Nineteen subagents in four lanes, spawned by the skills above. Read-only by default.
+Nineteen subagents in four lanes, spawned by the skills above. Read-only by default. Generally I find that these are not well utilized unless they are baked directly into commands and skills. 
 
 **Quality:** `adversarial-reviewer` (Opus, is this true), `simplifier` (Sonnet, is this the simplest way), `chaos-engineer` (Sonnet, what breaks this). Non-overlapping by construction.
 
@@ -63,7 +65,7 @@ Full table in [`.claude/agents/README.md`](.claude/agents/README.md).
 
 ## Other skills
 
-**Ralph loops.** `ralph-loop` / `/ralph-loop` is the Stop-hook loop: one prompt re-fed until Claude emits the completion promise or the iteration cap. `ralph-implement` is the task-driven sibling. `skill-validator` is the ralph specialised for validating a SKILL.md.
+**Ralph loops.** `ralph-loop` / `/ralph-loop` is the Stop-hook loop cycle that was all the rage of last month: one prompt re-fed until Claude emits the completion promise or the iteration cap. `ralph-implement` is the task-driven sibling. `skill-validator` is the ralph specialised for validating a SKILL.md. I use this for rote coding projects. It gets the job done right.
 
 **Prose and knowledge.** `writing-quality` strips AI-isms and empty prose from anything a person will read. `session-output` writes the report of what a session did. `insight-crystallizer` files a decision so it survives the chat; `insight-promotion` turns one into an always-on rule. `promote-to-tooling` reviews a tooling change in a working repo and promotes the universal part here. `ooda` runs Boyd's decision cycle on a task you ask to work that way.
 
@@ -71,7 +73,7 @@ Full table in [`.claude/agents/README.md`](.claude/agents/README.md).
 
 ## Hooks
 
-Every gate ships with a negative control (`test-*.sh`) that proves it can fail, and where the gate is a list, a mutator (`mutate-*.py`) that proves the control catches a broken gate. A gate that cannot fail proves nothing.
+Hooks are the silent heroes of AI, and also the most underused. Hooks are checks. Hooks are external validation. Hooks are gates -- is AI allowed to continue or no? Did it do what it was supposed to? Did it follow a rule? Did it format a sheet? Did it remember to do something? Hooks are the antidote to the "Oops my bad." And every gate ships with a negative control (`test-*.sh`) that proves it can fail, and where the gate is a list, a mutator (`mutate-*.py`) that proves the control catches a broken gate. A gate that cannot fail proves nothing. Nothing is itself without its opposite. 
 
 **Wired by default** in `settings.json.template`:
 
@@ -98,6 +100,8 @@ Every gate ships with a negative control (`test-*.sh`) that proves it can fail, 
 
 ## Slash commands
 
+I used slash commands for a while to orchestrate skills into larger workflows. I haven't done much of that work lately because markdown files do the job well enough. Generally, the least necessary part of this repo.
+
 `/adversarial-review`, `/quality-review`, `/adversarial`, `/simplify`, `/chaos`, `/five-whys`, `/ralph-loop`, and `/daily-review` (a Notion, Gmail and Calendar review that needs those connectors). Commands are thin; the logic lives in the skill each one invokes.
 
 ## Scripts
@@ -115,6 +119,8 @@ Every gate ships with a negative control (`test-*.sh`) that proves it can fail, 
 A skill lands in `assets/` rather than `.claude/skills/` when a project's filled copy legitimately differs from the canonical one (client paths, matter names). `check-promotion.sh` skips a project's copy of any catalog asset, so the filled copy never reads as drift. To set up a new project from the catalog, invoke `project-bootstrap`: it profiles the project, proposes an install set, copies assets, fills tokens and writes a `TOOLING.md` manifest.
 
 ## Rules and templates
+
+Here's how we enforce behavioral patterns.
 
 `.claude/rules/routing-protocol.md` (Classify → Load → Think → Pre-flight → Validate) and `kiss-yagni.md` (KISS, YAGNI, Two Strikes, Blocker Protocol, Cascade Re-Scope) load in every project.
 
