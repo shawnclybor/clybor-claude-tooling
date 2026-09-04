@@ -88,11 +88,55 @@ A failed criterion does not auto-fix anything. Report the failure with:
 
 Then stop and surface to the user. The next step is either return to `ralph-implement` with a narrower task list or update the PRD if the criterion was wrong.
 
+## Agent passes — conditional, after the checks
+
+Run these only once every deterministic check has been run and its evidence written. They are gates, not commentary: a **Critical** finding from any of them is treated exactly as a failed check, and the verdict is FAIL. Spawn whichever apply in one message.
+
+Each condition is a real trigger, not a suggestion — if the condition holds and the pass did not run, the verification is PARTIAL, not PASS.
+
+### Always, once the checks are green — `code-reviewer`
+
+Catches what a green check does not: type-safety gaps, naming, structural debt in the code the checks just passed.
+
+```
+Agent(
+  subagent_type="code-reviewer",
+  description="Final read-only pass over verified implementation",
+  prompt="Review the implementation files at <paths>. PRD criteria and their check results: <paste table>. The deterministic checks are already green — do NOT re-run or re-report them. Report correctness bugs, type-safety gaps, blast-radius misses, naming and structural debt, ranked, each with file and line. Mark each finding Critical / High / Medium / Low. Read-only, no edits."
+)
+```
+
+### When the PRD carries a security-shaped criterion — `security-auditor`
+
+Input validation, auth, secrets, injection, dependency surface. A deterministic check does not satisfy a security criterion on its own; this agent is the gate for it.
+
+```
+Agent(
+  subagent_type="security-auditor",
+  description="Audit the security-shaped PRD criteria",
+  prompt="Security-shaped criteria from the PRD: <paste>. Code surface: <paths>. For EACH criterion, say whether the code actually satisfies it and name the file and line that decides it. Then report any vulnerability in that surface the criteria did not anticipate. Mark each finding Critical / High / Medium / Low. Read-only, no edits."
+)
+```
+
+### When a criterion is cross-file or structural — `code-analyzer`
+
+For example *"no module in `api/` imports from `db/` directly"* or *"all routes in `handlers/` register through the central router"*. A grep catches the obvious violations; this agent confirms the criterion holds at the structural level rather than the textual one.
+
+```
+Agent(
+  subagent_type="code-analyzer",
+  description="Trace cross-file criteria to confirm they hold structurally",
+  prompt="Structural criteria: <paste>. Repo paths in scope: <paths>. For EACH criterion, trace the actual call and import paths and report HOLDS / VIOLATED with the file and line that decides it. A criterion satisfied textually but violated through an indirect path is VIOLATED — name the indirection. Read-only, no edits."
+)
+```
+
+A `VIOLATED` verdict fails that criterion, whatever its grep-based check returned.
+
 ## Pass / fail summary
 
-- **PASS** — every check returned green
-- **FAIL** — at least one check returned red
-- **PARTIAL** — some criteria pass, some have no check (the verification is incomplete; either write the missing checks or document why they can't be written)
+- **PASS** — every check returned green, and every applicable agent pass ran with no Critical finding
+- **FAIL** — at least one check returned red, or an agent pass returned a Critical finding
+- **PARTIAL** — some criteria pass and some have no check, or an applicable agent pass did not run (the verification is incomplete; either write the missing checks and run the pass, or document why they can't be)
 
 Treat PARTIAL the same as FAIL — do not advance to Stage 6 with unmapped criteria.
 
@@ -103,9 +147,3 @@ Treat PARTIAL the same as FAIL — do not advance to Stage 6 with unmapped crite
 - **Stale runs** — running checks against an old build. Re-run after every implementation change.
 - **Flaky checks counted as PASS** — a check that passes 80% of the time is not a check. Fix the flake or strike the check.
 
-## Agent integration
-
-- **`code-reviewer`** — runs a final read-only pass over the implementation files after deterministic checks return PASS, before Stage 6 evaluation. Catches issues the checks do not (type-safety gaps, naming, structural debt). A Critical finding from `code-reviewer` is treated the same as a failed check — return to Stage 4.
-
-- **`security-auditor`** — invoked when the PRD includes any security-shaped criterion (input validation, auth, secrets, injection, dependency surface). The deterministic check alone does not satisfy a security criterion — `security-auditor` is the gate. A Critical finding from `security-auditor` is treated the same as a failed check.
-- **`code-analyzer`** — invoked when a PRD criterion is cross-file or structural (e.g., "no module in `api/` imports from `db/` directly"; "all routes in `handlers/` register through the central router"). The deterministic check alone often catches obvious violations; `code-analyzer` traces logic flow across files to confirm the criterion holds at the structural level, not just at the textual one.

@@ -51,9 +51,33 @@ Use the table above. If multiple targets apply, pick the narrowest scope that st
 
 Match the target file's existing format. Most rule files have rule sections, Known Issues tables, or checklists. Drafts must be tight — governance files pay an always-on context tax, so every word earns its place. If the insight takes 500 words to explain, it is not promotion-ready. Boil it down.
 
-### Step 4 — Confirm before writing
+### Step 4 — Review the draft, then confirm before writing
 
-Present three things: the target file plus section, the exact draft text, and why it belongs there and not elsewhere. Wait for approval, edit, or redirect. Do not edit governance files silently.
+**4a. Run the three lenses against the draft.** Spawn all three in one message. A governance file is loaded into every session that touches its domain, so a bad rule compounds on every one of them — this is the cheapest place to catch it, and the only place before it goes always-on.
+
+```
+Agent(
+  subagent_type="adversarial-reviewer",
+  description="Challenge the proposed governance rule",
+  prompt="Proposed rule: <paste draft>. Target file and section: <paste>. The failure mode it claims to prevent: <paste>. Does the rule actually prevent that failure mode, or only describe it? Would following the rule as written have prevented the specific incident behind it? What does it forbid that should be allowed? Judge the rule as written, not the intent behind it. Findings only, no edits."
+)
+
+Agent(
+  subagent_type="simplifier",
+  description="Test whether the rule is the simplest framing",
+  prompt="Proposed rule: <paste draft>. Is this the simplest framing that addresses the failure mode? A long rule is a rule that gets skimmed. Propose a shorter wording that keeps every constraint, or say the current wording is already minimal. Do not weaken the rule to shorten it. Findings only, no edits."
+)
+
+Agent(
+  subagent_type="chaos-engineer",
+  description="Find where the rule itself breaks",
+  prompt="Proposed rule: <paste draft>. What breaks the RULE — not the system it governs? Name cases it does not cover, and cases where following it produces a worse outcome than ignoring it. Check specifically for a condition that can be satisfied vacuously, where the step never runs and looks identical to one that passed. Findings only, no edits."
+)
+```
+
+A High or Critical finding sends the draft back for revision before anything is presented. Fix it and re-run the lenses on the revision.
+
+**4b. Confirm.** Present four things: the target file plus section, the exact draft text, why it belongs there and not elsewhere, and what the three lenses found. Wait for approval, edit, or redirect. Do not edit governance files silently.
 
 ### Step 5 — Apply
 
@@ -92,9 +116,10 @@ Before promoting any insight:
 1. Does it meet at least one promotion criterion?
 2. Is there a narrower home than `CLAUDE.md` Hard Rules? (Default to narrower.)
 3. Have I drafted the exact text, not just a summary of the idea?
-4. Have I confirmed with the user before editing?
-5. Does the entry match the target file's existing format?
-6. Does an insight exist for this rule? If it came from conversation, have I filed one **before** promoting? Is `promoted_to:` set on it?
+4. Have the three lenses run on the draft, with no High or Critical finding outstanding?
+5. Have I confirmed with the user before editing?
+6. Does the entry match the target file's existing format?
+7. Does an insight exist for this rule? If it came from conversation, have I filed one **before** promoting? Is `promoted_to:` set on it?
 
 ## Append formats
 
@@ -121,11 +146,3 @@ Example (if essential): minimal concrete case.
 ```markdown
 N. **Rule Name** — one-sentence statement of the rule and its scope.
 ```
-
-## Agent integration
-
-- **`adversarial-reviewer`** — runs against the proposed governance edit before applying. The reviewer challenges whether the rule actually prevents the failure mode and whether the rule has unintended consequences. A High or Critical finding sends the draft back for revision.
-- **`simplifier`** — invoked alongside adversarial-reviewer in Step 4. Asks whether the proposed rule is the simplest framing that addresses the failure mode. A long rule is a rule that gets skimmed.
-- **`chaos-engineer`** — invoked alongside the other two. Asks what breaks the rule itself — edge cases the rule does not cover, situations where following the rule produces a worse outcome.
-
-The three together replicate the `quality-review` lens before any governance edit lands. Bad rules compound on every session.

@@ -1,262 +1,197 @@
 ---
 name: build-validate
-description: Multi-agent validation gate for a build plan BEFORE any execution spend. Spawns 4-5 reviewer agents in parallel — adversarial reviewer (ambiguity), pattern auditor (mirror drift), completeness auditor (PRD criteria → plan tasks coverage), anti-pattern auditor (recurring failures from prior FAIL evaluations), and a profile-specific auditor where applicable. Read-only. Outputs a must-fix / should-fix / note table. PASS = zero must-fix. If ≥3 prior validate FAILs exist for similar slugs, auto-invokes five-whys before reporting. Use after build-plan, before build-execute. Triggers — "validate the plan", "review before executing", "is the plan good", "ready to execute".
-allowed-tools: Read, Grep, Glob, Agent, Skill, AskUserQuestion, mcp__sequential-thinking__sequentialthinking
-user-invocable: true
-argument-hint: "<slug> matching an existing plan"
+description: >
+  Review a build's PREMISES — the three-to-five things that must be true about the world for the
+  design to be right — once, after build-probe and before build-plan. Not a plan review. Not a
+  per-round gate. Spawns 2-3 reviewers against the premise page and the probe run's UNPROVABLE
+  list, and asks one question: is the frame right. Use when a build's frame is new or contested —
+  a new module whose oracle is not obvious, a schema change that alters what a field MEANS, or a
+  reversal like "we check their sheet" becoming "we produce it". Triggers — "validate the
+  premises", "is the frame right", "check my assumptions before I plan", "/build validate".
+  Do NOT use on a plan, on a repair round, or on a running system.
 ---
 
-# Build Validate
+# Build Validate — the premise check
 
-Read-only validation gate. Spawns reviewers in parallel and synthesizes their findings.
+**One question: is the frame right?**
 
-## The rubric — read this BEFORE briefing any reviewer
+Not "is the plan complete", not "is this number correct", not "could a careless implementer game
+this criterion". Those have cheaper detectors and this stage must not spend itself on them.
 
-**Gates catch breakage, not findings** (repo `CLAUDE.md` Hard Rule 9). This gate stops a plan that is
-*broken*. It does not enumerate what a careful reader could improve.
+## Why this is scoped so narrowly — the measurement
 
-**`must-fix` has exactly one definition:**
+Twenty-one recorded rounds across seven slugs under the old design, which reviewed *plans*:
 
-> it produces a **wrong result a human relies on**, or it lets the tool **claim something it has not
-> verified**.
+```
+round-1 must-fix:  8, 13, 14, 15, 12, 12, 9      mean 11.9, every time
+total must-fix:    175
+self-inflicted:     78  = 45%      (a finding in text the PREVIOUS round's repair wrote)
+```
 
-Everything else is a **note**, however well-measured. A finding can be perfectly true and still not worth
-the build's time. **"True" is not "important"** — conflating them is how a review loop runs forever. Brief
-every reviewer with this definition explicitly; without it they default to "anything I can justify."
+Three things follow, and the design is built on them.
 
-**Never in scope as a finding:** calendar, effort, hours, or any estimate (Hard Rule 8). Schedule is the
-human's call, per instance.
+**A freshly-written plan carries ~12 must-fix regardless of care.** Seven independent first rounds,
+range 8–15. That is not a quality signal; it is what happens when prose asserts things about code
+nobody has run.
+
+**Later rounds mostly grade their own damage.** Repair rewrites the document, the panel re-reads
+fresh surface, forever. One slug reached *zero* must-fix at round 6, took on new scope, and was back
+to 12 at round 7 — with `review-drift.py` scoring 12 of 12 self-inflicted.
+
+**Sorting one real round by cheapest detector, only 3 of 15 findings needed judgment.** Seven were
+checkable facts (a probe settles those in seconds). Five were plan incoherence
+(`check-plan-soundness.py` settles those in under a second). Three were frame errors — and those
+three were worth the whole exercise, because nothing else finds them.
+
+So: probe the facts, gate the structure mechanically, and spend this stage only on the frame.
+Premises do not change when you fix a typo, which is precisely why reviewing them cannot spiral.
 
 ## When to use
 
-- A plan exists at `.claude/PRPs/{slug}/plan.md` and you're about to invoke build-execute.
-- Re-validating after a major plan revision.
+Run once, when a build's frame is **new or contested**:
 
-## When NOT to use — the stage rule
+- a new module whose oracle is not obvious — *what makes this output right?*
+- a schema change that alters what an existing field **means**
+- a reversal of direction — "we audit their sheet" becoming "we generate it"
+- any `UNPROVABLE` entry that `build-probe` carried forward
 
-- Mid-execute prompt tweaks — that's build-execute's per-iteration adversarial review step, not this skill.
-- The plan is still drafting (PRD status ≠ `planning` or `approved`). Finish build-plan first.
-- ⚠ **The system already runs and carries a live test suite.** This gate earns its cost on greenfield,
-  where nothing runs and mistakes compound. Once the guardrails exist and the suite is green, **rapid
-  build/test rounds catch more per hour than another reviewer panel** — the harness is the reviewer. Run
-  the thing dozens of times instead. A clean git tree makes revert cheap, which is what licenses the speed.
-- ⚠ **The work is hardening, not shipping.** "PASS = zero must-fix" against a large plan of optional
-  polish is unpassable by construction: a careful reader always finds a success condition a hypothetical
-  careless implementer could game. Use the consequence test above, or don't run this gate.
+If you can state every premise in one line and none is in dispute, **skip this stage and say so in
+`state.json`.** Skipping a premise check on settled ground is correct, not a shortcut.
 
-## ⚠ Stop rule — the SECOND FAIL is a process defect, not a target defect
+## When NOT to use — each of these has a cheaper detector
 
-**This is the `Two Strikes` hard rule in `CLAUDE.md` applied to review panels — CLAUDE.md holds the one
-true copy; this section only says what "the same op" means here.** Do not restate Two Strikes' reasoning
-below — a second copy drifts from the first, and a heading that disagrees with its own body sends a
-skimmer one panel past the stop.
+| Not this | Use instead |
+|---|---|
+| A plan's task list | `check-plan-soundness.py` — 8 mechanical classes, under a second |
+| A number, count, filename or line reference | `build-probe` |
+| A repair round after findings were fixed | Nothing. Re-run the probes and the mechanical gate |
+| A running system with a mutation-backed suite | The suite. Run the thing |
+| A per-iteration code change | `build-execute`'s conditional review — and it is conditional |
 
-**The op is one panel run against one target. Two FAILs on the same target = Two Strikes = STOP.**
-So after the **second** FAIL, do **not** run a third panel. Stop, report that the gate itself is suspect,
-and put the scope to the human. Run `.claude/hooks/review-drift.py check <target>` first and **heed its
-verdict rather than logging past it** — it catches ratchet, inflation, self-inflicted findings and
-re-grades. That drift check is this domain's substitute for Two Strikes' "research before you report" step.
+## Phase 1: WRITE THE PREMISE PAGE
 
-Distinguish two shapes before recommending anything, because the fixes are opposite:
-- **Ratchet** — *new* complaints each pass. Fix: stop reviewing.
-- **Persistent identical findings** — the same items surviving verbatim. Fix: go repair, or cut the scope.
-
-Worked example — note this is the rule being **violated**, which is how it was found; the stop should have
-come after the second FAIL. `build-a-yellow-sheet` rounds 7–9 (2026-08-30): three FAILs, 17 → 17 → 24 must-fix, on a
-build already running end to end on two real client matters with a green 475-assertion suite. **Not one of
-the 24 changed a figure, a flag, or anything a reader of the sheet sees.** Resolution was neither "stop
-reviewing" nor "go repair" — it was **cut the scope**, seven tasks to two. Full account:
-`mem:gate_philosophy`.
-
-## Phase 1: PARSE + PARALLEL LOAD + PRIOR-FAIL DISCOVERY
-
-**Batch in one message** — independent reads:
-- `Read` `.claude/PRPs/{slug}/plan.md`, the linked PRD (`prd_ref`), the mirror target, and the profile
-- `Glob` `.claude/PRPs/*/evaluate.md` to find prior FAIL verdicts on similar target types
-- Spawn `Agent(subagent_type="Explore", description="Find prior validate FAILs for similar builds", prompt="Search .claude/PRPs/*/validate.md and *.md for FAIL verdicts on builds whose target_type matches {type}. Return the top 5 recurring must-fix categories.")` — runs in parallel with the reads since it has no dependency on them
-
-If any required file is missing, stop and report.
-
-## Phase 2: META-CHECK (recurring failures)
-
-If the Explore agent returns ≥3 recurring must-fix categories: **invoke `five-whys`** BEFORE running the parallel reviewers. Recurring failures across builds suggest a process gap, not a one-off plan bug.
-
-```
-Skill(skill="five-whys", args="recurring_must_fix_categories=<list from Explore output>")
-```
-
-The five-whys output becomes additional input for the reviewers below (they should know what patterns to flag).
-
-## Phase 3: PARALLEL REVIEW (4-5 agents in one message)
-
-Spawn ALL reviewers in a SINGLE message. Per CLAUDE.md routing, when spawning multiple subagents, load `subagent-governance` first if you don't have it loaded.
-
-### Agent 1 — Adversarial reviewer (general-purpose)
-
-```
-Agent(
-  subagent_type="general-purpose",
-  description="Adversarial review of build plan",
-  prompt="""You are an adversarial reviewer for a build plan.
-
-PRD: <paste full PRD>
-Plan: <paste full plan>
-Mirror target excerpt: <paste relevant sections of the mirror>
-
-Find every place where:
-1. The plan is ambiguous — a careful reader could implement two different things from the same sentence.
-2. The acceptance test in the plan doesn't actually verify the PRD's anchor case.
-3. A step says "improve X" or "finalize Y" or "polish Z" without a binary DONE check.
-4. The plan invents new structure where the mirror target has an existing pattern that fits.
-5. The plan promises something the PRD did not require (scope creep) OR misses something the PRD did require.
-
-Output: numbered findings, each tagged must-fix / should-fix / note.
-End with one-line verdict: counts + PASS or FAIL recommendation.
-DO NOT propose edits. Findings only."""
-)
-```
-
-### Agent 2 — Pattern auditor (general-purpose)
-
-```
-Agent(
-  subagent_type="general-purpose",
-  description="Audit plan against mirror target pattern",
-  prompt="""You are auditing whether a build plan correctly mirrors an existing pattern.
-
-Mirror target: <path>
-Mirror sections to inspect: <list from plan>
-Plan: <paste full plan>
-
-Cross-check:
-1. Every section of the mirror target the plan claims to copy IS represented in the plan.
-2. Any section the plan adds beyond the mirror has a justification in the plan body.
-3. Naming conventions (frontmatter keys, file paths, function names) match the mirror.
-4. Anti-patterns called out in the mirror's own comments/docs are not reintroduced.
-
-Output: numbered findings, each tagged must-fix / should-fix / note.
-End with one-line verdict."""
-)
-```
-
-### Agent 3 — Completeness auditor (general-purpose)
-
-```
-Agent(
-  subagent_type="general-purpose",
-  description="PRD-criteria → plan-tasks coverage check",
-  prompt="""You are checking whether every PRD criterion has a corresponding plan task and acceptance check.
-
-PRD success criteria: <paste from PRD>
-PRD anchor case: <paste from PRD>
-PRD out-of-scope: <paste from PRD>
-Plan step-by-step tasks: <paste>
-Plan acceptance test: <paste>
-
-For each PRD criterion: name the plan task(s) that address it AND the acceptance check that verifies it. Flag missing coverage as must-fix.
-
-For the anchor case: confirm the acceptance test exercises it explicitly. If not, must-fix.
-
-For each out-of-scope item: scan the plan for accidental inclusions. Must-fix if any task implements something explicitly out-of-scope.
-
-Output: numbered findings, each tagged must-fix / should-fix / note. End with one-line verdict."""
-)
-```
-
-### Agent 4 — Anti-pattern auditor (general-purpose, parallel)
-
-```
-Agent(
-  subagent_type="general-purpose",
-  description="Anti-pattern check against recurring failures",
-  prompt="""You are auditing a plan against known anti-patterns.
-
-Plan: <paste>
-Profile anti-patterns: <paste from profile 'Anti-patterns to avoid' section>
-Recurring failure categories from prior builds: <paste from Phase 1 Explore output>
-Five-whys output (if Phase 2 ran): <paste or N/A>
-
-For each anti-pattern: scan the plan for accidental reintroduction. Flag matches as must-fix with the specific plan line.
-
-Output: numbered findings tagged must-fix / should-fix / note. End with one-line verdict."""
-)
-```
-
-### Agent 5 — Profile-specific auditor (if profile defines one)
-
-Skip if profile has no `validate_agent_3` (preserving the original naming) reviewer definition.
-
-## Phase 4: SYNTHESIZE (sequential thinking)
-
-Use `mcp__sequential-thinking__sequentialthinking` to:
-- Deduplicate overlapping findings across the 4-5 agents
-- Note contradictions explicitly (rare — flag them)
-- Categorize each unique finding by severity
-- Cross-reference with the five-whys output (if Phase 2 ran) — recurring-failure findings get extra weight
-
-## Phase 5: REPORT
-
-Write `.claude/PRPs/{slug}/validate.md`:
+One page. `.claude/PRPs/{slug}/premises.md`. Three to five entries, each in this shape:
 
 ```markdown
-## Validation: {slug}
-
-### Must-Fix ({N})
-| # | Issue | Source | Where in plan |
-|---|-------|--------|---------------|
-
-### Should-Fix ({N})
-| # | Issue | Source | Where |
-
-### Note ({N})
-| # | Issue | Source | Where |
-
-### Verdict
-{PASS / FAIL}
-
-PASS = zero must-fix **under the consequence test at the top of this skill** — a wrong result a human
-relies on, or the tool claiming something it has not verified. Findings that fail that test are notes and
-do **not** block. FAIL = ≥1 must-fix that meets it; do not proceed to execute until addressed.
-
-⚠ If the must-fix list is long and none of its items changes a figure, a flag, or anything a user sees,
-the verdict is **PASS with notes** and the finding to report is that **the scope is too large for the
-value** — not that the plan is broken.
-
-### Per-agent verdicts
-- Adversarial: {N} must-fix
-- Pattern auditor: {N} must-fix
-- Completeness auditor: {N} must-fix
-- Anti-pattern auditor: {N} must-fix
-- Profile auditor: {N} must-fix or N/A
-
-### Meta-check (Phase 2)
-Five-whys invoked: yes (recurring failures: {list}) / no
+### P1. {The premise, as a claim about the world — one sentence}
+**If this is wrong:** {what in the build becomes incoherent}
+**Evidence:** {a probe id, a document, a person who said it — or "none, this is an assumption"}
+**Who can settle it:** {a probe / the user / a named person at the client}
 ```
+
+A premise is load-bearing: if it is false, some part of the design stops making sense. *"The account
+numbers we bind on are printed on the bills"* is a premise. *"Task 4 should come before Task 5"* is
+not — that is the plan's business.
+
+Carry every `UNPROVABLE` from `probe.md` in as a premise. That list is this stage's agenda.
+
+**If a premise can be settled by asking the user, ask the user.** One question, five seconds,
+and you are done. Measured: on one build, three frame errors all reduced to a single question the
+owner could have answered instantly — five agents spent 45 minutes discovering the question existed.
+Discovering the question is this stage's value; answering it usually is not.
+
+## Phase 2: DECLARE THE PASS CONDITION
+
+Write it into `validate.md` **before** spawning anything. A bar set after seeing the findings is not
+a bar.
+
+```markdown
+### Pass condition (declared {ISO}, before agents ran)
+- Scope: the premises in premises.md. Nothing else is in scope, including the plan.
+- PASS if: every premise is settled — confirmed by evidence, or decided by the owner.
+- FAIL if: any premise is contradicted by the evidence, or any load-bearing premise is
+  unstated and only surfaced by review.
+```
+
+## Phase 3: REVIEW (2-3 agents, one message)
+
+Spawn in a single message. Every reviewer gets the pass condition from Phase 2, the scope line, and
+`premises.md` with the probe run's `UNPROVABLE` entries already carried in.
+
+Each reviewer is a **named agent**, not `general-purpose`. Each of the three questions below is one
+agent's standing lens, and this stage runs exactly once — there is no later round to correct a
+reviewer that improvised its own frame.
+
+### Agent 1 — Premise auditor (`adversarial-reviewer`, Opus)
+
+Finds the unstated frame, which is the failure mode that matters.
+
+```
+Agent(
+  subagent_type="adversarial-reviewer",
+  description="Surface unstated premises in {slug}",
+  prompt="Scope: premises only. The plan, its task list and its ordering are OUT of scope. Design: <paste PRD 'What this is' + anchor case>. Stated premises: <paste premises.md>. Which premises is this design relying on that are NOT stated? For each, write it as a one-sentence claim about the world and say what in the build becomes incoherent if it is false. Do not report numbers, counts, filenames or line references — build-probe owns those. Findings only, no edits."
+)
+```
+
+### Agent 2 — Falsifier (`evidence-auditor`)
+
+Its output contract is already CONTRADICTED / SUPPORTED / NO EVIDENCE against a source.
+
+```
+Agent(
+  subagent_type="evidence-auditor",
+  description="Falsify each stated premise against the sources",
+  prompt="Scope: the stated premises only. Premises with their Evidence lines: <paste premises.md>. Sources to read: <paste paths — documents, code, probe output>. For EACH premise report exactly one of CONTRADICTED / SUPPORTED / NO EVIDENCE, naming the file and line that decides it. NO EVIDENCE is a valid and useful verdict — do not upgrade it to SUPPORTED because the premise sounds reasonable. Findings only, no edits."
+)
+```
+
+### Agent 3 — Oracle auditor (`chaos-engineer`)
+
+Only when the build produces a value a human will act on. This is the frame problem's home: a
+criterion satisfiable by a module that behaves honestly while the deliverable stays useless.
+
+```
+Agent(
+  subagent_type="chaos-engineer",
+  description="Audit the correctness oracle for {slug}",
+  prompt="Scope: the correctness oracle, not the code and not the plan. Design: <paste PRD 'What this is' + anchor case>. Premises: <paste premises.md>. What makes this output right, and how would we know if it were subtly wrong? Is the correctness check a property of the module, or of the thing a person reads? Name one concrete case where every stated criterion passes and the output is still wrong for its reader. Findings only, no edits."
+)
+```
+
+No pattern auditor, no completeness auditor, no anti-pattern auditor — mechanical checks own those
+now. No fact-checker; `build-probe` owns facts. Adding a fourth lens re-opens the spiral this stage
+was scoped to avoid.
+
+## Phase 4: RECORD AND REPORT
+
+```bash
+python3 .claude/hooks/review-drift.py record <premises path> --must N --should N --note N \
+  --self-inflicted 0 --round-note "premise review"
+```
+
+Write `validate.md`: the pass condition, each premise with its verdict, and the decisions the owner
+made. **A premise the owner settled is settled** — record it and never re-open it.
+
+## The stop rule
+
+**One round.** There is no round 2 on premises: a premise is confirmed, contradicted, or decided, and
+none of those states improves by reviewing again. If new premises appear later, that is a new frame
+and a new single round, not a second pass at this one.
+
+If you find yourself wanting another round, the thing you actually want is either a probe (write it)
+or a decision from the owner (ask for it).
 
 ## Output
 
-If FAIL: present findings, recommend revising the plan via build-plan or direct edit. Do NOT auto-edit the plan.
-
-If PASS: **explicit user gate before dispatching execute** (unless `--autonomous` was passed).
-
-Print the validation summary (must-fix=0, should-fix={N}, notes={N}) and use `AskUserQuestion`:
-
 ```
-Question: Validation PASSED for {slug}. Proceed to build-execute now?
-Options:
-- "Yes, execute now" → dispatch via Skill(skill="build-execute", args="{slug}")
-- "Yes, but adjust caps first" → ask follow-up for --max-iterations N, then dispatch
-- "No, let me review validate.md first" → print the path, stop
-- "No, revise the plan" → print path to build-plan invocation hint, stop
+## Premises: {slug}
+
+**Reviewed:** N premises ({N} carried from probe.md as UNPROVABLE)
+**Settled:** {N} by evidence · {N} by the owner
+**Unstated premises surfaced:** {N}
+**Verdict:** PASS / FAIL
+
+### Next step
+PASS → `build-plan {slug}` — capped at ONE runnable increment.
+FAIL → the frame is wrong. Fix the PRD, re-probe, and run this once more.
 ```
-
-Why: execute applies real edits and (where applicable) burns API spend. A PASS verdict means "internally consistent," NOT "Shawn endorses this plan." The user reads validate.md, weighs the should-fix and notes, and decides.
-
-Skip this gate if invocation included `--autonomous` — in that case auto-dispatch with default caps.
 
 ## Guidelines
 
-- This skill is READ-ONLY. It does not edit the plan, the PRD, or any artifact.
-- All reviewer agents run in parallel in a single message. Sequential calls violate the parallel-agent norm.
-- The user decides what to do with should-fix and notes. Don't pre-empt.
-- A PASS verdict means the plan is internally consistent — NOT that the build will succeed. Execute still runs the acceptance test.
+- This skill is READ-ONLY on the build. It writes `premises.md` and `validate.md` and nothing else.
+- If a premise review produces a finding about a task, you are in the wrong stage. Drop it.
+- A build with no contested premises should skip this entirely. Record the skip; do not manufacture
+  premises to justify a run.
+- PASS means the frame is sound. It does not mean the build will work — that is the acceptance
+  driver's job, and the driver is written red before any of this is worth anything.

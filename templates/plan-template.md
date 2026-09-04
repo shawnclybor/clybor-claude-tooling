@@ -30,6 +30,16 @@ Identify groups that can run concurrently without contended writes or output dep
 |---|---|---|
 | [N] | [Specific failure mode] | [How it is prevented or handled] |
 
+## Probe re-check
+
+Run before anything else in this stage; it costs seconds and catches a cited source moving underneath the plan.
+
+```
+bash .claude/PRPs/{slug}/probes/run.sh
+```
+
+⚠ Any file this plan cites by TASK NUMBER must have a `sources.lock` entry. `check-plan-soundness.py` check 7 refuses an unpinned citation, because a sibling slug rewritten mid-flight silently changes what every citation means.
+
 ## Estimated effort
 
 Produced by the `build-estimate` skill, never typed. Write the spec (tasks by kind and status, fixed

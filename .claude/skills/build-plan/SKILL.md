@@ -1,6 +1,6 @@
 ---
 name: build-plan
-description: Decompose a build PRD into an implementation plan. Names mandatory reading with file paths and line ranges, identifies the mirror target to copy structure from, lists step-by-step tasks, and specifies the acceptance test that build-evaluate will run. Plan only — no implementation code is written. Output is `.claude/PRPs/{slug}/plan.md`. Use after build-prd, before build-validate. Triggers — "plan the build", "decompose the PRD", "implementation plan for X", "/build plan", or any time a PRD exists but no plan does.
+description: Decompose a build PRD into an implementation plan. Names mandatory reading with file paths and line ranges, identifies the mirror target to copy structure from, lists step-by-step tasks, and specifies the acceptance test that build-evaluate will run. Plan only — no implementation code is written. Output is `.claude/PRPs/{slug}/plan.md`. Use after build-validate, before build-estimate. Triggers — "plan the build", "decompose the PRD", "implementation plan for X", "/build plan", or any time a PRD exists but no plan does.
 allowed-tools: Read, Grep, Glob, Agent, Write, Edit, Bash, Skill, mcp__sequential-thinking__sequentialthinking
 user-invocable: true
 argument-hint: "<slug> matching a PRD in .claude/PRPs/{slug}/"
@@ -132,7 +132,9 @@ Edit the PRD frontmatter: set `status: planning` and add `plan_ref: .claude/PRPs
 **Estimated effort:** {minutes / hours / days}
 
 ### Next step
-Validate before executing: `build-validate {slug}` — offer to dispatch via `Skill(skill="build-validate", args="{slug}")` if user confirms.
+Size it: `build-estimate {slug}` (optional, never a gate), then `build-execute {slug}`.
+Sequence: **prd → probe → validate → plan → estimate → build → evaluate**.
+⚠ Re-run `bash .claude/PRPs/{slug}/probes/run.sh` first — it costs seconds and catches a cited source moving underneath the plan.
 ```
 
 ## Guidelines

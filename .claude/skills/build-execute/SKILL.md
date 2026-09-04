@@ -1,6 +1,6 @@
 ---
 name: build-execute
-description: Bounded execution loop for a validated build plan. Hard caps on iterations, edits, and (where applicable) spend prevent runaway loops. Each iteration runs MANDATORY adversarial review on the proposed change (iterative-bounded shape), applies the edit, measures via parallel fixture runs, and auto-invokes five-whys on stagnation or regression. Calls writing-quality on prose edits. Stops on success, on cap hit, on stagnation, or on regression. Use after build-validate PASSes, before build-evaluate. Triggers — "execute the build", "build it", "iterate the X", "implement the plan". Refuses to start if validate has not PASSed or if hard preconditions from the profile are unmet.
+description: Bounded execution loop for a validated build plan. Hard caps on iterations, edits, and (where applicable) spend prevent runaway loops. Each iteration runs a CONDITIONAL adversarial review (only when the change touches a contract, a pinned constant, a refusal limb, or an unmutated path), applies the edit, measures via parallel fixture runs, and auto-invokes five-whys on stagnation or regression. Calls writing-quality on prose edits. Stops on success, on cap hit, on stagnation, or on regression. Use after Stage 3 is dispositioned (PASS, SKIPPED or WAIVED - recorded either way), before build-evaluate. Triggers — "execute the build", "build it", "iterate the X", "implement the plan". Refuses to start if the probes mismatch, the plan-soundness gate fails, the Stage 3 disposition is unrecorded, or profile preconditions are unmet.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, Skill, AskUserQuestion, mcp__sequential-thinking__sequentialthinking
 user-invocable: true
 argument-hint: "<slug> [--max-iterations N] [--dry-run] [--autonomous]"
@@ -14,11 +14,27 @@ Bounded execution loop. The scheduler and budgeter; per-iteration work is delega
 
 - `.claude/PRPs/{slug}/prd.md` exists
 - `.claude/PRPs/{slug}/plan.md` exists
-- `.claude/PRPs/{slug}/validate.md` exists AND `### Verdict\nPASS` appears in it
+- `bash .claude/PRPs/{slug}/probes/run.sh` re-run in THIS session: 0 MISMATCH, 0 source changed
+- `check-plan-soundness.py {slug}/plan.md --prd {slug}/prd.md` exits 0
+- **Stage 3 disposition is RECORDED in `state.json` as `validate_regime`** and is one of the three below
 - Profile's hard preconditions (defined in the profile) are met
 - No prior `.claude/PRPs/{slug}/state.json` is in `state: running` (refuse double-runs)
 
 If any precondition fails: stop, list the failures, do nothing else.
+
+### The three Stage 3 dispositions
+
+Premises get reviewed **once** — confirmed, contradicted, or decided. None of those improves by re-reviewing, so "validate again until PASS" is not a thing. Record exactly one:
+
+| `validate_regime` | When | Must also record |
+|---|---|---|
+| **PASS** | Panel ran, frame held | Date, which premises were contested |
+| **SKIPPED** | Nothing contested — no new module, no schema change, no reversal of what a field MEANS. The common case on a running build | Suite green, **mutations FULL PASS**, driver written RED first |
+| **WAIVED** | Panel ran, FAILED, owner overrode on the record | Who, when, why, substituted gate, and `what_is_NOT_claimed` |
+
+⚠ SKIPPED needs a **mutation-proven** suite. Green but unmutated is unfalsifiable — that reverts the target to greenfield, which takes the panel. So does a schema change or a new module, whatever the surrounding suite proves.
+
+⚠ Three FAILs on one target is a process defect (Hard Rule 9). Re-scope; don't convert a repeated FAIL into a waiver.
 
 ## Hard caps (defaults — overridable per invocation but not per iteration)
 
@@ -86,11 +102,34 @@ Use `mcp__sequential-thinking__sequentialthinking` to synthesize and pick the wi
 
 Capture the current state of the acceptance metric. If the profile names >1 fixture, run them in parallel via concurrent Bash calls (one per fixture in a single message). For single-shot / pipeline / wrapper shapes, skip this step.
 
-### Step 4 — ADVERSARIAL REVIEW (MANDATORY for iterative-bounded; optional otherwise)
+### Step 4 — ADVERSARIAL REVIEW (CONDITIONAL — see the trigger list)
 
-For **iterative-bounded shape, this is mandatory** — the whole point of bounded iteration is catching bad edits before they apply. Spawn the profile's per-iteration adversarial reviewer on the proposed change BEFORE applying. Must-fix blocks the iteration; the change goes back to Step 2 with the finding added to the candidate set.
+⚠ **This was MANDATORY on every iteration until 2026-09-01 and is now conditional.** Reviewing every
+line change is the same pathology as re-panelling every plan revision, one scale down: it manufactures
+findings proportional to the edits it just reviewed, and on a build with a mutation-backed suite it
+re-derives what the mutations already prove. Once the harness can fail, **the harness is the reviewer**.
 
-For single-shot / pipeline / wrapper shapes, it's optional — skip if the profile doesn't define one.
+Run the per-iteration adversarial review when — and only when — the proposed change does one of:
+
+- **changes a contract** — what a field means, what a function promises, what a writer may emit
+- **moves a pinned constant** — a threshold, a hash pin, a closed enum, a blocking-type set, an
+  assertion floor
+- **adds a refusal limb**, or changes the conditions of an existing one
+- **touches a path with no mutation covering it** — if nothing would go red when this is broken,
+  a reviewer is the only detector you have
+
+Otherwise **skip it and go straight to apply-and-measure.** A change that adds a case to a covered
+path, adjusts a message, or extends a fixture is already guarded; the suite plus the mutation run is
+a stronger signal than an opinion about a diff, and it costs seconds.
+
+Record which branch each iteration took in the iteration report. An iteration that skipped the
+review says so — never silently.
+
+When it does run: spawn the profile's reviewer on the proposed change BEFORE applying. Must-fix
+blocks the iteration; the change goes back to Step 2 with the finding added to the candidate set.
+
+⚠ **If the suite has no mutation harness proving it can fail, every iteration takes the review.**
+An unfalsifiable green suite is not a reviewer, and the conditional above assumes one that is.
 
 ### Step 4.5 — WRITING QUALITY PASS (if edit touches prose)
 
@@ -207,6 +246,69 @@ State is the source of truth for re-entry. If the loop is interrupted mid-iterat
 {If success}: Verify with `build-evaluate {slug}` — offer to dispatch via `Skill(skill="build-evaluate", args="{slug}")` if user confirms.
 {If stopped via five-whys}: The five-whys report at `.claude/PRPs/{slug}/iterations/five-whys-{ISO}.md` names the root cause. Decide — fix at the plan level (re-run `build-plan`) or accept partial progress.
 ```
+
+## The session report — what the HUMAN reads
+
+⚠ The block above is the machine record. This is the report you give the person paying for the
+build, and it has a **fixed shape**. Adopted 2026-09-02 after a session where the owner had to ask
+"what's the overall status?" mid-run and then "is any of this a big deal or just a formality?" —
+both questions are symptoms of a report that buried the decisions in the findings.
+
+**No jargon. Ever.** Not "mutation harness", "refusal limb", "per_source", "fail-closed". If a
+sentence needs a term the owner would not use at dinner, rewrite the sentence. Name the money, the
+document, and the person affected instead.
+
+### 1. Executive summary — 3 to 5 lines
+
+What moved, in plain terms. Lead with the thing the owner actually asked for and whether it
+happened. One line of hard numbers (tests, gates) — not a table.
+
+### 2. What I need from you
+
+The section that matters most, and the one most often written wrong. **Rules:**
+
+- **Every item carries a verdict and a time cost.** `**This is the big deal.**` /
+  `**This is a formality.** ⏱️ 30 seconds` / `**Your call, low risk.**` The owner is triaging;
+  do the triage for them.
+- **Say plainly what does NOT need them.** A list of three asks reads like a list of three problems
+  unless you close it with "nothing else needs you — the dangerous one is mine to fix."
+- **Escalate what is genuinely theirs, and NOTHING else.** A target that no longer matches what the
+  build produces, a scope decision, a gate you were told to skip. Never pad this section with work
+  you could just do.
+- ⚠ **Never silently repair a TARGET.** If the PRD's number is now wrong, say so and ask — do not
+  edit it and report success. Changing the target after seeing the result is how a build grades its
+  own homework, and it is this repo's recorded failure mode. Say that reason out loud; owners
+  respect it and it explains why you are asking instead of acting.
+- **One word should be enough to answer each.** "Build it or cut it." "Say update them."
+
+### 3. The sequence
+
+A table of **rounds, not tasks.** A remaining-task count is a lie about effort — group the work by
+what ships together, and **mark the row where the thing is actually done**:
+
+| Round | Work | What it buys |
+|---|---|---|
+| 1 | … | … |
+| — | — | **⬅ The demo is done here.** |
+
+Then one line separating what is the deliverable from what is completeness.
+
+⚠ **If a required piece is missing from the plan entirely, that is the headline of this section**,
+not a footnote. Say "one required piece isn't on the list at all" and name it.
+
+### 4. General thoughts — your call, no jargon
+
+A short closing section, unstructured, entirely the model's judgement. Use it for the thing the
+owner should know but did not ask about: an honest note on pace, a risk that is not yet a decision,
+something the measurements suggest about the work ahead. **Not a summary of the above.** If there is
+nothing worth saying, leave it out rather than padding it.
+
+### On pace, when the owner is frustrated
+
+Answer straight, once, factually — what took the time and why. Do not grovel, do not get defensive,
+and do not bury it. Then move to the sequence. ⚠ If tasks were bugs rather than features, **say so
+and say what the bug would have cost** — "a subrogation vendor was being printed as a doctor on a
+settlement sheet" is information; "I fixed 3 defects" is not.
 
 ## Dry-run mode
 

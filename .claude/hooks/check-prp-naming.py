@@ -19,8 +19,13 @@ KIND_TYPES = {
     "card": {"note"}, "transcript": {"source", "note"},
     "session-summary": {"note"}, "notes": {"note"},
 }
-EXEMPT = {"prd.md", "plan.md", "validate.md", "evaluate.md", "index.md", "log.md",
-          "NAMING.md", "README.md"}
+EXEMPT = {"prd.md", "premises.md", "probe.md", "plan.md", "validate.md", "evaluate.md",
+          "index.md", "log.md", "NAMING.md", "README.md"}
+# premises.md and probe.md joined the root set 2026-09-02 with the pipeline re-cut:
+# prd -> probe -> validate -> plan. build-probe writes probe.md (and the probes/ dir,
+# which is a subdirectory and therefore already out of scope); build-validate writes
+# premises.md. Both are pipeline artifacts with the same frontmatter contract as the
+# other four, so they belong here and not behind a <kind>-<subject> rename.
 # Scope: the artifact level only — the immediate children of .claude/PRPs/<slug>/.
 # Subdirectories are deliberately OUT of scope. They hold pulled client sources
 # (jk-source/), test fixtures (client-fixtures/, render-gate-probe/), earlier research,
@@ -97,8 +102,8 @@ def placement_problem(path):
         return None
     if parent in KIND_TYPES:
         return f"filed under '{parent}/' but the kind is '{kind}' — move to '{kind}/{base}'"
-    return (f"artifact at the slug root — move to '{kind}/{base}'. Only prd / plan / "
-            f"validate / evaluate live at the root (build-* contract).")
+    return (f"artifact at the slug root — move to '{kind}/{base}'. Only prd / probe / "
+            f"premises / validate / plan / evaluate live at the root (build-* contract).")
 
 
 def check(path, content):
