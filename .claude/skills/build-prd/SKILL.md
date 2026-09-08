@@ -82,6 +82,30 @@ Invoke `writing-quality` skill (rewrite mode) on the PRD's "What this is" and "W
 Skill(skill="writing-quality", args="rewrite .claude/PRPs/{slug}/prd.md sections 'What this is' and 'Why this matters'")
 ```
 
+## Phase 5.6: COLD READ (the reader test)
+
+The writing-quality pass checks sentences. It cannot tell whether the two prose sections say what
+the build IS. Measured 2026-09-08 on `yellow-sheet-1-2`: every sentence passed that pass and the
+sections were an evidence dump with no arc, no stakes and no sense of progress, caught only by the
+owner on read. The author cannot run this test on their own text; a stranger can.
+
+Spawn ONE agent with no repo context and hand it ONLY the text of "What this is" and "Why this
+matters" — paste the text; give it no file paths, no CLAUDE.md, no memories:
+
+```
+Agent(
+  subagent_type="general-purpose",
+  description="Cold read of the PRD summary",
+  prompt="You have no other context and may not read any file or run any tool. From the text below alone, answer in at most three sentences each: (1) What is being built, and where does it sit in the sequence of what came before it? (2) Why does it matter to the person who will use it — what is worse for them today? (3) What will be different when it is done? If the text does not let you answer one, write CANNOT ANSWER and name what is missing.\n\n<paste the two sections verbatim>"
+)
+```
+
+PASS = three answers, none `CANNOT ANSWER`, each naming something specific from the text (a
+version, a person or role, a concrete change). A `CANNOT ANSWER`, or a generic answer ("it
+improves the workbook"), is a rewrite of that section, not a note. Run it AFTER Phase 5.5 and
+BEFORE the Phase 6 checklist, and record the three answers under the PRD's Notes so the next
+reader sees what a stranger took from it.
+
 ## Phase 6: VERIFY (tick through this checklist)
 
 Re-read the generated PRD. Walk this checklist literally — tick each box yes/no in the output, do NOT skip silently:
@@ -94,6 +118,7 @@ Re-read the generated PRD. Walk this checklist literally — tick each box yes/n
 - [ ] Mirror target named OR explicitly flagged "none exists"
 - [ ] Acceptance checklist subsection populated with one `- [ ]` per criterion + anchor case
 - [ ] Writing-quality pass run on "What this is" and "Why this matters" (Phase 5.5)
+- [ ] Cold read passed: three answers, no `CANNOT ANSWER`, recorded under Notes (Phase 5.6)
 
 If any box is `[ ]`, edit the PRD before exiting. Surface unresolved items to the user before printing the "Next step" line.
 

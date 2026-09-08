@@ -130,6 +130,10 @@ def hook_mode():
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
+        # Fail-open by design, never silently: a bare path on the command line lands here and
+        # would otherwise read as a pass.
+        print("document-claim gate: no hook JSON on stdin; nothing checked (file mode is --files <paths>)",
+              file=sys.stderr)
         sys.exit(0)
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {}) or {}
@@ -158,18 +162,28 @@ def hook_mode():
 
 def files_mode(paths, quiet):
     rc = 0
+    checked = skipped = 0
     for p in paths:
         try:
             text = Path(p).read_text(errors="replace")
         except OSError:
+            skipped += 1
+            print(f"document-claim gate: cannot read {p}", file=sys.stderr)
             continue
         if not in_scope(p) or OVERRIDE_MARKER in text:
+            skipped += 1
             continue
+        checked += 1
         for ln, s in findings(text):
             rc = 1
             print(f'{p}:{ln} [document-claim] "{s[:120]}"')
     if rc and not quiet:
         print("document-claim gate: cite the line (investigate.py), quote it, or CLAIMS_OK=1", file=sys.stderr)
+    if not rc and not quiet:
+        # A silent exit 0 reads the same whether a file was scanned or a path was mistyped, so a
+        # clean run states what it scanned. Measured 2026-09-08: two runs with no file checked
+        # were reported as passes.
+        print(f"document-claim gate: OK -- {checked} file(s) checked, {skipped} skipped, 0 findings")
     return rc
 
 
@@ -188,17 +202,23 @@ def staged_mode(quiet):
     except (subprocess.CalledProcessError, OSError):
         return 0
     rc = 0
+    checked = 0
     for name in (n for n in names if n and in_scope(n)):
         diff = subprocess.run(["git", "diff", "--cached", "-U0", "--", name],
                               capture_output=True, text=True).stdout
         if OVERRIDE_MARKER in diff:
             continue
+        checked += 1
         added = "\n".join(l[1:] for l in diff.split("\n") if l.startswith("+") and not l.startswith("+++"))
         for _ln, s in findings(added):
             rc = 1
             print(f'{name} [document-claim] "{s[:120]}"')
     if rc and not quiet:
         print("document-claim gate: cite the line (investigate.py), quote it, or CLAIMS_OK=1", file=sys.stderr)
+    if not rc and not quiet:
+        # Same rule as files_mode: a clean run states what it scanned, so zero in-scope files
+        # reads as zero and never as a pass over something.
+        print(f"document-claim gate: OK -- {checked} staged file(s) checked, 0 findings")
     return rc
 
 
