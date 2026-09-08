@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 """
 HOOK: no-postmortem-precommit.py
-ROLE: Commit-boundary backstop for no-postmortem-validator.py. Scans STAGED .md
-      files in the operational dirs for the SAME block patterns (imported from the
-      validator — single source of truth) and FAILS the commit if any are found.
-      Catches prose that never went through the PreToolUse gate (manual edits,
-      non-Claude tools, the validator being bypassed).
+ROLE: Commit-boundary backstop for no-postmortem-validator.py, on both of its
+      surfaces, with the patterns imported from the validator — single source of
+      truth. FAILS the commit on a hit. Catches prose that never went through the
+      PreToolUse gate (manual edits, non-Claude tools, a peer session, the
+      validator being bypassed).
+
+      STAGED .md   — the whole file is prose, so the whole file is scanned.
+      STAGED code  — ADDED LINES ONLY, and of those only the comments and
+                     docstrings. A commit is answerable for the prose it adds;
+                     the rest of the file is the sweep's business, not this
+                     gate's, and scanning it would make every commit a flag day.
 
 WIRED: via a local .git/hooks/pre-commit shim, which the global pre-commit execs.
-OVERRIDE (per file): provenance file name, or an inline <!-- postmortem-ok --> marker.
+OVERRIDE (per file): provenance file name, or the token postmortem-ok stated
+      OUTSIDE backticks — a doc that merely quotes the token is showing it, not
+      claiming it.
 
 EXIT CODES:
   0 — clean (or nothing in scope)
@@ -50,8 +58,9 @@ def main():
 
     blocked = []
     for rel in staged:
-        # validator.in_scope expects a path containing /.claude/...; rel is repo-relative.
-        if not v.in_scope("/" + rel):
+        # scope_of expects a path containing /.claude/...; rel is repo-relative.
+        mode = v.scope_of("/" + rel)
+        if not mode:
             continue
         if any(h in rel.lower() for h in v.PROVENANCE_HINTS):
             continue
@@ -59,16 +68,30 @@ def main():
         if show.returncode != 0:
             continue
         content = show.stdout
-        if v.OVERRIDE_MARKER in content:
+
+        if mode == "md":
+            prose = v.prose_of(content, "md")
+        else:
+            diff = git("diff", "--cached", "-U0", "--", rel)
+            if diff.returncode != 0:
+                continue
+            added = "\n".join(
+                ln[1:] for ln in diff.stdout.splitlines()
+                if ln.startswith("+") and not ln.startswith("+++")
+            )
+            ext = os.path.splitext(rel)[1].lower()
+            prose = v.prose_of(added, "code", ext, fallback=False)
+        if not prose.strip() or v.OVERRIDE_MARKER in prose:
             continue
-        hits = v.find_hits(content)
+
+        hits = v.find_hits(prose, mode)
         if hits:
             blocked.append((rel, hits))
 
     if blocked:
         print(
-            "BLOCKED by the no-postmortem gate — staged operational docs carry "
-            "tombstone / post-mortem prose:",
+            "BLOCKED by the no-postmortem gate — staged files carry "
+            "tombstone / change-narration prose:",
             file=sys.stderr,
         )
         for rel, hits in blocked:
@@ -76,9 +99,9 @@ def main():
             for h in hits:
                 print(f"     - {h}", file=sys.stderr)
         print(
-            "\nState things as they ARE; put rationale for cuts in the commit "
-            "message. Per file, override with a *-audit.md name or an inline "
-            "<!-- postmortem-ok --> marker.",
+            "\nState things as they ARE; put the reason for a change in the commit "
+            "message. Per file, override with a provenance name (*-audit.md) or "
+            "the token  postmortem-ok  in the file.",
             file=sys.stderr,
         )
         sys.exit(1)
