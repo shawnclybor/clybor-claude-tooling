@@ -110,6 +110,11 @@ settled, parked, still the owner's); the slug's `state.json → decisions`, `awa
 version's `evaluate.md` must-fix and notes; the ledger. Search the parking lot and large memories
 with grep.
 
+**Carried items.** A parking-lot entry whose last line ends `→ build-polish` is on this run's list —
+`grep -n '→ build-polish$' .claude/parking-lot.md` finds them. Each joins round 1's candidates as
+`lot-<n>` and goes through triage like any other; an entry polish takes moves into the ledger and
+leaves the lot.
+
 ## The round — at most three
 
 1. **RUN.** `polish.sh run {slug} {round} --driver <pattern>... --keep <path>... -- <command>`.
