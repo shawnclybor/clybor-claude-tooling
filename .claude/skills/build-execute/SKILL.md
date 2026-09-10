@@ -151,6 +151,14 @@ Make the actual file changes. The change must match what was planned in Step 2 (
 
 Run the acceptance test from the plan (or the per-iteration check the profile defines). If multiple fixtures, run them in parallel (same pattern as Step 3). Capture each result.
 
+⚠ **Capture the WHOLE output; trim only when you display it.** A log cut with `tail -N` at write
+time loses whatever printed above the cut, and a parser over it then reports the value as absent —
+which reads exactly like a failed build. Measured 2026-09-10: a corpus log trimmed to 12 lines
+dropped the per-matter table, and the closing check printed the anchor NOT MET while the same
+number sat in the driver's own tally line and in the records the probes read. A verdict-bearing
+check gets a second witness that reads the artifact directly; on a failed check the first question
+is whether the measurement failed or the reading of it.
+
 ### Step 7 — DECIDE: CONTINUE / STOP
 
 Compare post-edit measurement to pre-edit baseline (or to acceptance bar for single-shot):

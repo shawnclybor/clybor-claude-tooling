@@ -17,6 +17,11 @@
       "scales_from": "intensive",
       "multiplier": 0.35,
       "basis": "assumed \u2014 no measured record yet"
+    },
+    "harness-reviewed": {
+      "multiplier": 0.2,
+      "basis": "MEASURED from yellow-sheet-1-3 increments 2 and 4 and yellow-sheet-1-3-1 (2026-09-09/10). The process build-execute runs once a build carries a mutation-backed suite: no per-iteration review panel, adversarial review CONDITIONAL and usually taken by a mutation row, the acceptance driver written RED first, one bounded pass per increment. Differs from `intensive` (settlement-verifier, every iteration panelled) by roughly 5x; the multiplier here is the placeholder the records override.",
+      "description": "build-execute once a build carries a mutation-backed suite: no per-iteration review panel, adversarial review CONDITIONAL (usually taken by a mutation row), driver written RED first, one bounded pass per increment, mutation rows proven with --only per increment and the full table once at build-evaluate."
     }
   },
   "task_kinds": {
@@ -111,6 +116,48 @@
         "high": 50
       },
       "note": "Remediation lane, not plan tasks: three must-fix defects found by build-evaluate Stage 5. Iter 41 appears_in_lien fail-open (check-logic) ~50 min, iter 42 render-gate constant + both shipped templates (test-layer) 36 min, iter 43 known_exceptions six fields + fp8 in the report (test-layer) 47 min. Counted from iteration-report mtimes 41.md 09:20 -> 43.md 10:43, with the 40.md->41.md span excluded as overnight plus the Stage-5 evaluation itself. EVERY iteration was BLOCKed at the mandatory pre-apply review and repaired before landing (3, 4 and 6 must-fix respectively), which is the dominant cost here and is why remediation ran close to the median task rate rather than faster: the edits were small but each needed two measured rounds. Suite grew 421 -> 446, code mutations 6 -> 13. Excludes the build-evaluate re-run that followed."
+    },
+    {
+      "project": "legal-client-a",
+      "slug": "yellow-sheet-1-3-1",
+      "process": "harness-reviewed",
+      "window": "2026-09-10T14:40 -> 2026-09-10T15:21 authoring (0.68 h), then supervision of serial machine runs to ~16:05 (~0.25 h at the keyboard); machine time excluded: RED run 10 min, harness chain 20 min, T10 drivers ~25 min",
+      "iterations": 1,
+      "tasks": 10,
+      "hours": 0.93,
+      "task_minutes": {
+        "low": 2,
+        "high": 12
+      },
+      "note": "Fix increment cut from 1.3's evaluate: PRD, probes (24), plan and soundness gate took 18 min before execute; T0-T9 landed in one pass (fixture, driver section RED first, dedupe on the money path, two deletions, five mutation rows, three traps, an exact floor, a lock re-pin). T10 (serial drivers + corpus) was still running when this record was written; it is machine time. Atypical in one way: every task was a repair of a measured finding with its oracle already named, so no discovery."
+    },
+    {
+      "project": "legal-client-a",
+      "slug": "yellow-sheet-1-3 (increment 2)",
+      "process": "harness-reviewed",
+      "window": "2026-09-09T19:11 -> 2026-09-09T22:26 local, one continuous session (3.25 h) -- bracketed by iterations/3.md (increment 1's close) and iterations/inc2-1.md",
+      "iterations": 1,
+      "tasks": 16,
+      "hours": 3.25,
+      "task_minutes": {
+        "low": 8,
+        "high": 40
+      },
+      "note": "Criteria 3, 4, 5 of 1.3: the lien reads whole from the letter (positive heading test, rarity guard), Lien Amount / Amount Due, C3 deferral. One bounded pass, driver RED first, adversarial review conditional. Single operator. Hours are the bracket between two iteration reports on one evening; no gap inside it is known."
+    },
+    {
+      "project": "legal-client-a",
+      "slug": "yellow-sheet-1-3 (increment 4)",
+      "process": "harness-reviewed",
+      "window": "2026-09-10T10:13 -> 2026-09-10T13:33 local, one continuous session (3.33 h) -- from commit 0b97c7e to iterations/inc4-1.md; commit 9e013f8 at 13:37",
+      "iterations": 1,
+      "tasks": 12,
+      "hours": 3.33,
+      "task_minutes": {
+        "low": 8,
+        "high": 45
+      },
+      "note": "Criteria 7, 8, 9 of 1.3: the check_row split behind RowCtx with three byte-identical baselines, the clean-tree refusal, --selftest, run_1_2.sh repairs, MD125-MD127. The harness itself found five test defects in the session's own work (state.json). One bounded pass. Single operator."
     }
   ]
 }
