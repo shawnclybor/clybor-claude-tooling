@@ -2,6 +2,32 @@
 # Repo pre-commit gate. Enable once with: git config core.hooksPath .githooks
 ROOT="$(git rev-parse --show-toplevel)"
 CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
+
+# A gate guarded by `[ -f <script> ]` is a no-op when the script is absent, and a silent no-op
+# reads exactly like a pass. Measured 2026-09-18: the PHI gate below was wired but its scanner
+# did not exist, so a file carrying eleven client identifiers was committed under a hook that
+# printed success. Absence is now announced. Do not add a gate without a matching skip notice.
+skipped=()
+trap report_skips EXIT
+report_skips() {
+  if [ "${#skipped[@]}" -gt 0 ]; then
+    echo "" >&2
+    echo "⚠ pre-commit gates NOT RUN (script absent):" >&2
+    for s in "${skipped[@]}"; do echo "    - $s" >&2; done
+    echo "  These checked nothing. That is not the same as passing." >&2
+  fi
+}
+
+# Detect absent gates BEFORE running any of them. Gates exit on first failure, so an inline
+# else-branch on gate 6 never fires when gate 2 fails — the skip notice has to be built up
+# front or it is only correct on the happy path.
+[ -x "$ROOT/scripts/check-knowledge.sh" ]                   || skipped+=("knowledge invariants (scripts/check-knowledge.sh)")
+[ -x "$CANON/scripts/check-promotion.sh" ]                  || skipped+=("tooling drift ($CANON/scripts/check-promotion.sh)")
+[ -f "$ROOT/.claude/hooks/no-postmortem-precommit.py" ]     || skipped+=("no-postmortem doc gate")
+[ -f "$ROOT/scripts/check_dependency_probes.py" ]           || skipped+=("availability / dependency probes")
+[ -f "$ROOT/scripts/check_tracker_version.py" ]             || skipped+=("tracker-staleness gate")
+[ -f "$ROOT/scripts/phi-scan.py" ]                          || skipped+=("PHI / client-identifier gate (scripts/phi-scan.py)")
+
 # 1. local knowledge-wiki / project-rule invariants
 if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
   bash "$ROOT/scripts/check-knowledge.sh" || exit $?
