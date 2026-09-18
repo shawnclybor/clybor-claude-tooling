@@ -67,6 +67,8 @@ Full table in [`.claude/agents/README.md`](.claude/agents/README.md).
 
 **Prose and knowledge.** `writing-quality` strips AI-isms and empty prose from anything a person will read. `session-output` writes the report of what a session did. `insight-crystallizer` files a decision so it survives the chat; `insight-promotion` turns one into an always-on rule. `promote-to-tooling` reviews a tooling change in a working repo and promotes the universal part here. `ooda` runs Boyd's decision cycle on a task you ask to work that way.
 
+**Third-party, installed not vendored.** `scripts/install-archify.sh` puts [Archify](https://github.com/tt-a1i/archify) (MIT) at a pinned release into `~/.claude/skills/`, so every project draws on one copy. It renders an architecture, workflow, sequence, data-flow or lifecycle diagram from typed JSON into one self-contained HTML file, and refuses a layout whose text would fall below 6px on a 1440px desktop — which caps a single canvas at roughly a dozen nodes and makes it a tool for a flow, never an inventory. Upstream code is not copied in here: the script and its commit pin are the artifact, and the script refuses to install when the tag has moved off the pinned commit. A vendored copy would put a repository we do not control behind the drift gate.
+
 **Governance.** `notion-governance`, `search-governance` and `excel-connector-governance` are domain-governance skills for the workspaces they name. The pattern they follow is `assets/skills/governance-skill-template/`; project-specific governance belongs in the project.
 
 ## Hooks

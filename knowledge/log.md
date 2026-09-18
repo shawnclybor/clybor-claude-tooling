@@ -7,6 +7,29 @@ gate scans staged content.
 
 ---
 
+## 2026-09-18 — Archify installed at a pin, not vendored
+
+**What.** `scripts/install-archify.sh` installs the third-party Archify diagram skill (MIT) into
+`~/.claude/skills/archify` at `v2.16.0`, commit `c826e6c`. One user-level copy serves every project.
+`ARCHIFY_UPDATE_CHECK_DISABLED=1` goes in the user `settings.json` env block.
+
+**Why it is not vendored.** The skill is 7.3 MB across 160 `.mjs` files that upstream owns. Copying
+it into `.claude/skills/` here would push that payload into every project `init.sh` touches and put
+a repository we do not control behind the drift gate, where each upstream release reads as project
+drift. The script and its pin are the reusable artifact; a machine rebuild runs it and is back.
+
+**The pin is checked, not trusted.** The script resolves the tag and compares the commit, refusing
+with exit 3 when they disagree, because a tag can be moved to point at other code. Negative control:
+running it with a wrong pin refuses, exits 3, and creates no destination directory.
+
+**What it is good for, measured.** Layout is authored, not computed — `layout.mode` has one legal
+value and everything else is hand-placed coordinates. At `showcase` quality a check named
+`composition/desktop-readability` rejects any canvas whose 9px context text would project below 6px
+at a 1440px viewport, which holds the viewBox under about 1395px and a single diagram to roughly a
+dozen nodes. Two real diagrams each took three correction rounds, every failure returning a named
+rule code and an exact repair. It draws a flow; a catalog of fifty items belongs in a spreadsheet.
+
+
 ## 2026-08-25 — availability gate promoted: the rule and the hook, together
 
 **What.** A PreToolUse Write|Edit validator that fires when text asserts something is blocked,
