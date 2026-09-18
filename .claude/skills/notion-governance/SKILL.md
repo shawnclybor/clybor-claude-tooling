@@ -97,6 +97,35 @@ task to a page that already has five leaves that page with one.
 a multi-value relation from the parent side. If you genuinely must write from the parent, read the
 existing values first and send the full list including them.
 
+## The parent-nesting trap (the failure that reports success)
+
+`parent` is a **top-level sibling of `pages`** on a create call. Not inside a page object, not
+inside `properties`. The shape:
+
+```json
+{
+  "parent": { "type": "data_source_id", "data_source_id": "<id from the overlay>" },
+  "pages": [ { "properties": { "Name": "<title>" }, "content": "<markdown body>" } ]
+}
+```
+
+**Omitting `parent` does not error.** Two API behaviours chain into something worse than a
+rejection: with no `parent` the page is created at workspace level as a private page, and
+outside a database the only valid property is `title` — so a `Name` key is silently dropped.
+The result is an untitled, unfiled page that the call reports as success. It is invisible to
+every filtered query, every sweep, and every freshness check that would otherwise catch it.
+
+A rejected call writes nothing and is recoverable. A parentless call writes an orphan.
+
+**Rule:** name the field AND its nesting before the first create. Naming only the field is what
+produces the permutation spiral below — a rule that said "use the data-source ID as parent"
+without showing where it sits generated three distinct wrong shapes.
+
+**Stop rule — two rejections, then stop.** If a create returns a schema error twice, report the
+blocker. Do not keep permuting the payload. The dangerous permutation is the one that moves the
+parent key *inside* `properties`, where it is ignored rather than rejected: that attempt looks
+like the one that finally worked, and it is the one that writes the orphan.
+
 ## Retrieval routing — route on the QUESTION TYPE
 
 | Question type | Shape | Tool |
@@ -118,6 +147,7 @@ Answer each yes/no — no silent skips:
 - [ ] Have I run this record through *Which database does this record belong in?* above — including the "is it also a state change" half?
 - [ ] Does the title follow that database's naming convention (KB type-first, Note scope-first)?
 - [ ] Do I have the exact database ID, not a guess?
+- [ ] On a create: is `parent` a TOP-LEVEL sibling of `pages` — not nested inside a page object and not inside `properties`? (A parentless create succeeds and writes an untitled orphan.)
 - [ ] Am I writing any multi-value relation from the parent side? (If yes — stop, write from the child.)
 - [ ] Have I read the current values of every property I am about to overwrite?
 - [ ] Am I setting **BOTH** `Project` and `Client`? Setting only one is the most common defect — the record looks filed and is half-filed. `Project` does not populate `Client`; the relations are independent.

@@ -8,3 +8,9 @@ __pycache__/
 # tooling-catalog — local, uncommitted secret/constant sources (never ship to the public repo)
 scripts/*.local.json
 bundles/
+
+# Parked work-in-progress that is NOT anonymized yet. knowledge/drafts/ holds drafts
+# pulled out of .claude/skills/ because they were unsafe to load; some still carry real
+# client identifiers. Committing one to this repo is a one-way door (git history), so the
+# folder is ignored until a draft has been through the scrub. See each PARKED.md.
+knowledge/drafts/

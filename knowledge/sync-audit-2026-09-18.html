@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tooling Sync Audit</title>
+<style>
+:root{
+  --bg:#faf9f7; --panel:#fff; --ink:#1c1a17; --muted:#6b6560; --line:#e4e0da;
+  --red:#b3261e; --amber:#8a5a00; --blue:#1a4f8a; --green:#1d6b3f;
+  --redbg:#fdecea; --amberbg:#fdf4e3; --bluebg:#eaf1f9; --greenbg:#e9f4ee;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17161a; --panel:#1f1e23; --ink:#eceaf0; --muted:#a19aa8; --line:#332f38;
+  --red:#ff9c92; --amber:#e8b45c; --blue:#8fbbe8; --green:#7fd39f;
+  --redbg:#3a1f1d; --amberbg:#332713; --bluebg:#1a2a3d; --greenbg:#172f22;
+}}
+:root[data-theme="dark"]{
+  --bg:#17161a; --panel:#1f1e23; --ink:#eceaf0; --muted:#a19aa8; --line:#332f38;
+  --red:#ff9c92; --amber:#e8b45c; --blue:#8fbbe8; --green:#7fd39f;
+  --redbg:#3a1f1d; --amberbg:#332713; --bluebg:#1a2a3d; --greenbg:#172f22;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;padding:40px 16px 80px}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:1.65rem;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:.92rem;margin:0 0 28px}
+.hero{background:var(--greenbg);border:1px solid var(--green);border-radius:10px;
+  padding:16px 18px;margin-bottom:28px}
+.hero .big{font-size:1.15rem;font-weight:650;color:var(--green)}
+.hero p{margin:6px 0 0;font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:32px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .n{font-size:1.55rem;font-weight:650;line-height:1.1;letter-spacing:-.03em}
+.card .l{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.card .was{font-size:.76rem;color:var(--muted);margin-top:4px}
+.ok .n{color:var(--green)} .lo .n{color:var(--blue)} .md .n{color:var(--amber)}
+h2{font-size:1.02rem;margin:34px 0 4px;display:flex;align-items:center;gap:9px}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.note{color:var(--muted);font-size:.87rem;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;background:var(--panel);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.88rem}
+th{text-align:left;font-size:.71rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+code{font:.85em ui-monospace,"SF Mono",Menlo,monospace;background:var(--bluebg);
+  padding:1px 5px;border-radius:4px;color:var(--ink)}
+.tag{display:inline-block;font-size:.69rem;font-weight:650;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.t-done{background:var(--greenbg);color:var(--green)}
+.t-fork{background:var(--bluebg);color:var(--blue)}
+.t-open{background:var(--amberbg);color:var(--amber)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+footer{margin-top:40px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Tooling &harr; Plugin Sync Audit</h1>
+<p class="sub">clybor-claude-tooling <code>7213f09</code> &middot; life-crm <code>4d40cf7</code> &middot; audited and resolved 18 Sep 2026</p>
+
+<div class="hero">
+  <div class="big">Blocking drift: 9 &rarr; 0</div>
+  <p><code>check-promotion.sh --gate</code> run from life-crm exits 0. Both plugins rebuilt and live: <strong>life-crm-meta 2.8.0</strong>, <strong>life-crm-governance 1.28.0</strong>, each through all four promote gates.</p>
+</div>
+
+<div class="cards">
+  <div class="card ok"><div class="n">0</div><div class="l">Blocking drift</div><div class="was">was 9</div></div>
+  <div class="card ok"><div class="n">10/10</div><div class="l">Bundle greps pass</div><div class="was">verified in the zip</div></div>
+  <div class="card ok"><div class="n">2</div><div class="l">Plugins promoted</div><div class="was">gates all green</div></div>
+  <div class="card lo"><div class="n">11</div><div class="l">Deliberate forks</div><div class="was">informational only</div></div>
+  <div class="card md"><div class="n">3</div><div class="l">Open for Shawn</div><div class="was">decisions, not drift</div></div>
+</div>
+
+<h2><span class="dot" style="background:var(--green)"></span>What was fixed, item by item</h2>
+<div class="scroll"><table>
+<tr><th>#</th><th>Item</th><th>Resolution</th><th>Evidence</th><th></th></tr>
+
+<tr><td>1</td><td>Build pipeline behind canon</td><td><code>build-polish</code> (351L + <code>polish.sh</code>) added to life-crm; <code>build-execute</code>, <code>build-evaluate</code>, <code>build-prd</code>, <code>build-validate</code> synced</td><td>all five now byte-match canon</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>1b</td><td><code>calibration.json</code></td><td>Merged additively — gained the <code>harness-reviewed</code> profile + 3 measured records. life-crm's real project names preserved rather than overwritten with canon's anonymized ones</td><td>structural diff: profiles, task_kinds, task_status, all 6 slugs identical; only 2 <code>project</code> values differ, by design</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>2</td><td>search-governance no-Brave rule missing from the shipped bundle</td><td>Ported into life-crm-governance as <code>### No Brave tool in the session at all</code></td><td>1.27.5 &rarr; <strong>1.28.0</strong>; string verified inside the <code>.plugin</code> zip</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>3</td><td>adversarial-re-read verifier pass missing</td><td>Ported as <code>### 3d</code>, sitting after the plugin's own 3b quotation audit and 3c framing audit — which canon lacks. Discovered mid-run: this skill was bidirectional too</td><td>2.7.1 &rarr; <strong>2.8.0</strong>; <code>opposite defect</code> + <code>MISATTRIBUTED</code> verified in the zip</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>4</td><td>writing-quality diverged both ways</td><td><strong>Canon gained</strong> 3 sections, generalized (Unverified Assertion, Internal Filing-System Artifacts, Scope &amp; Volume Mismatch) + 3 severity-tier bullets. <strong>Plugin gained</strong> Empty Prose with all four subsections, and Citations, and a citation gate in both mode lists</td><td>client incident dates, slugs, KB ids and names stripped from everything promoted to canon</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>5</td><td>notion-governance parent-nesting trap not in canon</td><td>Promoted as <code>## The parent-nesting trap (the failure that reports success)</code> + a pre-flight checklist line. Real data-source id replaced with an overlay reference</td><td>canon <code>notion-governance/SKILL.md</code> modified</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>6</td><td>gmail-governance scope &mdash; <em>answer reversed on inspection</em></td><td>The 111-line canon file is an <strong>unfinished draft</strong>, not a trim. It drops 7 load-bearing rules including the Zapier wrong-thread bug, and carries 11 un-anonymized client identifiers in the shareable repo. <strong>Parked</strong> to <code>knowledge/drafts/gmail-governance-WIP/</code> with a gap list. Its 3 genuinely-new facts were salvaged into the plugin</td><td>routing trap, system-sender gap, duplicate-send supersession all verified in the 1.28.0 zip</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>7</td><td><code>rebuild-plugin.sh</code> &mdash; life-crm ahead</td><td>Gate P4b hardcodes one plugin name and one test file. Generalizing would invent a mapping with exactly one entry, so it went to <code>promotion-ignore</code> with that reasoning written down</td><td><code>.claude/promotion-ignore</code> created</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>8</td><td><code>check-deliverables.sh</code> same-day fork</td><td>All four diff hunks were <strong>comments only</strong> — executable logic byte-identical. Ported the one real gap (the presence-in-page CAVEAT), kept life-crm's client-specific comment prose, then ignore-listed</td><td><code>bash -n</code> clean</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>8b</td><td><code>check-context-budget.sh</code></td><td>Canon carried a real fix life-crm lacked — <code>exists_or_skip()</code>, so a missing file reports SKIP instead of printing <code>[OK] — words</code> while inspecting nothing. Synced byte-exact</td><td>gate now runs and immediately surfaced a genuine finding: registry longest line 3111 &gt; 3000 budget</td><td><span class="tag t-done">done</span></td></tr>
+
+<tr><td>8c</td><td><code>check-new-names.sh</code></td><td><strong>Not synced, deliberately.</strong> Canon's copy carries an explicit warning against resyncing from life-crm: logic is identical, but the life-crm comment names real client-side people and would re-leak. Ignore-listed with that reason</td><td>canon's own in-file NOTE</td><td><span class="tag t-done">done</span></td></tr>
+</table></div>
+
+<h2><span class="dot" style="background:var(--blue)"></span>Deliberate forks — the 11 informational rows that remain</h2>
+<p class="note">These are not drift. Canon holds trimmed, anonymized, house-style rewrites of the same substance; the plugins hold the client-specific originals. <code>--gate</code> does not block on them.</p>
+<div class="scroll"><table>
+<tr><th>Skill</th><th>Why it differs</th></tr>
+<tr><td><code>five-whys</code>, <code>insight-crystallizer</code>, <code>insight-promotion</code>, <code>ooda</code>, <code>quality-review</code>, <code>why-diagnostic</code>, <code>session-output</code></td><td>Prose rewrites. Heading sets differ by rename, not content loss</td></tr>
+<tr><td><code>notion-governance</code>, <code>search-governance</code>, <code>adversarial-re-read</code>, <code>writing-quality</code></td><td>Both sides now carry the same rules; the wording differs because canon's copy is anonymized. Closing these would mean de-anonymizing canon</td></tr>
+</table></div>
+
+<h2><span class="dot" style="background:var(--amber)"></span>Left open — decisions, not drift</h2>
+<div class="scroll"><table>
+<tr><th>Item</th><th>State</th><th>The call</th></tr>
+<tr><td>Canon lacks the plugin's 3b quotation audit and 3c framing audit</td><td>Found mid-run; not in the original 1&ndash;8</td><td>Promote both to canon (needs the same anonymization pass), or leave canon with 3d only</td></tr>
+<tr><td><code>content-studio-tracker-governance</code></td><td>Was a skill directory with <strong>no SKILL.md</strong> — only <code>scripts/decode_social_dates.py</code>. Moved intact to <code>knowledge/drafts/content-studio-tracker-stray/</code>, nothing deleted</td><td>Write the SKILL.md, move the script to <code>scripts/</code>, or drop it</td></tr>
+<tr><td>Registry line over budget</td><td>life-crm <code>docs/project-registry.md</code> longest line 3111 chars vs 3000 budget — pre-existing, surfaced by the newly-working gate</td><td>Trim that Status cell into the project's memory file</td></tr>
+</table></div>
+
+<footer>
+<strong>How each claim here was checked.</strong> Blocking-drift count from <code>check-promotion.sh --gate</code> exit code, not from reading files. Ported content verified by reading strings back out of the shipped <code>.plugin</code> zips, not the staging directories — 10/10 pass, with whitespace normalized because reflowed prose wraps mid-phrase and a naive grep false-negatives (it did once here). Both bundles pass <code>validate-plugin.py</code>; both promotes passed <code>check-skill-descriptions.py</code>, <code>validate-plugin.py</code> and <code>validate-plugin-promotion.py</code>. Installed versions confirmed at 2.8.0 / 1.28.0 by walking the install tree. Staging dirs cleaned, <code>cowork/_pending-edits/</code> and <code>.cache/</code> confirmed intact after the subagent runs.
+<br><br>
+<strong>Not verified:</strong> the new bundles' skills were not invoked in this session. The Skill-tool registry served the pre-rebuild bundles throughout, so per plugin-governance's post-reinstall check, invocability needs a fresh session to confirm.
+</footer>
+
+</div>
+</body>
+</html>

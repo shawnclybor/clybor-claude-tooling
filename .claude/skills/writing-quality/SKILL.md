@@ -391,6 +391,63 @@ rather than to fix that one draft again.
 
 ---
 
+## Unverified Assertion — the claim that rests on nothing
+
+A claim that reads as established fact but rests on adjacent context instead of a source
+anyone checked. It is the most frequent correction on client-facing drafts, and prohibiting it
+at the behavioural level does not stop it — it recurs at the point where prose is written, so
+the check belongs here too.
+
+Before releasing any client-facing draft, sweep every factual claim and sort it:
+
+| Claim rests on | Required treatment |
+|---|---|
+| A source actually read this session | State it plainly. |
+| Inference from surrounding context | Mark it — "my read is", "assuming X", "worth confirming". |
+| A conditional in the source | Keep the condition. "If they approve, we start Monday" never becomes "we start Monday". |
+| A person's role, headcount, team, or authority | Verify against a contact record or a transcript, or do not assert it. |
+| A decision not yet actually made | Never write it as settled, and never commit the principal to it. |
+
+Two tells worth their own line. **Proper nouns taken from transcripts** are mis-transcribed
+constantly — near-homophone first names especially — so check a name against a contact record
+before one reaches a client. And **a hedge deleted while editing is a new assertion**: cutting
+"probably" is making a claim.
+
+## Internal Filing-System Artifacts — the audience boundary
+
+Two questions, in order: **who is this for?** Then: **what does the system need to remember?**
+Serve the second without contaminating the first. System memory belongs on system surfaces —
+commit messages, changelogs, knowledge-base entries, memory files — never interleaved into a
+surface a client reads. Post-mortem notes in a commit message: right surface. The same notes in
+a client deliverable: wrong surface, same information.
+
+Strip from any client-facing output:
+
+- File-inventory tables ("what's in this folder") and package manifests
+- Changelog references, version-history sections, deprecation and retrospective notes
+- Internal record and database IDs, knowledge-base citations, registry or backlink references
+- Repo paths (`memory/`, `docs/`, `working/`, `drafts/`, `deliverables/`)
+- Governance or skill names, router language, "promoted YYYY-MM-DD" annotations
+
+**Conversion is authorship.** Converting an in-repo file to a client format — markdown to
+`.docx`, a paste into email, a shared link — creates a NEW client deliverable and earns a full
+audit against this list. The repo source keeps its conventions; the client copy loses them.
+Derive the client copy first, then convert. Converting first and editing after is how the
+artifacts survive.
+
+## Scope and Volume Mismatch — the answer that does not fit the ask
+
+It cuts both ways, which is why "be concise" does not fix it:
+
+- **Over-scoped** — a narrow question gets a treatise, and the reader hunts for the answer.
+- **Under-scoped** — a period report covers one meeting and silently drops the rest of the window.
+- **Wrong shape** — an internal status dump shipped as a client update: jargon, task IDs, workstream codes.
+
+The check: name the ask in one sentence, then confirm the draft answers exactly that — no less
+coverage, no extra freight. A status update covering a date range covers the whole range. A
+yes/no question gets the yes/no first, then the reason. If the draft reads as a laundry list,
+the reader was handed raw material instead of an answer.
+
 ## Severity Tiers
 
 ### P0 — Credibility killers (fix immediately)
@@ -399,8 +456,11 @@ rather than to fix that one draft again.
 - Vague attributions without sources ("Experts believe")
 - Significance inflation on routine events
 - Reasoning chain artifacts leaking into prose
+- Unverified assertions — a claim stated as fact that rests on inference, a conditional, or an unchecked source
+- Internal filing-system artifacts in client-facing output
 
 ### P1 — Obvious AI smell (fix before publishing)
+- Scope or volume mismatch — the answer does not fit the ask, in either direction
 - Word-list violations (delve, leverage, harness, robust, etc.)
 - Template phrases and slot-fill constructions
 - "Let's" transition openers

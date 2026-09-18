@@ -56,7 +56,41 @@ Open your existing synthesis next to the source. For each section of the source 
  
 This is the adversarial step. The mindset is: "I'm trying to find what I missed, not confirm what I got." If everything reflects, the synthesis is solid. If items are missing, list them.
  
-### 3b. Check the other direction — when the synthesis carries quotes or attributed claims
+### 3b. Quotation-mark audit (every quoted string, no exceptions)
+
+The diff in step 3 asks *"did I miss anything?"* This step asks the opposite: *"did I invent anything?"* Omission and fabrication are different failures and step 3 only catches the first.
+
+**Extract every string in the synthesis that sits inside quotation marks. For each one, find it in the source and match it character by character.** Not "is this the gist" — is this *the string*. There is no partial credit; a quote is either verbatim or it is not a quote.
+
+Three failure shapes, in rising order of danger:
+
+1. **Cleaned** — disfluencies, filler, and stutters removed (`"that that"` → `"that"`, dropped `"you know"`). Acceptable *if* meaning is untouched. Prefer `[…]` or a bracketed note.
+2. **Stitched** — two or more non-adjacent turns fused into one quotation. Must be marked as such, never presented as a single utterance.
+3. **Paraphrased-in-quotes** — a summary wearing quotation marks. **Always a defect.** Either quote it or don't, but never both.
+
+**The tell to hunt for: a quote that is partly real.** Fabrications rarely invent whole cloth — they keep the source's distinctive tail (`"…costs on that properly yet"`) and swap the subject and the verb. The surviving fragment is what makes it feel checked. If a quoted string *sounds* like the source but you cannot land it on a contiguous span of source text, it is not a quote — it is a reconstruction, and it must be rewritten as one.
+
+**When the source cannot be reached** (paywalled sheet, permissions-scoped doc, deleted thread), a quotation from it is **unverifiable, not verified**. Say so explicitly next to it. An unverifiable quote may be entirely correct — but no future audit can ever confirm it, and it must never be treated as settled.
+
+Rationale: 2026-07-13. A meeting note quoted the client's technical gate as admitting *"[we] haven't figured out the costs on that properly yet."* The transcript says *"the tool does not actually have the ability for me to control costs on that properly yet."* The real blocker was a missing capability in the tool itself; the note reported it as un-done homework at the client. A downstream recommendation (bring him a cost model) was built on the inversion. Every *other* quote in the section was verbatim-perfect — which is precisely why nobody looked twice.
+
+### 3c. Framing audit — check what the quote is said to PROVE, not just what it says
+
+3b asks *"is this quote real?"* This asks *"is the sentence next to it real?"* A verbatim quote can sit inside a false frame, and the frame is what gets acted on. § 3b passes it every time, because the quote is fine.
+
+**Audit every attribution and sequence word attached to a quote.** The high-risk vocabulary is small and worth memorising:
+
+- **sequence** — *unprompted · before I raised it · independently · without being asked · first · spontaneously*
+- **strength** — *confirms · corroborates · proves · validates · agrees* (vs. the weaker truth: *did not object · went along with it*)
+- **authority** — *the client said · the vendor states · X's own position* (vs. someone repeating what they heard)
+
+For each, land it on the transcript and check **turn order**. Who spoke first? Did the second speaker open with assent (*"yeah, I agree"*, *"right"*, *"exactly"*, *"yep"*) before adding their content? **Assent-then-detail is not independent corroboration** — it is agreement plus, at best, a detail the first speaker could not have supplied. That residue is often still valuable; say precisely what it is.
+
+**Follow the claim downstream.** The escalation usually is not in the note — it is in the task, memo, or email *derived* from the note, written later by someone with less of the source in view. If the extraction feeds a downstream record, re-read that record against the source too, not just against the note. **A claim that gained confidence between two records without gaining evidence is the defect.**
+
+**Rule of thumb:** if a framing word makes a finding *more useful to argue with*, it is exactly the word to check. Convenience and accuracy drift apart quietly, and the direction of drift is never random.
+
+### 3d. Check the other direction — when the synthesis carries quotes or attributed claims
 
 Steps 1–3 look for **omission**: what the source says that the synthesis dropped. They cannot catch
 the opposite defect — a claim in the synthesis that traces to nothing, or to the wrong speaker. A
