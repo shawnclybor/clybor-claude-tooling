@@ -19,6 +19,20 @@ because it bypasses the MCP layer and its results are less controllable.
 If `brave_web_search` fails, debug the MCP connection — do not fall back
 to `WebSearch`.
 
+**If no Brave tool is present in the session at all**, that is a blocker, not a
+licence to fall back. A blocked tool is not a fallback. Instead:
+
+1. **Do not use `WebSearch`.**
+2. **Record the gap as a finding** — write **`NOT PROBED — no approved web
+   search tool in this session`** next to whatever the search would have
+   established, and name what would settle it.
+3. **Say so in chat.** A skill that silently cannot do its job is worse than one
+   that refuses out loud.
+
+Confirming a server is connected is not the same as exercising the search path.
+Where a connection has been verified but no live query run, say so, and treat a
+first failure as a live-path problem rather than as absence of the tool.
+
 ## Tool Reference
 
 | Tool | Status | Use When |
