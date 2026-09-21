@@ -1,4 +1,8 @@
 {
+  "env": {
+    "HOOK_SAFETY_LEVEL": "high",
+    "CONFIG_GUARD_ALLOW": "true"
+  },
   "permissions": {
     "allow": [
       "Bash(npm:*)",
@@ -24,11 +28,33 @@
           {
             "type": "command",
             "command": "h=.claude/hooks/session-context.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"session-context.sh: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "h=.claude/hooks/vendor/dead-rules-audit/dead-rules-audit.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec node \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec node \"$p/$h\"; p=$(dirname \"$p\"); done; exit 0"
           }
         ]
       }
     ],
     "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|MultiEdit|Write|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "g=.claude/hooks/guard-resolve.sh; t=.claude/hooks/vendor/guard-pack/guard-pack.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$g\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$g\" node \"$t\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$g\" ] && exec bash \"$p/$g\" node \"$t\"; p=$(dirname \"$p\"); done; echo \"GUARD BLOCKED: guard-resolve.sh not found from $PWD\" >&2; exit 2"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "g=.claude/hooks/guard-resolve.sh; t=.claude/hooks/vendor/smart-approve/smart_approve.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$g\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$g\" python3 \"$t\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$g\" ] && exec bash \"$p/$g\" python3 \"$t\"; p=$(dirname \"$p\"); done; echo \"GUARD BLOCKED: guard-resolve.sh not found from $PWD\" >&2; exit 2"
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [
@@ -49,11 +75,40 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Read|WebFetch|Bash|Grep|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "h=.claude/hooks/vendor/prompt-injection-defender/post-tool-defender.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec uv run \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec uv run \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"post-tool-defender.py: not found from $PWD - HOOK SKIPPED (warn-only scanner, fails open by design)\" >&2; exit 0"
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
             "command": "input=$(cat); echo \"$input\" | grep -qE 'CLAUDE\\.md|\\.claude/rules/' || exit 0; h=scripts/check-context-budget.sh; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$h\" 1>&2; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec bash \"$p/$h\" 1>&2; p=$(dirname \"$p\"); done; exit 0"
+          },
+          {
+            "type": "command",
+            "command": "h=.claude/hooks/vendor/format-code/format-code.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec node \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec node \"$p/$h\"; p=$(dirname \"$p\"); done; exit 0"
+          },
+          {
+            "type": "command",
+            "async": true,
+            "command": "h=.claude/hooks/vendor/dead-rules-audit/dead-rules-audit.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec node \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec node \"$p/$h\"; p=$(dirname \"$p\"); done; exit 0"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "h=.claude/hooks/vendor/dead-rules-audit/dead-rules-audit.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec node \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec node \"$p/$h\"; p=$(dirname \"$p\"); done; exit 0"
           }
         ]
       }
