@@ -1,0 +1,41 @@
+guard-pack-redos-fix — a fork of vendor/guard-pack, taken 2026-09-21.
+
+Why it exists
+  vendor/guard-pack/lib/protect-secrets.js has a catastrophic-backtracking bug in the
+  grep-env pattern. The three alternatives in
+
+      (?:"[^"]*"|'[^']*'|[^|;&])*
+
+  overlap: the catch-all branch also matches the quote characters the first two match,
+  so a command naming grep/rg/egrep/fgrep/ag/awk/gawk, carrying many quotes, and lacking
+  a trailing .env explores exponentially many partitions before failing.
+
+  Driver is quote count, not length. Measured 2026-09-21 on real commands from this
+  machine: 22 quotes 3.2ms, 34 quotes 50ms, 38 quotes 590ms, 46 quotes 6291ms — the last
+  on a 663-char command. A synthetic 241-char command with 52 quotes never returned in 8s.
+  1,150 of 28,083 Bash calls in a 30-day window (4.10%) sit above that threshold.
+
+  With timeout: 5 on the guard entry, each of those was a silent skip of ALL SEVEN guards,
+  not just protect-secrets — Claude Code treats a timed-out hook as failed and allows.
+  Verified directly: a hook returning "deny" after 10s against a 5s budget did not block.
+
+The change
+  One character class, in lib/protect-secrets.js, grep-env only:
+      [^|;&]   ->   [^|;&"']
+  Everything else in this directory is byte-identical to vendor/guard-pack.
+
+  Measured after: whole 28,083-command corpus in 29ms total, 0.22ms worst single command.
+  No behavioural divergence on five true positives (grep SECRET .env, grep -r 'api'
+  .env.local, awk "{print}" .env, rg TOKEN ./config/.env, egrep foo .env) or four controls.
+
+Why a fork and not an edit in place
+  vendor/README.md: files there are byte-pinned against their upstream test suites, and a
+  local edit silently diverges from the tests that make them trustworthy. That README's own
+  escape hatch is to fork out of vendor/ under a new name. This is that.
+
+On re-vendor
+  Diff the new upstream protect-secrets.js against this file. If upstream has taken the
+  fix, delete this fork and repoint settings.json back at vendor/guard-pack. If not,
+  re-apply the one character class and keep the fork.
+
+Upstream: karanb192/claude-code-hooks @ 888ef0827f12 (MIT)
