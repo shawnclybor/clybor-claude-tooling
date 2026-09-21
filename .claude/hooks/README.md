@@ -47,10 +47,35 @@ backstop, never the sole gate.
 - **vendor/dead-rules-audit/** — tallies which CLAUDE.md rules are followed vs ignored.
 - **vendor/format-code/** — ruff + prettier after Write/Edit. Inert until `ruff` and `prettier` are installed.
 
-## Interpreters: why python3 is narrowed and bash is not
+## Interpreters: an accepted risk, not a solved problem
 
-`permissions.allow` carries `Bash(python3:[!-]*)` but plain `Bash(bash:*)`. The
-asymmetry is deliberate and measured.
+`permissions.allow` carries `Bash(python3:*)` and `Bash(bash:*)` — both wide.
+That is a decision, taken with the numbers below in hand, and the reasoning is
+worth keeping because the config line alone looks like nobody thought about it.
+
+**What is being accepted:** an allow-listed `python3 -c` is arbitrary code
+execution with no prompt and no guard.
+
+**Why gating it was rejected:** `~/.claude/settings.json` already contains
+`Bash(python3 -)` from an earlier "always allow" click. That is the heredoc
+form — 5,316 calls in the corpus against 2,830 for `-c`, and just as arbitrary.
+Narrowing `-c` while `-` runs silently from the global layer does not reduce
+what can execute; it only produces a prompt on the smaller half. A control that
+covers the less-used path to the same outcome is the appearance of a control.
+Better to hold the risk knowingly than to hold a decoration.
+
+**What would actually close it:** remove `Bash(python3 -)` from
+`~/.claude/settings.json` *and* set the project pattern to `Bash(python3:[!-]*)`,
+which allows a script path and rejects anything starting with a dash. Both, or
+neither — either half alone is the decoration described above. Measured cost of
+doing both: 85.1% of calls silent drops to 62.4%.
+
+**The failure mode to watch:** "allow always" writes to a settings file
+permanently, and `smart_approve` merges global, project, and project-local
+layers. So one click during an annoying prompt re-opens this everywhere, with no
+record. That is exactly how `Bash(python3 -)` got there.
+
+The rest of this section is the evidence behind those numbers.
 
 `guard-pack` pattern-matches the command string, so a dangerous call sits in
 matchable position inside `bash -c` and gets caught, but Python source is opaque
@@ -67,26 +92,30 @@ command start, so `import os; os.system('rm -rf ~')` still passes, and the next
 wrapper defeats whatever you add — `shutil.rmtree` carries no shell string at all,
 then `exec()`, then base64. A regex guard over an interpreter is a game you lose.
 
-So the fix is not detection, it is where the prompt falls. `fnmatch` supports
-negated classes, so `[!-]*` allows a script path and rejects anything starting
-with a dash:
+So there is no detection fix available — only a choice about where the prompt
+falls. `fnmatch` supports negated classes, so `[!-]*` would allow a script path
+and reject anything starting with a dash:
 
 ```
 python3 script.py     ALLOW      python3 -c "…"   prompt
 python3 -m json.tool  prompt     python3 -        prompt
 ```
 
-Measured over 27,992 real calls: `python3:*` + `bash:*` = 85.1% silent with the
-hole open; narrowing both = 61.9%; narrowing python3 only = **62.4%**; dropping
-both = 51.9%. Narrowing bash buys 0.5 points because guard-pack already covers
-it, so it stays wide.
+Measured over 27,992 real calls: `python3:*` + `bash:*` = **85.1%** silent (what
+ships); narrowing python3 only = 62.4%; narrowing both = 61.9%; dropping both =
+51.9%. Narrowing bash buys 0.5 points because guard-pack already covers it.
 
-**Two things this does not fix.** `python3 script.py` is still auto-allowed and
-that script may contain anything — writing it passes the `Write|Edit` matcher
-first, which is weak and does nothing about a script already on disk. And this
-moves inline code from silent to prompted, which is a control only if the prompt
-gets read; at roughly a third of calls, assume it sometimes will not. The hole
-went from invisible to visible. It did not close.
+Options ranked by what they actually buy:
+
+| | silent | what can still execute unprompted |
+|---|---|---|
+| ships today | 85.1% | any Python, any shell |
+| narrow python3 only | 62.4% | any Python via the global `Bash(python3 -)` |
+| narrow python3 **and** clear the global entry | 62.4% | shell via `bash -c`, caught by guard-pack |
+| drop both interpreters | 51.9% | — |
+
+Rows two and three cost the same and differ enormously, which is the whole point:
+the global layer decides whether the narrowing means anything.
 
 ## Smoke tests
 

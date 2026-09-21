@@ -18,7 +18,7 @@
       "Bash(pandoc:*)",
       "Bash(jq:*)",
       "Bash(echo:*)",
-      "Bash(python3:[!-]*)",
+      "Bash(python3:*)",
       "Bash(head:*)",
       "Bash(cd:*)",
       "Bash(sed:*)",
