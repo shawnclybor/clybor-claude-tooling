@@ -47,4 +47,18 @@ if [ -f scripts/check_grep_blindspots.py ]; then
     echo "$out"
   fi
 fi
+
+# Hook wiring. A hook whose script is missing errors into a void, so the session is told at
+# start. Absence of the check itself is announced too: a silent no-op reads like a pass.
+if [ -f scripts/check_hook_wiring.py ]; then
+  out="$(python3 scripts/check_hook_wiring.py --quiet 2>&1)"
+  if [ -n "$out" ]; then
+    [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
+    emitted=1
+    echo ""
+    echo "$out"
+  fi
+else
+  echo "⚠ hook-wiring check absent (scripts/check_hook_wiring.py) — hooks were NOT verified."
+fi
 exit 0

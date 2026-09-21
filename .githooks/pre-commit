@@ -28,6 +28,7 @@ report_skips() {
 [ -f "$ROOT/scripts/check_tracker_version.py" ]             || skipped+=("tracker-staleness gate")
 [ -f "$ROOT/scripts/phi-scan.py" ]                          || skipped+=("PHI / client-identifier gate (scripts/phi-scan.py)")
 [ -f "$ROOT/scripts/check_house_style.py" ]                 || skipped+=("Cox house style gate (scripts/check_house_style.py)")
+[ -f "$ROOT/scripts/check_hook_wiring.py" ]                  || skipped+=("hook wiring (scripts/check_hook_wiring.py)")
 
 # 1. local knowledge-wiki / project-rule invariants
 if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
@@ -62,5 +63,11 @@ fi
 #    by an ad-hoc regex rather than any gate. Override: HOUSE_STYLE_OK=1 git commit
 if [ -f "$ROOT/scripts/check_house_style.py" ] && [ -z "$HOUSE_STYLE_OK" ]; then
   python3 "$ROOT/scripts/check_house_style.py" --staged || exit $?
+fi
+# 8. Hook wiring -- every configured hook must name a script that exists, so a hook that
+#    would error into a void is caught here rather than at the next session.
+#    Override: HOOK_WIRING_OK=1 git commit
+if [ -f "$ROOT/scripts/check_hook_wiring.py" ] && [ -z "$HOOK_WIRING_OK" ]; then
+  python3 "$ROOT/scripts/check_hook_wiring.py" --quiet || exit $?
 fi
 exit 0
