@@ -13,6 +13,16 @@ style reminder: a missing KISS nudge should never block work.
 A security hook that silently stops running is worse than no security hook,
 because the absence is not self-announcing.
 
+**Both guard entries carry `"timeout": 5`, and that timeout fails OPEN.** Claude
+Code treats a timed-out hook as a failed hook and allows the call. So the
+timeout converts a freeze into a silent skip — better than freezing, but it is
+a hole in the posture above, and it is there for a measured reason:
+`vendor/guard-pack/lib/protect-secrets.js` backtracks catastrophically on long
+commands. Bisected against a real 4,159-char heredoc from this machine: 2,000
+chars 60 ms, 2,500 chars 3,036 ms, 3,000 chars no return in 15 s. Multi-KB
+heredocs are routine here, so without the cap a `PreToolUse` guard would stall
+the session outright. The cap is a mitigation; the fix is upstream.
+
 That posture applies to the *launch*. It does not extend inside `guard-pack.js`,
 which catches a throwing guard, logs it, skips to the next, and emits `{}`
 (= allow) from its top-level catch. That is upstream's design and the file is
@@ -36,6 +46,28 @@ backstop, never the sole gate.
 - **vendor/prompt-injection-defender/** — PostToolUse scan of Read/WebFetch/Bash/Grep/Task output for indirect prompt injection. Warn-only, so it fails open.
 - **vendor/dead-rules-audit/** — tallies which CLAUDE.md rules are followed vs ignored.
 - **vendor/format-code/** — ruff + prettier after Write/Edit. Inert until `ruff` and `prettier` are installed.
+
+## Known gap: interpreter flags bypass both layers
+
+`permissions.allow` carries `Bash(python3:*)` and `Bash(bash:*)` because
+measurement said so — over 27,992 real Bash calls from a month of work, they are
+ranks 2 and 7 by frequency, and dropping them takes the auto-allowed rate from
+85.1% to 51.9%. The cost is a hole, measured not assumed:
+
+| command | smart_approve | guard-pack |
+|---|---|---|
+| `bash -c "rm -rf ~"` | allow | DENY `[rm-home]` |
+| `python3 -c "import os; os.system('rm -rf ~')"` | allow | **pass** |
+| `echo hi && rm -rf ~` | prompt | DENY `[rm-home]` |
+
+`guard-pack` pattern-matches the command string, so it catches the dangerous
+call inside `bash -c` but sees nothing inside Python source. `HOOK_SAFETY_LEVEL=strict`
+does not change this — it is structural, not a tuning knob. So an allow-listed
+`python3 -c` is arbitrary code execution with no prompt and no guard.
+
+Dropping `Bash(python3:*)` and `Bash(bash:*)` from `permissions.allow` restores
+the prompt at the cost of roughly a third of the silence. Which way to go is a
+judgment about whether a prompt you see thousands of times is still a control.
 
 ## Smoke tests
 

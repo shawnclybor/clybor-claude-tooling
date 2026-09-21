@@ -17,6 +17,18 @@
       "Bash(git:*)",
       "Bash(pandoc:*)",
       "Bash(jq:*)",
+      "Bash(echo:*)",
+      "Bash(python3:*)",
+      "Bash(head:*)",
+      "Bash(cd:*)",
+      "Bash(sed:*)",
+      "Bash(tail:*)",
+      "Bash(bash:*)",
+      "Bash(cut:*)",
+      "Bash(wc:*)",
+      "Bash(printf:*)",
+      "Bash(awk:*)",
+      "Bash(sort:*)",
       "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": []
@@ -42,6 +54,7 @@
         "hooks": [
           {
             "type": "command",
+            "timeout": 5,
             "command": "g=.claude/hooks/guard-resolve.sh; t=.claude/hooks/vendor/guard-pack/guard-pack.js; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$g\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$g\" node \"$t\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$g\" ] && exec bash \"$p/$g\" node \"$t\"; p=$(dirname \"$p\"); done; echo \"GUARD BLOCKED: guard-resolve.sh not found from $PWD\" >&2; exit 2"
           }
         ]
@@ -51,6 +64,7 @@
         "hooks": [
           {
             "type": "command",
+            "timeout": 5,
             "command": "g=.claude/hooks/guard-resolve.sh; t=.claude/hooks/vendor/smart-approve/smart_approve.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$g\" ] && exec bash \"$CLAUDE_PROJECT_DIR/$g\" python3 \"$t\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$g\" ] && exec bash \"$p/$g\" python3 \"$t\"; p=$(dirname \"$p\"); done; echo \"GUARD BLOCKED: guard-resolve.sh not found from $PWD\" >&2; exit 2"
           }
         ]
