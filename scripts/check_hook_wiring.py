@@ -58,6 +58,15 @@ SETTINGS = ROOT / ".claude" / "settings.json"
 ROOT_REF = re.compile(r'"\$(?:R|CLAUDE_PROJECT_DIR)"/(\S+)')
 # ${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}/path
 TOOLING_REF = re.compile(r'\$\{CLYBOR_TOOLING:-([^}]+)\}/(\S+)')
+# h=.claude/hooks/x.py; ... exec python3 "$CLAUDE_PROJECT_DIR/$h"
+#
+# Every hook command in this repo's settings.json.template opens by assigning the
+# script to a short variable and dereferencing it later, so the path never appears
+# in either shape above. Without this pattern the gate parsed zero of fourteen
+# hooks and reported the lot UNVERIFIED -- honest, but blind. Single-letter names
+# only (h, g, t), which is what the template uses and which keeps `input=$(cat)`
+# and friends from being read as script paths.
+ASSIGN_REF = re.compile(r'(?:^|;\s*)([hgt])=([^\s;"\']+)')
 
 
 def _strip_args(path: str) -> str:
@@ -75,6 +84,10 @@ def resolve(cmd: str) -> list[tuple[str, Path]]:
         base = m.group(1).replace("$HOME", str(Path.home()))
         rel = _strip_args(m.group(2))
         found.append((f"{base}/{rel}", Path(os.environ.get("CLYBOR_TOOLING", base)) / rel))
+    for m in ASSIGN_REF.finditer(cmd):
+        rel = _strip_args(m.group(2))
+        if (rel, ROOT / rel) not in found:
+            found.append((rel, ROOT / rel))
     return found
 
 
