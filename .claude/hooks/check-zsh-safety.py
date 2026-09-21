@@ -143,7 +143,10 @@ def findings(cmd):
     for word, mask, prev, depth in scan(cmd):
         if not word:
             continue
-        if word[0] == "=" and not mask[0] and depth == 0:
+        # EQUALS expansion needs `=` plus at least one character: `=foo` and `===` resolve to a
+        # command path, while a lone `=` is an ordinary argument -- it is how POSIX writes
+        # `[ a = b ]`, which runs correctly under zsh.
+        if word[0] == "=" and len(word) > 1 and not mask[0] and depth == 0:
             out.append((
                 "EQUALS expansion", word,
                 "a word beginning with `=` is resolved to a command's path -- this either errors and "
