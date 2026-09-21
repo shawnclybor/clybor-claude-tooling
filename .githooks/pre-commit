@@ -27,6 +27,7 @@ report_skips() {
 [ -f "$ROOT/scripts/check_dependency_probes.py" ]           || skipped+=("availability / dependency probes")
 [ -f "$ROOT/scripts/check_tracker_version.py" ]             || skipped+=("tracker-staleness gate")
 [ -f "$ROOT/scripts/phi-scan.py" ]                          || skipped+=("PHI / client-identifier gate (scripts/phi-scan.py)")
+[ -f "$ROOT/scripts/check_house_style.py" ]                 || skipped+=("Cox house style gate (scripts/check_house_style.py)")
 
 # 1. local knowledge-wiki / project-rule invariants
 if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
@@ -55,5 +56,11 @@ fi
 #    No-ops in repos without the scanner. Needs a client-name list outside git.
 if [ -f "$ROOT/scripts/phi-scan.py" ]; then
   python3 "$ROOT/scripts/phi-scan.py" --staged || exit $?
+fi
+# 7. Cox house style gate — a staged Content Studio draft must pass the twelve rules Cox stated
+#    on 2026-09-16. Both packs written on 2026-09-18 broke rules encoded hours earlier, caught
+#    by an ad-hoc regex rather than any gate. Override: HOUSE_STYLE_OK=1 git commit
+if [ -f "$ROOT/scripts/check_house_style.py" ] && [ -z "$HOUSE_STYLE_OK" ]; then
+  python3 "$ROOT/scripts/check_house_style.py" --staged || exit $?
 fi
 exit 0
