@@ -29,6 +29,7 @@ report_skips() {
 [ -f "$ROOT/scripts/phi-scan.py" ]                          || skipped+=("PHI / client-identifier gate (scripts/phi-scan.py)")
 [ -f "$ROOT/scripts/check_house_style.py" ]                 || skipped+=("Cox house style gate (scripts/check_house_style.py)")
 [ -f "$ROOT/scripts/check_hook_wiring.py" ]                  || skipped+=("hook wiring (scripts/check_hook_wiring.py)")
+[ -f "$ROOT/scripts/check_draft_empty_prose.py" ]            || skipped+=("empty-prose gate (scripts/check_draft_empty_prose.py)")
 
 # 1. local knowledge-wiki / project-rule invariants
 if [ -x "$ROOT/scripts/check-knowledge.sh" ]; then
@@ -69,5 +70,11 @@ fi
 #    Override: HOOK_WIRING_OK=1 git commit
 if [ -f "$ROOT/scripts/check_hook_wiring.py" ] && [ -z "$HOOK_WIRING_OK" ]; then
   python3 "$ROOT/scripts/check_hook_wiring.py" --quiet || exit $?
+fi
+# 9. Empty prose -- a staged Content Studio draft body must name things rather than gesture
+#    at them. Scoped to the marked body, so the internal apparatus does not trip it.
+#    Override: EMPTY_PROSE_OK=1 git commit
+if [ -f "$ROOT/scripts/check_draft_empty_prose.py" ] && [ -z "$EMPTY_PROSE_OK" ]; then
+  python3 "$ROOT/scripts/check_draft_empty_prose.py" --staged || exit $?
 fi
 exit 0

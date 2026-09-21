@@ -61,4 +61,19 @@ if [ -f scripts/check_hook_wiring.py ]; then
 else
   echo "⚠ hook-wiring check absent (scripts/check_hook_wiring.py) — hooks were NOT verified."
 fi
+
+# Repo-root census. A file at the root has no owner: convention gates walk directories, and
+# .gitignore hides rather than files. Reports, never blocks -- its own header argues a veto is
+# too expensive, and half the strays are not markdown. Absence is announced.
+if [ -f scripts/check-root-strays.sh ]; then
+  out="$(bash scripts/check-root-strays.sh 2>&1)"
+  if [ $? -ne 0 ]; then
+    [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
+    emitted=1
+    echo ""
+    echo "$out"
+  fi
+else
+  echo "⚠ root census absent (scripts/check-root-strays.sh) — the root was NOT inspected."
+fi
 exit 0
