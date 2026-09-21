@@ -47,27 +47,46 @@ backstop, never the sole gate.
 - **vendor/dead-rules-audit/** — tallies which CLAUDE.md rules are followed vs ignored.
 - **vendor/format-code/** — ruff + prettier after Write/Edit. Inert until `ruff` and `prettier` are installed.
 
-## Known gap: interpreter flags bypass both layers
+## Interpreters: why python3 is narrowed and bash is not
 
-`permissions.allow` carries `Bash(python3:*)` and `Bash(bash:*)` because
-measurement said so — over 27,992 real Bash calls from a month of work, they are
-ranks 2 and 7 by frequency, and dropping them takes the auto-allowed rate from
-85.1% to 51.9%. The cost is a hole, measured not assumed:
+`permissions.allow` carries `Bash(python3:[!-]*)` but plain `Bash(bash:*)`. The
+asymmetry is deliberate and measured.
+
+`guard-pack` pattern-matches the command string, so a dangerous call sits in
+matchable position inside `bash -c` and gets caught, but Python source is opaque
+to it. `HOOK_SAFETY_LEVEL=strict` does not change that — it is structural, not a
+tuning knob:
 
 | command | smart_approve | guard-pack |
 |---|---|---|
 | `bash -c "rm -rf ~"` | allow | DENY `[rm-home]` |
 | `python3 -c "import os; os.system('rm -rf ~')"` | allow | **pass** |
-| `echo hi && rm -rf ~` | prompt | DENY `[rm-home]` |
 
-`guard-pack` pattern-matches the command string, so it catches the dangerous
-call inside `bash -c` but sees nothing inside Python source. `HOOK_SAFETY_LEVEL=strict`
-does not change this — it is structural, not a tuning knob. So an allow-listed
-`python3 -c` is arbitrary code execution with no prompt and no guard.
+Extracting the payload and re-scanning does not rescue it. The patterns anchor at
+command start, so `import os; os.system('rm -rf ~')` still passes, and the next
+wrapper defeats whatever you add — `shutil.rmtree` carries no shell string at all,
+then `exec()`, then base64. A regex guard over an interpreter is a game you lose.
 
-Dropping `Bash(python3:*)` and `Bash(bash:*)` from `permissions.allow` restores
-the prompt at the cost of roughly a third of the silence. Which way to go is a
-judgment about whether a prompt you see thousands of times is still a control.
+So the fix is not detection, it is where the prompt falls. `fnmatch` supports
+negated classes, so `[!-]*` allows a script path and rejects anything starting
+with a dash:
+
+```
+python3 script.py     ALLOW      python3 -c "…"   prompt
+python3 -m json.tool  prompt     python3 -        prompt
+```
+
+Measured over 27,992 real calls: `python3:*` + `bash:*` = 85.1% silent with the
+hole open; narrowing both = 61.9%; narrowing python3 only = **62.4%**; dropping
+both = 51.9%. Narrowing bash buys 0.5 points because guard-pack already covers
+it, so it stays wide.
+
+**Two things this does not fix.** `python3 script.py` is still auto-allowed and
+that script may contain anything — writing it passes the `Write|Edit` matcher
+first, which is weak and does nothing about a script already on disk. And this
+moves inline code from silent to prompted, which is a control only if the prompt
+gets read; at roughly a third of calls, assume it sometimes will not. The hole
+went from invisible to visible. It did not close.
 
 ## Smoke tests
 
