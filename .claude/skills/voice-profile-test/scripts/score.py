@@ -44,7 +44,7 @@ for j in judges:
             continue
         rows, quotes, tot = parse(f)
         t, s = sum(sum(v[:3]) for v in rows.values()), sum(v[3] for v in rows.values())
-        check = "" if tot.get("THINKING") == t and tot.get("SOUND") == s else f", judge totals {tot} vs table {t}/{s}"
+        check = "" if not tot or (tot.get("THINKING") == t and tot.get("SOUND") == s) else f", judge totals {tot} vs table {t}/{s}"
         miss = [n for n in range(1, nq + 1) if n not in rows]
         print(f"{j} {pid}: {len(rows)}/{nq} rows, {quotes} quoted lines ({4 * nq} asked){check}" + (f", MISSING Q{miss}" if miss else ""))
         for n, v in rows.items():
