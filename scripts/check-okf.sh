@@ -63,6 +63,55 @@ in_mirror() {
   return 1
 }
 
+# --files <path>... : check only the named markdown files and exit.
+#
+# For a pre-commit gate, where the question is "is what I am committing compliant",
+# not "is the whole tree". The full walk answers the second question and is the right
+# shape for a periodic review; as a commit gate it would fail on every pre-existing
+# file and be disabled within a day. Scoped this way the standard ratchets: legacy
+# files are nobody's problem until someone touches them.
+#
+# Same skip rules as the walk -- excluded dirs, CLAUDE.md, index.md, mirrors, read-only.
+# No staged markdown is a legitimate pass here, unlike the walk's vacuous-pass guard:
+# a commit that touches no markdown has nothing to be non-compliant about.
+if [ "${1:-}" = "--files" ]; then
+  shift
+  okf_missing=0
+  okf_seen=0
+  for f in "$@"; do
+    case "$f" in *.md) ;; *) continue ;; esac
+    b="$(basename "$f")"
+    [ "$b" = "CLAUDE.md" ] && continue
+    [ "$b" = "index.md" ] && continue
+    case "$f" in
+      docs/handoffs/*) ;;
+      *) is_excluded_dir "${f%%/*}" && continue ;;
+    esac
+    [ -f "$f" ] || continue
+    okf_seen=$((okf_seen + 1))
+    if [ "$(head -n1 "$f" 2>/dev/null)" != "---" ]; then
+      in_mirror "$f" && continue
+      [ ! -w "$f" ] && continue
+      okf_missing=$((okf_missing + 1))
+      echo "  no OKF frontmatter: $f"
+    fi
+  done
+  if [ "$okf_missing" -gt 0 ]; then
+    echo ""
+    echo "$okf_missing of $okf_seen staged markdown file(s) carry no frontmatter."
+    echo "Open the file and add a block at the very top, before any heading:"
+    echo "    ---"
+    echo "    title: ..."
+    echo "    type: ..."
+    echo "    updated: YYYY-MM-DD"
+    echo "    ---"
+    [ -f docs/okf-profile.md ] && echo "Contract: docs/okf-profile.md"
+    exit 1
+  fi
+  echo "OKF — OK ($okf_seen staged markdown file(s))"
+  exit 0
+fi
+
 drift=0
 total=0
 total_locked=0
@@ -121,6 +170,14 @@ EOF
   # Binaries need a sibling .okf.yaml sidecar.
   while IFS= read -r b; do
     [ -z "$b" ] && continue
+    # A mirror folder is exempt for binaries too: its files are byte-checked copies, and a
+    # sidecar inside it would travel with the package (a generated client bundle would ship
+    # internal project ids). Metadata goes in a sidecar BESIDE the folder. Reported, not drift.
+    if in_mirror "$b"; then
+      mirror=$((mirror + 1))
+      [ $QUIET -eq 0 ] && echo "        MIRROR (verbatim client copy): $b"
+      continue
+    fi
     # Two accepted sidecar names, resolved in the SAME order as verify-deliverable.py
     # (scripts/verify-deliverable.py, BINARY_EXT branch). Keep these two in sync.
     #   1. <file>.okf.yaml  — full filename incl. extension. Canonical: the only form
