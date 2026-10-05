@@ -24,7 +24,7 @@ DENYLIST = os.path.join(ROOT, "scripts", "denylist.local.json")
 REGEX_REPLACEMENTS = [
     (re.compile(r"\b[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}\b", re.I), "{{RECORD_ID}}"),
     (re.compile(r"\b(?:(?:\d{1,3}\.){3}\d{1,3})\b(?<!0\.0\.0\.0)(?<!127\.0\.0\.1)"), "{{SERVER_IP}}"),
-    (re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b"), "{{CONTACT_EMAIL}}"),
+    (re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b"), "{{CONTACT_EMAIL}}"),
     (re.compile(r"/Users/[a-z][a-z0-9_-]*", re.I), "{{HOME}}"),
 ]
 

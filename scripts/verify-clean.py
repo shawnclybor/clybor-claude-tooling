@@ -26,7 +26,7 @@ CATALOG = os.path.join(ROOT, "catalog.json")
 REGEX_CLASSES = {
     "uuid/hex-id": re.compile(r"\b[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}\b", re.I),
     "ipv4": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
-    "email": re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b"),
+    "email": re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b"),
     "user-path": re.compile(r"/Users/[a-z][a-z0-9_-]*", re.I),
 }
 TOKEN_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
