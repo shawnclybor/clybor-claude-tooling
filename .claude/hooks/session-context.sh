@@ -12,6 +12,21 @@ for r in .claude/rules/*-project.md; do
   echo "- Load \`$r\` for engagement/domain specifics before project work."
 done
 
+# Knowledge-base freshness — FIRST, because everything below is read from this checkout.
+# On 2026-09-25 a session loaded a seven-week-stale CLAUDE.md from a `main` that newer
+# branches had left behind, and nothing said so. Report-only; absence is announced.
+if [ -f scripts/check_kb_freshness.py ]; then
+  out="$(python3 scripts/check_kb_freshness.py --audit 2>/dev/null)"
+  if [ -n "$out" ]; then
+    [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
+    emitted=1
+    echo ""
+    echo "$out"
+  fi
+else
+  echo "⚠ knowledge-base freshness check absent (scripts/check_kb_freshness.py) — staleness was NOT checked."
+fi
+
 if [ -f knowledge/log.md ]; then
   [ "$emitted" -eq 0 ] && echo "## Project context (auto-loaded by SessionStart hook)"
   emitted=1
