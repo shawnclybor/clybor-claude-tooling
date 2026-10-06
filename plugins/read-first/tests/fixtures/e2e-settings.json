@@ -1,0 +1,3 @@
+{ "pluginConfigs": {
+    "read-first": { "options": { "rules": "WebFetch => fixture-guide" } },
+    "read-first@inline": { "options": { "rules": "WebFetch => fixture-guide" } } } }

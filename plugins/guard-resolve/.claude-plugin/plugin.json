@@ -1,0 +1,7 @@
+{
+  "name": "guard-resolve",
+  "version": "0.1.0",
+  "description": "Makes your security hooks fail closed. guard-resolve launches a guard and blocks the tool call if the guard's runtime or script is missing, instead of letting the call through silently. Includes a skill for choosing which hooks need it, a fail-closed guard template, and tests.",
+  "author": { "name": "Clybor Consulting" },
+  "keywords": ["security", "hooks", "fail-closed", "add-security-guard"]
+}

@@ -1,0 +1,3 @@
+{ "pluginConfigs": {
+    "think-first": { "options": { "writes": "WebFetch", "retries": "WebFetch" } },
+    "think-first@inline": { "options": { "writes": "WebFetch", "retries": "WebFetch" } } } }

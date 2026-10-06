@@ -1,0 +1,48 @@
+{
+  "name": "read-first",
+  "version": "0.2.0",
+  "description": "Blocks a tool call until Claude has loaded the guide skill you mapped to that tool. A guide skill is one part rules, one part operating manual. Missing one? The block message says which, and the bundled write-guide-skill skill drafts it in a standard format that a checker verifies.",
+  "author": {
+    "name": "Clybor Consulting"
+  },
+  "keywords": [
+    "mod",
+    "guide-skill",
+    "gate",
+    "write-guide-skill"
+  ],
+  "userConfig": {
+    "rules": {
+      "type": "string",
+      "title": "Rules",
+      "description": "Which guide skill each tool needs, as tool-pattern => guide, separated by semicolons. A plain pattern is a glob (* matches anything); /regex/ matches anywhere in the tool name. Example: mcp__notion__* => notion-guide; /__send_/ => mail-guide, compliance-guide",
+      "default": ""
+    },
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "enforce blocks the call; warn lets it run and tells Claude which guide it skipped",
+      "options": [
+        "enforce",
+        "warn"
+      ],
+      "default": "enforce"
+    },
+    "strict": {
+      "type": "boolean",
+      "title": "Strict",
+      "description": "Also block MCP tools that no rule covers, and point Claude to write-guide-skill",
+      "default": false
+    },
+    "match": {
+      "type": "string",
+      "title": "Match",
+      "description": "all requires the guide skills of every matching rule; first requires only the first matching rule's, so rule order decides",
+      "options": [
+        "all",
+        "first"
+      ],
+      "default": "all"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "think-first",
+  "version": "0.1.0",
+  "description": "Makes Claude run a sequential-thinking step before its first write in each turn, and again before retrying a tool call that just failed. Installs the Model Context Protocol sequential-thinking server it relies on, pinned to one version.",
+  "author": { "name": "Clybor Consulting" },
+  "keywords": ["mod", "sequential-thinking", "gate", "retry"],
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking@2025.11.25"]
+    }
+  },
+  "userConfig": {
+    "writes": {
+      "type": "string",
+      "title": "Writes",
+      "description": "Which tools count as writes, as patterns separated by semicolons. A plain pattern is a glob (* matches anything); /regex/ matches anywhere in the tool name. Default matches MCP tools whose names create, update, delete, send, publish and similar.",
+      "default": "/^mcp__.+?__.*(create|update|delete|send|post|publish|upload|move|remove|insert|execute|write|apply|deploy|trash|share|edit|merge)/i"
+    },
+    "retries": {
+      "type": "string",
+      "title": "Retries",
+      "description": "Which tools need a thinking step before they are retried after a failure, in the same pattern format. Default is every MCP tool.",
+      "default": "mcp__*"
+    },
+    "mode": {
+      "type": "string",
+      "title": "Mode",
+      "description": "enforce blocks the call; warn lets it run and tells Claude it skipped the thinking step",
+      "options": ["enforce", "warn"],
+      "default": "enforce"
+    }
+  }
+}
