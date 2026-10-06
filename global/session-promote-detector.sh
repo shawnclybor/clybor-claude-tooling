@@ -8,6 +8,6 @@ out="$(bash "$CANON/scripts/check-promotion.sh" --surface 2>&1)"
 if [ -n "$out" ]; then
   echo "## Tooling promotion check (clybor-claude-tooling)"
   echo "$out"
-  echo "_Promote with \`$CANON/scripts/promote.sh <path>\`._"
+  echo "_Each line says which way it differs. Promote AHEAD files with the promote-to-tooling skill (it runs the universality test, then \`$CANON/scripts/promote.sh <path>\`)._"
 fi
 exit 0

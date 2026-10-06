@@ -78,8 +78,16 @@ list_files() {
 while IFS= read -r f; do [ -n "$f" ] && scan "$f"; done < <(list_files)
 
 if [ "${#drift[@]}" -gt 0 ]; then
-  echo "⚠ tooling DRIFT vs clybor-claude-tooling (promote or sync):" >&2
-  for d in "${drift[@]}"; do echo "  ~ $d" >&2; done
+  echo "⚠ tooling DRIFT vs clybor-claude-tooling:" >&2
+  # Name the direction and whether the project copy is private (classify-drift.py), so the
+  # fix is obvious: sync down, promote up, merge, or keep local. Falls back to bare paths.
+  if command -v python3 >/dev/null 2>&1 && [ -f "$CANON/scripts/classify-drift.py" ]; then
+    python3 "$CANON/scripts/classify-drift.py" "$REPO" "$CANON" "${drift[@]}" \
+      | while IFS=$'\t' read -r cls rel advice; do echo "  ~ [$cls] $rel — $advice" >&2; done
+  else
+    for d in "${drift[@]}"; do echo "  ~ $d" >&2; done
+  fi
+  echo "  A copy that is deliberately specific to this project belongs in .claude/promotion-ignore, with the reason." >&2
 fi
 if [ "${#candidates[@]}" -gt 0 ]; then
   echo "↑ promotable tooling not in clybor-claude-tooling:"
@@ -131,7 +139,8 @@ if [ "${#bundle_drift[@]}" -gt 0 ]; then
 fi
 
 if [ "$MODE" = "--gate" ] && [ "${#drift[@]}" -gt 0 ]; then
-  echo "Promoted tooling has drifted. Run: $CANON/scripts/promote.sh <file>  (or 'git commit --no-verify')." >&2
+  echo "Promoted tooling has drifted. Fix each file as its label says above: BEHIND -> copy canon here;" >&2
+  echo "AHEAD -> $CANON/scripts/promote.sh <file>; PRIVATE -> keep local via .claude/promotion-ignore; BOTH -> merge." >&2
   exit 1
 fi
 exit 0
