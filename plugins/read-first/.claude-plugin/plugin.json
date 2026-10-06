@@ -1,10 +1,11 @@
 {
   "name": "read-first",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Blocks a tool call until Claude has loaded the guide skill you mapped to that tool. A guide skill is one part rules, one part operating manual. Missing one? The block message says which, and the bundled write-guide-skill skill drafts it in a standard format that a checker verifies.",
   "author": {
     "name": "Clybor Consulting"
   },
+  "license": "MIT",
   "keywords": [
     "mod",
     "guide-skill",

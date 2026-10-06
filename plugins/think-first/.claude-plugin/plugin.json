@@ -1,13 +1,24 @@
 {
   "name": "think-first",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Makes Claude run a sequential-thinking step before its first write in each turn, and again before retrying a tool call that just failed. Installs the Model Context Protocol sequential-thinking server it relies on, pinned to one version.",
-  "author": { "name": "Clybor Consulting" },
-  "keywords": ["mod", "sequential-thinking", "gate", "retry"],
+  "author": {
+    "name": "Clybor Consulting"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mod",
+    "sequential-thinking",
+    "gate",
+    "retry"
+  ],
   "mcpServers": {
     "sequential-thinking": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking@2025.11.25"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking@2025.11.25"
+      ]
     }
   },
   "userConfig": {
@@ -27,7 +38,10 @@
       "type": "string",
       "title": "Mode",
       "description": "enforce blocks the call; warn lets it run and tells Claude it skipped the thinking step",
-      "options": ["enforce", "warn"],
+      "options": [
+        "enforce",
+        "warn"
+      ],
       "default": "enforce"
     }
   }
