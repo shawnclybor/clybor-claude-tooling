@@ -31,6 +31,14 @@ if [ -f "$ROOT/.claude/hooks/no-postmortem-precommit.py" ]; then
   python3 "$ROOT/.claude/hooks/no-postmortem-precommit.py" || exit 1
 fi
 
+# HARD GATE: a Claude plugin may not contain a second .claude-plugin/plugin.json.
+# claude.ai's marketplace sync rejects it and `claude plugin validate` misses it.
+# No-op in repos without plugin manifests.
+if [ -f "$CANON/scripts/check-plugin-manifests.py" ]; then
+  python3 "$CANON/scripts/check-plugin-manifests.py" "$ROOT" || {
+    echo "BLOCKED: nested plugin manifest (see above)." >&2; exit 1; }
+fi
+
 # preserve the repo's own default hook (not auto-run while core.hooksPath is set globally)
 if [ -x "$ROOT/.git/hooks/pre-commit" ]; then exec "$ROOT/.git/hooks/pre-commit"; fi
 exit 0
