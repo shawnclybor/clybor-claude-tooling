@@ -98,6 +98,12 @@ Hooks are the silent heroes of AI, and also the most underused. Hooks are checks
 | `review-drift.py` | The review ledger described under Review |
 | `no-postmortem-precommit.py` | The commit-time backstop for the write-time validator |
 
+**Wired at user level** in `~/.claude/settings.json`, so it runs in every project:
+
+| Hook | Event | Does |
+|---|---|---|
+| `global/clarity-stop-hook.json` | Stop | A model (Sonnet) reads Claude's final reply and sends it back for a rewrite when it does not lead with the outcome, buries what the user must do, or piles up unexplained file names and IDs. Longer replies must be numbered items of two sentences plus a one-sentence recommendation. Adds a few seconds per turn. Merge its `hooks.Stop` entry into user settings; `global/test-clarity-stop-hook.sh` is the live battery and its negative control |
+
 ## Slash commands
 
 I used slash commands for a while to orchestrate skills into larger workflows. I haven't done much of that work lately because markdown files do the job well enough. Generally, the least necessary part of this repo.
