@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test-clarity-stop-hook.sh — live battery for global/clarity-stop-hook.json, a prompt-type
-# Stop hook (installed in ~/.claude/settings.json) in which a model judges whether Claude's
-# final reply is clear before the user sees it.
+# Stop hook (installed through the clarity-check plugin) in which a model judges whether
+# Claude's final reply is clear before the user sees it.
 #
 # The judge is a model, so verdicts vary run to run: each case runs REPS times and must be
 # right every time. A control run with no hook proves the battery can fail: the unclear
@@ -53,10 +53,23 @@ check "short but dense reply -> blocked"               2 "$HOOK" "$DENSE"    "$R
 check "clear numbered wrap-up -> passes"               1 "$HOOK" "$CLEAR"    "$REPS"
 check "plain question -> passes"                       1 "$HOOK" "$QUESTION" "$REPS"
 
-# The installed copy lives in ~/.claude/settings.json; this file is canonical. Report drift.
-if jq -e --slurpfile c "$HOOK" '[.hooks.Stop[]?.hooks[]? | select(.type=="prompt")] | any(. == $c[0].hooks.Stop[0].hooks[0])' \
-     ~/.claude/settings.json >/dev/null 2>&1; then echo "OK    installed copy matches canonical"
-else echo "WARN  ~/.claude/settings.json has no Stop hook identical to $HOOK"; fi
+# This file is canonical. The installed copy ships in the clarity-check plugin (uploaded to
+# the account, so it runs in cloud Cowork and syncs to Claude Code). Exactly one installed
+# copy is right: Claude Code does not merge identical prompt hooks, so a second copy in
+# ~/.claude/settings.json judges every reply twice. Report missing, drifted and doubled copies.
+same() { jq -e --slurpfile c "$HOOK" '[.hooks.Stop[]?.hooks[]? | select(.type=="prompt")] | any(. == $c[0].hooks.Stop[0].hooks[0])' "$1" >/dev/null 2>&1; }
+COPIES=0
+for f in ~/.claude/plugins/synced/*/clarity-check/hooks/hooks.json; do
+  [ -f "$f" ] || continue
+  if same "$f"; then COPIES=$((COPIES+1)); echo "OK    synced plugin copy matches canonical"
+  else echo "WARN  synced plugin copy differs from canonical: $f (rebuild and re-upload clarity-check)"; fi
+done
+if same ~/.claude/settings.json; then COPIES=$((COPIES+1)); echo "INFO  ~/.claude/settings.json also has a copy"; fi
+case "$COPIES" in
+  0) echo "WARN  no installed copy matches canonical (upload the clarity-check plugin)" ;;
+  1) ;;
+  *) echo "WARN  $COPIES installed copies: every reply is judged $COPIES times; remove the settings.json copy" ;;
+esac
 
 echo "---"; echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

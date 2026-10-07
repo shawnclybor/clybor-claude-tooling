@@ -102,7 +102,7 @@ Hooks are the silent heroes of AI, and also the most underused. Hooks are checks
 
 | Hook | Event | Does |
 |---|---|---|
-| `global/clarity-stop-hook.json` | Stop | A model (Sonnet) reads Claude's final reply and sends it back for a rewrite when it does not lead with the outcome, buries what the user must do, or piles up unexplained file names and IDs. Longer replies must be numbered items of two sentences plus a one-sentence recommendation. Adds a few seconds per turn. Merge its `hooks.Stop` entry into user settings; `global/test-clarity-stop-hook.sh` is the live battery and its negative control |
+| `global/clarity-stop-hook.json` | Stop | A model (Sonnet) reads Claude's final reply and sends it back for a rewrite when it does not lead with the outcome, buries what the user must do, or piles up unexplained file names and IDs. Longer replies must be numbered items of two sentences plus a one-sentence recommendation. Adds a few seconds per turn. Installed by uploading the clarity-check plugin, whose `hooks/hooks.json` is a byte-for-byte copy; that runs it in cloud Cowork and syncs it to Claude Code. Do not also merge it into user settings: Claude Code would run both and judge every reply twice. `global/test-clarity-stop-hook.sh` is the live battery and its negative control |
 
 ## Slash commands
 
