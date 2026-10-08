@@ -7,6 +7,16 @@ gate scans staged content.
 
 ---
 
+## 2026-10-08 — Clarity stop hook retired; reporting rules moved to global CLAUDE.md
+
+**What.** Deleted `global/clarity-stop-hook.json` and its test battery, and removed the README entry. Added a "Reporting back" section to `global/CLAUDE.global.snippet.md`: big picture first (what the session was about, what was done, how well it worked), then open issues, named in plain words with no internal labels.
+
+**Why.** A Stop hook runs after the reply is already on screen, so every failed check printed the full hook prompt plus a second reply. That doubled the text it was meant to cut, and the rewrites were rarely clearer. Instructions shape the first draft instead. CLAUDE.md, not an output style, because Cowork reads CLAUDE.md and output styles are Claude Code only.
+
+**Install note.** `install-global.sh` appends the snippet only when the promotion-rule heading is missing, so existing installs need the new section added by hand.
+
+---
+
 ## 2026-09-18 — Archify installed at a pin, not vendored
 
 **What.** `scripts/install-archify.sh` installs the third-party Archify diagram skill (MIT) into
