@@ -90,4 +90,9 @@ if [ -f "$ROOT/scripts/check-okf.sh" ] && [ -z "$OKF_OK" ]; then
     bash "$ROOT/scripts/check-okf.sh" --files $staged_md || exit $?
   fi
 fi
+# 11. Project-specific gates -- a repo's own checks live in .githooks/pre-commit.local (executable),
+#     so this shared hook stays identical in every repo and a project gate never forces it to drift.
+if [ -x "$ROOT/.githooks/pre-commit.local" ]; then
+  "$ROOT/.githooks/pre-commit.local" || exit $?
+fi
 exit 0

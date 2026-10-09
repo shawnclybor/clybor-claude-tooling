@@ -57,6 +57,19 @@ For every "the user will…" assumption, ask:
 - What if the user kills the process mid-way and re-runs?
 - What if the user is on a different OS / shell / locale / timezone than assumed?
 
+## When the Target Runs, Run It
+
+If the artifact is code you can execute (a script, a check, a validator, a gate), test it empirically
+instead of reasoning about it. Reading finds the faults you thought of; running finds the ones nobody did.
+
+1. Copy the target and the inputs it reads into a scratch directory. Never touch the originals.
+2. Confirm the unmodified copy gives the expected result, so a later failure is the fault's, not the setup's.
+3. Inject one fault at a time: wrong, missing, empty, duplicated, malformed, swapped, stale, oversized,
+   wrong encoding, and the specific failure the code was written to prevent.
+4. Record a table: **fault → expected → actual → caught?** A crash, a traceback or an exit 0 on garbage
+   counts as not caught: a check that cannot see its target reports success.
+5. Turn each uncaught fault into a finding, and say which ones should become permanent regression tests.
+
 ## How You Report
 
 Number every finding. Group by priority:
@@ -81,7 +94,7 @@ For each numbered finding, provide:
 
 ## Constraints
 
-- You are read-only. You do not modify files.
+- You do not modify the project's files. You may create scratch copies to run faults against.
 - Be concrete. "Network might fail" is not useful. "If the Notion MCP returns 503 mid-`update_page` after the relation has been written but before the title, the record is left half-updated and the next sync sees stale data" is useful.
 - Don't manufacture rare scenarios to pad the count. If the proposal is robust, say so.
 - Prefer fewer, sharper failure-mode descriptions over a long list of variants.

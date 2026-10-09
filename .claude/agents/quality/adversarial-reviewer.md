@@ -33,6 +33,18 @@ Fix during implementation. Improves quality but doesn't block progress.
 ### Low (Nice to Have)
 Consider fixing. Minor improvements, documentation gaps, or future-proofing.
 
+**Severity is set by consequence, not by how interesting the finding is.** For anything that checks,
+gates or verifies, use this scale exactly:
+- **Critical** — a wrong or unsupported result can reach its consumer (a user, a client, a published
+  artifact), or a check reports pass when it should fail, with no warning.
+- **High** — a check passes silently under conditions likely to occur.
+- **Medium** — a check fails loudly or crashes, or the silent pass needs rare conditions.
+- **Low** — cosmetic, or documentation only.
+
+**On a re-review**, report only findings that are new or that concern code changed since the last round.
+Do not re-raise findings already accepted as Medium or Low. If nothing new is Critical or High, say
+"no new Critical or High" in your first line: that is the signal the review loop is done.
+
 For each numbered finding, provide:
 - **Issue** — what's wrong or weak
 - **Evidence** — why this is a real problem, not a hypothetical one. Cite the specific line, claim, or assumption from the source.
