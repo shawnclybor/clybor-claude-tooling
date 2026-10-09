@@ -20,6 +20,13 @@ JSON output for warnings:
 
 Note: In PostToolUse, "block" doesn't prevent execution (tool already ran),
 but sends the reason message to Claude as a warning.
+
+Local change (2026-10-09): the Claude in Chrome extension adds its own system-reminder
+nudge as a separate, final text block on single-action results. Joined into the scanned
+text, it tripped the fake-system-tag rule on ~88 of ~100 warnings across 22 Cox sessions,
+none of them real. Only that nudge is skipped: the last text block of a multi-block
+Chrome result, matching the extension's exact wording (one variant in 1,112 measured
+results). Any other reminder-shaped text, anywhere, still warns.
 """
 
 import json
@@ -86,6 +93,25 @@ def _load_yaml(path: Path) -> Dict[str, Any]:
         return {}
 
 
+CHROME_NUDGE = re.compile(
+    r"\s*<system-reminder>You used a single tool call this turn\. "
+    r"Prefer browser_batch[^<]*</system-reminder>\s*"
+)
+
+
+def drop_chrome_nudge(tool_name: str, blocks: List[Any]) -> List[Any]:
+    """Drop the Chrome extension's own nudge: the last text block, exact wording only."""
+    if len(blocks) < 2 or not tool_name.startswith("mcp__claude-in-chrome__"):
+        return blocks
+    for i in range(len(blocks) - 1, -1, -1):
+        text = blocks[i].get("text") if isinstance(blocks[i], dict) else blocks[i]
+        if isinstance(text, str):
+            if CHROME_NUDGE.fullmatch(text):
+                return blocks[:i] + blocks[i + 1 :]
+            return blocks
+    return blocks
+
+
 def extract_text_content(tool_name: str, tool_result: Any) -> str:
     """Extract text content from tool result based on tool type.
 
@@ -109,7 +135,7 @@ def extract_text_content(tool_name: str, tool_result: Any) -> str:
             elif isinstance(content, list):
                 # Handle array of content blocks (common in Claude responses)
                 texts = []
-                for block in content:
+                for block in drop_chrome_nudge(tool_name, content):
                     if isinstance(block, dict) and "text" in block:
                         texts.append(str(block["text"]))
                     elif isinstance(block, str):
@@ -139,7 +165,7 @@ def extract_text_content(tool_name: str, tool_result: Any) -> str:
     if isinstance(tool_result, list):
         # Handle list of results
         texts = []
-        for item in tool_result:
+        for item in drop_chrome_nudge(tool_name, tool_result):
             extracted = extract_text_content(tool_name, item)
             if extracted:
                 texts.append(extracted)

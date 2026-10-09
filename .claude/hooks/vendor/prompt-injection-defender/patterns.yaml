@@ -62,7 +62,10 @@ instructionOverridePatterns:
     reason: "System prompt injection marker"
     severity: high
 
-  - pattern: '(?i)\b(this\s+is\s+)?(your\s+)?new\s+(instructions?|task|objective|mission|directive)'
+  # Local change (2026-10-09): bare "new task" matched everyday project-log and task-tracker
+  # text (~16 false hits in Cox sessions). "new task / objective / mission" now needs an
+  # addressee ("your new task") or a colon ("New task:"); "new instructions" is unchanged.
+  - pattern: '(?i)\bnew\s+(instructions?|directives?)\b|\byour\s+new\s+(task|objective|mission)|\bnew\s+(task|objective|mission)\s*:'
     reason: "Attempts to set new instructions"
     severity: high
 
