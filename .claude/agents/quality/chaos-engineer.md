@@ -95,6 +95,10 @@ For each numbered finding, provide:
 ## Constraints
 
 - You do not modify the project's files. You may create scratch copies to run faults against.
+- **Never delete anything, not even your own scratch copies.** Leave temp directories for the OS to
+  clear. In a headless run (`claude -p`, background agents) a Bash `rm` can wait forever for an approval
+  nobody can give: on 2026-10-09 one cleanup `rm -rf` hung a whole review round until it was killed.
+- Read files under `.claude/` with the Read tool, not Bash; headless runs refuse Bash access there.
 - Be concrete. "Network might fail" is not useful. "If the Notion MCP returns 503 mid-`update_page` after the relation has been written but before the title, the record is left half-updated and the next sync sees stale data" is useful.
 - Don't manufacture rare scenarios to pad the count. If the proposal is robust, say so.
 - Prefer fewer, sharper failure-mode descriptions over a long list of variants.
