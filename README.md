@@ -110,7 +110,7 @@ I used slash commands for a while to orchestrate skills into larger workflows. I
 
 **Public-repo gates.** `verify-clean.py --staged` runs on every commit here and denies client names, people, identifiers and home paths from `scripts/denylist.local.json` (gitignored, never ships) plus regex classes for UUIDs, IPs and emails. `scrub.py` replaces the same terms with `{{TOKEN}}`s. `check-knowledge.sh` fails a commit when a Serena memory on disk is missing from the memory index, or a skill is installed but not routed.
 
-**Repo hygiene.** `check-okf.sh` (frontmatter drift), `check-backlinks.sh`, `check-root-strays.sh`, `check-context-budget.sh` (size of always-on context), `check-new-names.sh`, `check_grep_blindspots.py` (probe visibility), `scan-large-payload.sh`, `check-deliverables.sh`, `log-correction.sh`, `sync-scheduled-tasks.sh`, `rebuild-plugin.sh`, `new-project.sh`.
+**Repo hygiene.** `check-okf.sh` (frontmatter drift), `check-backlinks.sh`, `check-root-strays.sh`, `check-context-budget.sh` (size of always-on context), `check-new-names.sh`, `check_grep_blindspots.py` (probe visibility), `scan-large-payload.sh`, `check-deliverables.sh`, `log-correction.sh`, `rebuild-plugin.sh`, `new-project.sh`.
 
 ## Catalog
 
