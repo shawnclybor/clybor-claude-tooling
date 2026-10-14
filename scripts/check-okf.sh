@@ -33,7 +33,10 @@ QUIET=0
 [ "${1:-}" = "--quiet" ] && QUIET=1
 
 # Infrastructure, not project knowledge. Everything else is walked.
-EXCLUDE_DIRS="git claude scripts memory node_modules cowork outputs venv __pycache__ docs"
+# `logs` is gitignored run scratch (run directories, gate output, backups) with the
+# same standing as outputs/ and cowork/ — added 2026-10-14 after it re-reddened the
+# gate every week with files no one reads twice.
+EXCLUDE_DIRS="git claude scripts memory node_modules cowork outputs venv __pycache__ docs logs"
 
 is_excluded_dir() {
   case " $EXCLUDE_DIRS " in
