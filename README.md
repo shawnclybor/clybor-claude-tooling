@@ -112,6 +112,8 @@ I used slash commands for a while to orchestrate skills into larger workflows. I
 
 **Repo hygiene.** `check-okf.sh` (frontmatter drift), `check-backlinks.sh`, `check-root-strays.sh`, `check-context-budget.sh` (size of always-on context), `check-new-names.sh`, `check_grep_blindspots.py` (probe visibility), `scan-large-payload.sh`, `check-deliverables.sh`, `log-correction.sh`, `sync-scheduled-tasks.sh`, `rebuild-plugin.sh`, `new-project.sh`.
 
+**Publish gate for HTML pages.** `validate-artifact.mjs <page.html> [--require <css>]...` refuses a self-contained page (dashboard, report, artifact) that does not parse or does not render: `node --check` on every inline script, then a headless-Chromium load that fails on uncaught errors, near-empty output, or a missing required region. Run it before publishing any generated page. Tests: `test-validate-artifact.sh`.
+
 ## Catalog
 
 `assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Eight today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`.
