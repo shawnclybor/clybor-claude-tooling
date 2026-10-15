@@ -54,8 +54,10 @@ const PATTERNS = [
   // HIGH - complementary coverage the sibling hook does not provide
 
   // Block pushing directly to a protected branch by name
-  { level: 'high', id: 'push-main',                 regex: /\bgit\s+push\b.*\bmain\b/,                        reason: 'Pushing to main is not allowed' },
-  { level: 'high', id: 'push-master',               regex: /\bgit\s+push\b.*\bmaster\b/,                      reason: 'Pushing to master is not allowed' },
+  // Scoped to the push's own command segment: `git push origin feat && gh pr create --base main`
+  // must not read as a push to main (false positive, 2026-10-15).
+  { level: 'high', id: 'push-main',                 regex: /\bgit\s+push\b[^;&|\n]*\bmain\b/,                 reason: 'Pushing to main is not allowed' },
+  { level: 'high', id: 'push-master',               regex: /\bgit\s+push\b[^;&|\n]*\bmaster\b/,               reason: 'Pushing to master is not allowed' },
 
   // Block deleting protected branches locally
   { level: 'high', id: 'branch-delete-protected',   regex: /\bgit\s+branch\s+.*(?:-[dD]|--delete)\s+(?:main|master)\b/, reason: 'Deleting a protected branch is not allowed' },
@@ -67,8 +69,9 @@ const PATTERNS = [
   { level: 'high', id: 'reset-on-protected',        regex: /\bgit\s+reset\b/,                                 reason: 'Resetting {branch} is not allowed', branchOnly: true },
   { level: 'high', id: 'push-on-protected',         regex: /\bgit\s+push\b/,                                  reason: 'Pushing from {branch} is not allowed', branchOnly: true },
 
-  // Block destructive gh CLI operations
-  { level: 'high', id: 'gh-pr-merge',               regex: /\bgh\s+pr\s+merge\b/,                             reason: 'Merging PRs via gh CLI is not allowed' },
+  // Block destructive gh CLI operations. `gh pr merge` is deliberately allowed (Shawn, 2026-10-15):
+  // merging an opened PR is the normal route to main, and the pre-commit gates already review
+  // every commit it carries.
   { level: 'high', id: 'gh-pr-close',               regex: /\bgh\s+pr\s+close\b/,                             reason: 'Closing PRs via gh CLI is not allowed' },
   { level: 'high', id: 'gh-issue-close',            regex: /\bgh\s+issue\s+close\b/,                          reason: 'Closing issues via gh CLI is not allowed' },
   { level: 'high', id: 'gh-release-delete',         regex: /\bgh\s+release\s+delete\b/,                       reason: 'Deleting releases via gh CLI is not allowed' },
