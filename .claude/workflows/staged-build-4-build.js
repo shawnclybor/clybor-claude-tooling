@@ -56,7 +56,7 @@ for (const f of queue) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     await agent(`Start by reading ${DIR}/progress.md, the last 10 git log lines and ${DIR}/PRD.md, then run ${APP}/init.sh. Implement ONLY feature ${f.id} (${f.title}) in ${APP}/, within the constraints in the brief at ${BRIEF}. Run the check: ${f.check}. Append to ${DIR}/progress.md what you changed and what the check returned. Do not edit features.json and do not commit.${feedback ? `\nThe last attempt failed verification:\n${feedback}` : ''}`,
       { label: `${f.id} build (try ${attempt})` })
-    verdict = await agent(`Independently verify feature ${f.id} (${f.title}) in ${APP}/. Run ${APP}/init.sh, then: ${f.check}. Use the feature the way a user would, including one bad input. Answer passes: false if anything is uncertain. Change no files.`,
+    verdict = await agent(`Independently verify feature ${f.id} (${f.title}) in ${APP}/. Run ${APP}/init.sh, then: ${f.check}. Use the feature the way a user would, including one bad input. Then prove the check can fail: copy aside each file the mutation touches, apply the mutation from ${DIR}/features.json, run the check and confirm it exits non-zero, then restore each file and confirm with cmp that it matches the copy. Answer passes: false if the mutated check still passes or anything is uncertain. Leave no file changed.`,
       { label: `${f.id} verify (try ${attempt})`, schema: VERDICT })
     if (verdict && verdict.passes) break
     feedback = verdict ? verdict.evidence : 'the verifier returned nothing'

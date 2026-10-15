@@ -35,10 +35,10 @@ const DIR = brief.docs
 const APP = brief.app
 
 phase('Write plan')
-await agent(`Use this repo's planning skill on ${DIR}/PRD.md. Write ${DIR}/features.json as an array of {id, title, prd_criteria: [...], check: "<one shell command that exits 0 only when the feature works>", passes: false}, in build order, each small enough for one focused pass. Write ${DIR}/progress.md (a header, then nothing). Write ${APP}/init.sh, which starts the app and exits non-zero if it does not come up.`,
+await agent(`Use this repo's planning skill on ${DIR}/PRD.md. Write ${DIR}/features.json as an array of {id, title, prd_criteria: [...], check: "<one shell command that exits 0 only when the feature works>", mutation: "<one small change to the built code that breaks this feature, so the check must then fail>", passes: false}, in build order, each small enough for one focused pass. Write ${DIR}/PLAN.md for a human reader: in plain language, the build order, and for each feature what it does, how its check proves it, and how its mutation proves the check can fail. Write ${DIR}/progress.md (a header, then nothing). Write ${APP}/init.sh, which starts the app and exits non-zero if it does not come up.`,
   { label: 'write plan' })
 
 phase('Audit plan')
-const audit = await agent(`Check ${DIR}/features.json against ${DIR}/PRD.md. Every success criterion needs at least one feature whose check could actually fail. Name each criterion left uncovered and each check that cannot fail (for example, a file-exists test on a file the plan creates first). ${READ_ONLY}`,
+const audit = await agent(`Check ${DIR}/features.json against ${DIR}/PRD.md. Every success criterion needs at least one feature whose check could actually fail. Name each criterion left uncovered, each check that cannot fail (for example, a file-exists test on a file the plan creates first), and each mutation that would not make its check fail. ${READ_ONLY}`,
   { label: 'audit plan' })
 return { audit, next: 'review the audit, then run /staged-build-4-build' }
