@@ -33,6 +33,7 @@ Per-stage skills, invokable independently or in sequence. Each has explicit pass
 
 ## Reporting
 
+- **multi-session** — Opens, types into and reads the rendered screen of other Claude Code sessions through Orca terminal tabs. For testing what a screen shows (e.g. `/workflows`), running a stage in a fresh session, or side-by-side sessions. Carries the measured traps (trust dialog and open panels swallow prompts). Thin layer over Orca's own `orca-cli` guide.
 - **session-output** — Reports what a working session actually did, in two modes: a self-contained HTML dashboard (default) or plain prose (`/session-output simplify`). Measured outcomes only, never invented. Ships `assets/template.html` and `scripts/session_file_check.py`.
 
 ## Knowledge capture
