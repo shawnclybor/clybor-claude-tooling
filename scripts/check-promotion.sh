@@ -9,7 +9,7 @@
 #
 # Canonical repo: $CLYBOR_TOOLING or ~/gits/clybor-claude-tooling.
 # Reusable categories (relative to repo root): .claude/skills .claude/hooks .claude/commands
-#   .claude/agents .githooks scripts/*.sh — EXCLUDING per-project files (see SKIP).
+#   .claude/agents .claude/workflows .githooks scripts/*.sh — EXCLUDING per-project files (see SKIP).
 set -uo pipefail
 MODE="${1:---surface}"
 CANON="${CLYBOR_TOOLING:-$HOME/gits/clybor-claude-tooling}"
@@ -66,7 +66,7 @@ scan() { # $1 = relative path of a candidate file
 list_files() {
   { ls .githooks/* 2>/dev/null
     ls scripts/*.sh 2>/dev/null
-    find .claude/skills .claude/hooks .claude/commands .claude/agents -type f 2>/dev/null
+    find .claude/skills .claude/hooks .claude/commands .claude/agents .claude/workflows -type f 2>/dev/null
   } | sort -u | grep -Ev '(^|/)(\.DS_Store|Thumbs\.db|\.localized)$|(^|/)__pycache__/|\.pyc$|(^|/)\.git/|~$|\.swp$|\.bak-'
 }
 
