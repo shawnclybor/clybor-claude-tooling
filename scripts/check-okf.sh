@@ -93,6 +93,7 @@ if [ "${1:-}" = "--files" ]; then
     [ -f "$f" ] || continue
     okf_seen=$((okf_seen + 1))
     if [ "$(head -n1 "$f" 2>/dev/null)" != "---" ]; then
+      [ -f "$f.okf.yaml" ] && continue   # paste-exact markdown: metadata in a sidecar
       in_mirror "$f" && continue
       [ ! -w "$f" ] && continue
       okf_missing=$((okf_missing + 1))
@@ -147,7 +148,12 @@ for slug in $TARGETS; do
     found=$((found + 1))
     scanned_files=$((scanned_files + 1))
     if [ "$(head -n1 "$f" 2>/dev/null)" != "---" ]; then
-      if in_mirror "$f"; then
+      if [ -f "$f.okf.yaml" ]; then
+        # Paste-exact markdown (an agent's instructions, copied whole into a
+        # platform with a character limit): frontmatter would travel with the
+        # paste, so its metadata sits in a <file>.okf.yaml sidecar instead.
+        :
+      elif in_mirror "$f"; then
         # Verbatim copy of a client-system file. Frontmatter would break
         # byte-fidelity against the source. Reported, not drift.
         mirror=$((mirror + 1))
