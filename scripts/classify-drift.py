@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 ADVICE = {
     "PRIVATE": "contains private details; keep it local (add to .claude/promotion-ignore with the reason) or scrub before promoting",
-    "BEHIND": "canon changed since this copy; sync down from clybor-claude-tooling",
+    "BEHIND": "canon changed since this copy; sync down: clybor-claude-tooling/scripts/sync-down.sh <project> --apply",
     "AHEAD": "this project improved it; promote up after the universality test (promote-to-tooling skill)",
     "BOTH": "both copies changed; merge by hand",
 }
