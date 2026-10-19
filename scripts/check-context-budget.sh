@@ -6,6 +6,9 @@
 #          recalibrated 1400 -> 3000 on 2026-08-14 — see the comment above the check_maxline call).
 # Exit 0 = within budget. Exit 2 = over budget — trim narrative to KB pointers
 # or move domain-specific content into a plugin skill.
+# The exit code is the contract: gate runners and the PostToolUse hook in
+# settings.json.template read it. A caller that only wants the report, and must not
+# register a failed tool call, appends `|| true`.
 
 set -u
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -51,17 +54,22 @@ check_lines() { # $1=path $2=budget
   fi
 }
 
-check_maxline() { # $1=path $2=budget(chars) — catches a single Status cell regrowing into a journal
-  local maxlen
+check_maxline() { # $1=path $2=budget(chars) -- catches a single Status cell regrowing into a journal
+  local maxlen maxline_nr maxline_pre
   exists_or_skip "$1" || return 0
   maxlen=$(awk '{ if (length > m) m=length } END { print m+0 }' "$1")
+  if [ "$maxlen" -gt "$2" ] || [ "$maxlen" -gt $(( $2 * 90 / 100 )) ]; then
+    maxline_nr=$(awk -v ml="$maxlen" '{ if (length==ml) { print NR; exit } }' "$1")
+    maxline_pre=$(awk -v ml="$maxlen" '{ if (length==ml) { print substr($0,1,80); exit } }' "$1")
+  fi
   if [ "$maxlen" -gt "$2" ]; then
-    echo "[OVER] $1 — longest line ${maxlen} chars (budget $2). A Status field is regrowing into a journal — move the detail to the project's memory file and keep the registry Status to one line."
+    echo "[OVER] $1 -- longest line ${maxlen} chars at line ${maxline_nr} (budget $2): ${maxline_pre}..."
+    echo "[OVER]   -> Status field is regrowing. Move detail to the project memory file."
     FAIL=1
   elif [ "$maxlen" -gt $(( $2 * 90 / 100 )) ]; then
-    echo "[WARN] $1 — longest line ${maxlen} chars (budget $2, >=90%)."
+    echo "[WARN] $1 -- longest line ${maxlen} chars at line ${maxline_nr} (budget $2, >=90%): ${maxline_pre}..."
   else
-    echo "[OK]   $1 — longest line ${maxlen} chars (budget $2)."
+    echo "[OK]   $1 -- longest line ${maxlen} chars (budget $2)."
   fi
 }
 
