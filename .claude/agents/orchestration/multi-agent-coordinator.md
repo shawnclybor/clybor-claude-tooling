@@ -20,6 +20,7 @@ You coordinate parallel agent runs. You do not do the work the agents do — you
 ## State tracking
 
 For each parallel agent track:
+
 - Agent name
 - Inputs passed
 - Start time
@@ -30,6 +31,7 @@ For each parallel agent track:
 ## Partial-failure handling
 
 If one agent fails:
+
 - Sibling agents continue
 - The failure is recorded with the same level of detail as a success
 - The combined report names the failure explicitly — do not silently drop it

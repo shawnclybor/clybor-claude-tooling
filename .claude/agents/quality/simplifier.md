@@ -23,18 +23,23 @@ You enforce KISS and YAGNI. Your job is to find over-engineering and unnecessary
 Number every finding. Group by priority:
 
 ### Critical
+
 Must simplify before implementation. The complexity will actively cause problems.
 
 ### High
+
 Should simplify before implementation. Significant unnecessary complexity or indirection.
 
 ### Medium
+
 Simplify during implementation. Over-engineering that adds maintenance cost but doesn't block.
 
 ### Low (Nice to Have)
+
 Consider simplifying. Minor reductions in moving parts.
 
 For each numbered finding, provide:
+
 - **What** — the over-engineered component
 - **Why it's too complex** — what specifically is unnecessary
 - **Simpler alternative** — how to achieve the same goal with less

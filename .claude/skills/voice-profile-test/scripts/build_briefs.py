@@ -20,9 +20,9 @@ text = PROMPTS.read_text()
 p2 = text[text.index("You are a ghostwriter"):text.index("PROFILE:\n[PASTE ONE PROFILE HERE]")]
 
 q = (a.work / "heldout/questions.md").read_text()
-meta = {l.split(":", 1)[0]: l.split(":", 1)[1].strip() for l in q.splitlines() if l.startswith(("SETTING:", "LENGTH:"))}
+meta = {line.split(":", 1)[0]: line.split(":", 1)[1].strip() for line in q.splitlines() if line.startswith(("SETTING:", "LENGTH:"))}
 assert "SETTING" in meta, "questions.md needs a SETTING: line"
-questions = "\n".join(l for l in q.splitlines() if not l.startswith(("SETTING:", "LENGTH:"))).strip()
+questions = "\n".join(line for line in q.splitlines() if not line.startswith(("SETTING:", "LENGTH:"))).strip()
 
 p2 = (p2.replace("[PERSON]", a.person).replace("[SETTING]", meta["SETTING"])
         .replace("[LENGTH]", meta.get("LENGTH", "80 to 150").replace("–", " to ").replace(" words", "")))

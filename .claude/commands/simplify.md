@@ -8,7 +8,7 @@ Single-lens review using just the simplifier agent. Use when you want the KISS /
 
 ## Usage
 
-```
+```text
 /simplify <target>
 ```
 

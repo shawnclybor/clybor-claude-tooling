@@ -77,6 +77,7 @@ Before writing the file:
 ## What happens next
 
 The PRD feeds three downstream skills:
+
 - `task-plan` — decomposes the PRD into a checkbox task list
 - `verify` — uses the success criteria as the verification gates
 - `quality-review` — runs the 3-agent team against the PRD before implementation starts

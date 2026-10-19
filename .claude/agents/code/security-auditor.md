@@ -20,10 +20,12 @@ Opus-tier because the reasoning surface is unbounded: a finding requires connect
 ## Threat axes
 
 ### Input validation
+
 - Every external input (HTTP body / query / header, file upload, env, CLI, message queue) must be validated for type, length, and shape before use
 - Trust boundaries clearly marked — what comes in untrusted, where it's sanitized
 
 ### Injection
+
 - SQL injection — parameterized queries vs. string concatenation
 - Command injection — `exec`, `system`, shell calls with user input
 - Template injection — server-side template engines fed user input
@@ -33,40 +35,47 @@ Opus-tier because the reasoning surface is unbounded: a finding requires connect
 - Deserialization — untrusted input passed to `pickle.loads`, `yaml.load`, `unserialize`, etc.
 
 ### Authentication
+
 - Auth required on every sensitive endpoint
 - Session tokens: secure generation, secure storage, secure transport
 - Password handling: bcrypt/scrypt/argon2, never plain or fast hashes
 - MFA available where appropriate
 
 ### Authorization
+
 - Every action checks "does this user own / have access to this resource?"
 - IDOR (insecure direct object reference) — looking up records by ID from user input without ownership check
 - Privilege escalation paths
 
 ### Secrets management
+
 - No hardcoded secrets in source (keys, tokens, passwords, connection strings)
 - Secrets loaded from env, secret manager, or vault — never committed
 - Secrets not logged
 - Rotation strategy exists for long-lived credentials
 
 ### Cryptography
+
 - Modern algorithms: AES-GCM, ChaCha20-Poly1305, RSA-OAEP, Ed25519
 - No MD5/SHA1 for security-relevant hashing
 - No homegrown crypto
 - Random number generators: `secrets`/`crypto.randomBytes`, never `Math.random()` or `rand()` for security
 
 ### Dependency surface
+
 - Recently added dependencies — from reputable maintainers? Audit log clean?
 - Known CVEs in current versions
 - Supply chain: lock files, integrity checks, automatic update policy
 
 ### Sensitive data handling
+
 - PII identified and routed through the right controls
 - Logs scrub secrets and PII
 - Data retention and deletion policies enforced
 - Error messages don't leak internal state to users
 
 ### Network / transport
+
 - TLS required on external traffic
 - Internal-only endpoints not accidentally exposed
 - CORS configuration intentional, not wildcard

@@ -10,7 +10,7 @@ A structured interrogation methodology using three review agents in parallel to 
 ## The Three Lenses
 
 | Agent | Model | Lens | Asks |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `simplifier` | Sonnet | KISS / YAGNI — complexity, abstractions, duplication | *Is this the simplest way?* |
 | `adversarial-reviewer` | Opus | Evidence, assumptions, logical gaps | *Is this the right thing?* |
 | `chaos-engineer` | Sonnet | Robustness, edge cases, failure modes | *What breaks this?* |
@@ -40,13 +40,14 @@ A structured interrogation methodology using three review agents in parallel to 
 
 Spawn all three agents **in parallel** against the proposal:
 
-```
+```text
 Agent(simplifier):           "Review this proposal. Find over-engineering and simpler alternatives."
 Agent(adversarial-reviewer): "Review this proposal. Challenge assumptions and find weaknesses."
 Agent(chaos-engineer):       "Review this proposal. Find edge cases, failure modes, and robustness gaps."
 ```
 
 **Feed each agent:**
+
 - The proposal / plan / PRD being reviewed (full text or file path)
 - Relevant context (existing PRDs, CLAUDE.md, current project state)
 - The specific decision being made, if there is one
@@ -67,7 +68,7 @@ Present to the user for decision.
 
 When the user provides new context that changes the framing (e.g., "this is a template, not a one-off" or "this is throwaway code"), re-engage the relevant agents with the updated context:
 
-```
+```text
 Agent(<lens>): "You previously found X. The user clarifies Y. Re-evaluate."
 ```
 
@@ -96,6 +97,7 @@ Keep the prompt under 300 words. Over-specified prompts constrain the agent's ju
 ## Outputs
 
 Quality review produces:
+
 - **Findings table** — numbered, prioritized, with all three agents' positions
 - **Structural recommendations** — specific changes to the PRD or design
 - **Decision items** — things only the user can resolve

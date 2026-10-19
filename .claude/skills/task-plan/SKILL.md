@@ -50,7 +50,7 @@ Take the `task-distributor` output verbatim into the plan's "Parallelizable grou
 ## Common decomposition patterns
 
 | PRD shape | Plan shape |
-|---|---|
+| --- | --- |
 | New feature | Schema → API → client → tests → docs |
 | Refactor | Add new path → migrate callers in batches → remove old path |
 | Integration | Contract / types → happy path → error paths → retries → observability |

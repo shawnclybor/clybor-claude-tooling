@@ -8,7 +8,7 @@ Single-lens review using just the adversarial-reviewer agent. Use when you speci
 
 ## Usage
 
-```
+```text
 /adversarial <target>
 ```
 

@@ -22,7 +22,7 @@ From the master rules README: would this apply equally to a Python backend, a
 TypeScript frontend, a research repo, a documentation site?
 
 | Verdict | Action |
-|---|---|
+| --- | --- |
 | Universal as-is | Port verbatim |
 | Universal mechanism, project-specific surface (paths, names, IDs) | Generalize, then port |
 | Project-specific (registry formats, client branding, Notion IDs, MCP tool IDs) | Stays in the working repo — record a pointer only |
@@ -30,7 +30,7 @@ TypeScript frontend, a research repo, a documentation site?
 ## Where things live in the master
 
 | Working-repo artifact | Master destination |
-|---|---|
+| --- | --- |
 | Skill | `.claude/skills/<name>/SKILL.md` |
 | Slash command | `.claude/commands/<name>.md` |
 | Agent definition | `.claude/agents/<lane>/<name>.md` |

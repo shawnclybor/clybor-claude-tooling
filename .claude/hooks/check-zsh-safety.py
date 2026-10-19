@@ -69,7 +69,9 @@ def scan(cmd):
         c = cmd[i]
         if quote is None and c == "\\":
             if i + 1 < n:
-                chars.append(cmd[i + 1]); mask.append(True); started = True
+                chars.append(cmd[i + 1])
+                mask.append(True)
+                started = True
                 i += 2
                 continue
             i += 1
@@ -79,20 +81,27 @@ def scan(cmd):
                 i += 1
             continue
         if quote is None and c == "$" and i + 1 < n and cmd[i + 1] == "'":
-            quote = "'"; started = True; i += 2
+            quote = "'"
+            started = True
+            i += 2
             continue
         if quote is None and c in "'\"":
-            quote = c; started = True; i += 1
+            quote = c
+            started = True
+            i += 1
             continue
         if quote is not None:
             if c == quote:
-                quote = None; i += 1
+                quote = None
+                i += 1
                 continue
             if quote == '"' and c == "\\" and i + 1 < n:
-                chars.append(cmd[i + 1]); mask.append(True)
+                chars.append(cmd[i + 1])
+                mask.append(True)
                 i += 2
                 continue
-            chars.append(c); mask.append(True)
+            chars.append(c)
+            mask.append(True)
             i += 1
             continue
         if c == "<" and i + 1 < n and cmd[i + 1] == "<":
@@ -100,7 +109,8 @@ def scan(cmd):
             i += 2
             strip = False
             if i < n and cmd[i] == "-":
-                strip = True; i += 1
+                strip = True
+                i += 1
             if i < n and cmd[i] == "<":       # <<< herestring: no body to skip
                 i += 1
                 continue
@@ -111,7 +121,8 @@ def scan(cmd):
                 if cmd[i] in "'\"":
                     i += 1
                     continue
-                d.append(cmd[i]); i += 1
+                d.append(cmd[i])
+                i += 1
             if d:
                 heredocs.append(("".join(d), strip))
             continue
@@ -131,7 +142,9 @@ def scan(cmd):
             flush()
             i += 1
             continue
-        chars.append(c); mask.append(False); started = True
+        chars.append(c)
+        mask.append(False)
+        started = True
         i += 1
 
     flush()

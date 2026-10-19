@@ -27,7 +27,7 @@ Continuous-iteration implementation loop. For each task in a plan, implement the
 
 ## The loop (per task)
 
-```
+```text
 for task in plan.unchecked_tasks():
     retries = 0
     while retries < BUDGET.max_retries:
@@ -55,7 +55,7 @@ The loop above names these at the two points that matter. Both are gates, not co
 
 A Critical finding sends the task back into the loop with the findings as input. The task check is a gate; it is not the only gate.
 
-```
+```text
 Agent(
   subagent_type="code-reviewer",
   description="Review task {N} before marking done",
@@ -67,7 +67,7 @@ Agent(
 
 Earlier than the two-strike halt on purpose: the point is to investigate before a blind retry, not after one.
 
-```
+```text
 Agent(
   subagent_type="debugger",
   description="Reproduce and narrow the repeated failure on task {N}",

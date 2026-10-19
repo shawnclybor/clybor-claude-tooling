@@ -8,11 +8,12 @@ Start a Ralph loop. Implements the Ralph Wiggum technique: a single prompt re-fe
 
 ## Usage
 
-```
+```text
 /ralph-loop "<prompt>" --completion-promise "<text>" --max-iterations <n>
 ```
 
 **Options:**
+
 - `--completion-promise <text>` — exact string Claude emits to signal done (default: `DONE`)
 - `--max-iterations <n>` — hard cap (default: 50; required for safety)
 
@@ -30,7 +31,7 @@ Start a Ralph loop. Implements the Ralph Wiggum technique: a single prompt re-fe
 
 Delete `.ralph-loop/state.json` to stop the loop on the next iteration:
 
-```
+```text
 rm .ralph-loop/state.json
 ```
 

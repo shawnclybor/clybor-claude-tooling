@@ -65,7 +65,7 @@ Each one exists because the test gave a wrong answer without it.
 **Work folder.** Client material stays out of git. Use a gitignored folder with this layout. The
 scripts expect it:
 
-```
+```text
 <work>/heldout/source.*          the held-out transcript or written pieces
 <work>/heldout/questions.md      SETTING: …  / optional LENGTH: …  / Q1–Q4   (from Prompt 1)
 <work>/heldout/SEALED-answers.md A1–A4                                       (from Prompt 1)

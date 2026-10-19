@@ -17,7 +17,7 @@ This skill files insights as markdown under `docs/insights/` by default. The pat
 
 ## When to crystallize
 
-### Suggest proactively after any of these:
+### Suggest proactively after any of these
 
 - A comparison or evaluation of tools, approaches, or vendors
 - A synthesis that connected dots across multiple files, modules, or projects
@@ -47,16 +47,20 @@ Read the conversation. Identify what is worth preserving. Not everything from a 
 Structure the extraction as:
 
 ### Title
+
 A clear, searchable title in the format: `[Type] Topic — Key Finding`.
 
 Examples:
+
 - `Analysis: SQLite vs Postgres for local-first sync — Postgres wins under N concurrent writers`
 - `Decision: Use server components by default — rationale documented`
 - `Finding: Race condition in queue draining when worker exits during retry`
 - `Comparison: Vector store options — short benchmark table, hybrid recommended`
 
 ### Insight Type
+
 Classify so retrieval is easier later:
+
 - **Analysis** — evaluation of options with trade-offs and a recommendation
 - **Research** — synthesized findings from multiple sources
 - **Decision** — a choice made with documented rationale
@@ -66,15 +70,19 @@ Classify so retrieval is easier later:
 - **Strategy** — directional thinking about approach or positioning
 
 ### Summary (2-4 sentences)
+
 The key takeaway. If a reader only reads this, they should know what was decided or discovered and why it matters.
 
 ### Full Content
+
 The detailed analysis, comparison table, decision rationale, or research findings. Include the question, sources consulted, reasoning, conclusion, and any caveats or open questions.
 
 ### Connections
+
 Which other files, modules, decisions, or insights does this relate to? Capture as a short list of relative paths or insight slugs.
 
 ### Confidence and Shelf Life
+
 - **Confidence**: High (well-sourced and verified) / Medium (reasonable but not verified) / Low (preliminary)
 - **Shelf life**: Evergreen / Seasonal / Perishable. Perishable insights include a re-check-by date.
 
@@ -130,6 +138,7 @@ After filing, check whether the new insight connects to or updates existing know
 ### Connection check
 
 Search `docs/insights/` for related entries. If the new insight:
+
 - **Supersedes** an older one — add `superseded_by:` to the old frontmatter; do not delete it.
 - **Contradicts** an older one — flag for the user: "This contradicts [old slug]. Update or keep both?"
 - **Extends** an older one — add cross-references in both frontmatters.
@@ -141,6 +150,7 @@ If 3+ insights now exist on the same topic, mention it: "You have N insights on 
 ## Configuration
 
 Default location: `docs/insights/`. Override per project by:
+
 - Setting `INSIGHTS_DIR=path` in the environment, OR
 - Adding `.claude/rules/insights-location.md` with one line: `Insights directory: <path>`.
 

@@ -33,6 +33,7 @@ If it doesn't reproduce, document what was tried and stop. Speculative fixes wit
 ### Step 2 — Hypothesize
 
 State 2-3 candidate causes, in priority order. For each:
+
 - What evidence would confirm it?
 - What evidence would rule it out?
 
@@ -45,6 +46,7 @@ The Two Strikes rule applies: if a hypothesis is rejected twice in a row by evid
 ### Step 4 — Identify the root cause
 
 Reach a cause that:
+
 - Explains all the observed symptoms
 - Can be reproduced by triggering the same code path with a controlled input
 - Is structural ("we don't validate X before calling Y") not just symptomatic ("API returned 500")
@@ -54,12 +56,14 @@ Stop when you have a root cause you can act on — you don't always need to go f
 ### Step 5 — Propose a minimal fix
 
 The smallest change that addresses the root cause without introducing new failure modes. Prefer:
+
 - Add a missing check
 - Fix the broken assumption
 - Tighten the contract
 - Add the missing test
 
 Avoid:
+
 - Reorganizing unrelated code
 - Adding configuration knobs to work around the bug
 - Catching and swallowing the error
@@ -67,6 +71,7 @@ Avoid:
 ### Step 6 — Verify (if implementing)
 
 After the fix lands:
+
 - Re-run the reproduction — confirm the failure no longer triggers
 - Run the broader test suite — confirm no regressions
 - Add a regression test that would have caught this bug
