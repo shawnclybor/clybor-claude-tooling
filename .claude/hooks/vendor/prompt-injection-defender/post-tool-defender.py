@@ -24,9 +24,16 @@ but sends the reason message to Claude as a warning.
 Local change (2026-10-09): the Claude in Chrome extension adds its own system-reminder
 nudge as a separate, final text block on single-action results. Joined into the scanned
 text, it tripped the fake-system-tag rule on ~88 of ~100 warnings across 22 Cox sessions,
-none of them real. Only that nudge is skipped: the last text block of a multi-block
+none of them real. Only that nudge is skipped: a whole text block of a multi-block
 Chrome result, matching the extension's exact wording (one variant in 1,112 measured
 results). Any other reminder-shaped text, anywhere, still warns.
+
+Local change (2026-10-19): the filter first checked only the LAST block. Since 2026-10-12
+the first navigate of a session appends a "Tab context (from front-loaded
+tabs_context_mcp)" block after the nudge, so the nudge was missed and every such navigate
+warned (5 of 20 measured). Any block matching the exact wording is now dropped, wherever
+it sits; an exact match holds only the extension's own text, so dropping it hides nothing.
+Regression cases: test_post_tool_defender.py.
 """
 
 import json
@@ -100,16 +107,15 @@ CHROME_NUDGE = re.compile(
 
 
 def drop_chrome_nudge(tool_name: str, blocks: List[Any]) -> List[Any]:
-    """Drop the Chrome extension's own nudge: the last text block, exact wording only."""
+    """Drop the Chrome extension's own nudge: any whole block, exact wording only."""
     if len(blocks) < 2 or not tool_name.startswith("mcp__claude-in-chrome__"):
         return blocks
-    for i in range(len(blocks) - 1, -1, -1):
-        text = blocks[i].get("text") if isinstance(blocks[i], dict) else blocks[i]
-        if isinstance(text, str):
-            if CHROME_NUDGE.fullmatch(text):
-                return blocks[:i] + blocks[i + 1 :]
-            return blocks
-    return blocks
+
+    def is_nudge(block: Any) -> bool:
+        text = block.get("text") if isinstance(block, dict) else block
+        return isinstance(text, str) and CHROME_NUDGE.fullmatch(text) is not None
+
+    return [b for b in blocks if not is_nudge(b)]
 
 
 def extract_text_content(tool_name: str, tool_result: Any) -> str:

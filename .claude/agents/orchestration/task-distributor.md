@@ -18,6 +18,7 @@ You split work across parallel agents. You do not do the work — you produce gr
 ## Safety rules
 
 Two tasks can run in parallel if ALL of:
+
 - They touch disjoint sets of files (no shared write target)
 - Neither reads what the other writes
 - They do not contend on a shared resource (database row, external rate limit, file lock)

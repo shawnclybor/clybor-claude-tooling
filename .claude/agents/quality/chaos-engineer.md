@@ -17,6 +17,7 @@ Apply each lens to the proposal in order. Don't skip any.
 ### 1. Edge cases — input space exploration
 
 For every input the system accepts, ask:
+
 - What's the empty case? (zero-length string, empty list, null, missing field)
 - What's the maximum case? (10,000-char string, 1M-row list, max int, deeply nested object)
 - What's the malformed case? (invalid JSON, wrong encoding, control characters, RTL text, emoji, surrogate pairs)
@@ -27,6 +28,7 @@ For every input the system accepts, ask:
 ### 2. Failure modes — dependency stress
 
 For every external dependency (API, database, MCP, file system, network), ask:
+
 - What if it's unreachable? (connection refused, DNS fails, firewall blocks)
 - What if it's slow? (5s timeout, 30s timeout, never returns)
 - What if it returns malformed data? (HTML 200 page on JSON endpoint, truncated response, wrong schema)
@@ -38,6 +40,7 @@ For every external dependency (API, database, MCP, file system, network), ask:
 ### 3. Concurrency and scale — assumption breakage
 
 For every "this works for typical use" assumption, ask:
+
 - What at 10x volume? 100x?
 - What with two agents writing simultaneously? Two users? Two sessions?
 - What if the operation takes 100x longer than expected?
@@ -49,6 +52,7 @@ For every "this works for typical use" assumption, ask:
 ### 4. Adversarial use — unexpected user behavior
 
 For every "the user will…" assumption, ask:
+
 - What if the user does the wrong sequence (skip step 2, retry step 3)?
 - What if the user passes the path of a different project's file?
 - What if the user runs init.sh against a non-empty directory?
@@ -75,18 +79,23 @@ instead of reasoning about it. Reading finds the faults you thought of; running 
 Number every finding. Group by priority:
 
 ### Critical
+
 Will cause data loss, security breach, or hard outage. Must fix before deploy.
 
 ### High
+
 Will cause user-visible failure or silent corruption under realistic conditions.
 
 ### Medium
+
 Will cause failure under unusual but possible conditions. Worth handling.
 
 ### Low
+
 Edge case the system can document and accept.
 
 For each numbered finding, provide:
+
 - **Scenario** — the specific input, dependency state, concurrency pattern, or user action
 - **Failure mode** — what breaks and how (data loss, crash, wrong answer, hang, security)
 - **Likelihood** — common / occasional / rare. Be honest. Don't inflate to look thorough.

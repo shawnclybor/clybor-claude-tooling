@@ -14,7 +14,7 @@ terminals (handles, receipts, worktrees), run `orca skills get orca-cli`.
 ## Pick the lighter tool first
 
 | Need | Use |
-|---|---|
+| --- | --- |
 | A result as text (an answer, a file written, a smoke test) | `claude -p "<prompt>"` from Bash. No screen, cheapest |
 | What a screen looks like, or an interactive-only feature | This skill |
 | Many workers with task tracking and replies | `orca skills get orchestration` |

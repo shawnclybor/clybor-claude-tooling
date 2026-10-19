@@ -82,6 +82,7 @@ Before running:
 ## Failure handling
 
 A failed criterion does not auto-fix anything. Report the failure with:
+
 - Which check command failed
 - Where the evidence lives
 - The smallest hint at the root cause (don't guess — cite the actual output)
@@ -98,7 +99,7 @@ Each condition is a real trigger, not a suggestion — if the condition holds an
 
 Catches what a green check does not: type-safety gaps, naming, structural debt in the code the checks just passed.
 
-```
+```text
 Agent(
   subagent_type="code-reviewer",
   description="Final read-only pass over verified implementation",
@@ -110,7 +111,7 @@ Agent(
 
 Input validation, auth, secrets, injection, dependency surface. A deterministic check does not satisfy a security criterion on its own; this agent is the gate for it.
 
-```
+```text
 Agent(
   subagent_type="security-auditor",
   description="Audit the security-shaped PRD criteria",
@@ -122,7 +123,7 @@ Agent(
 
 For example *"no module in `api/` imports from `db/` directly"* or *"all routes in `handlers/` register through the central router"*. A grep catches the obvious violations; this agent confirms the criterion holds at the structural level rather than the textual one.
 
-```
+```text
 Agent(
   subagent_type="code-analyzer",
   description="Trace cross-file criteria to confirm they hold structurally",
@@ -146,4 +147,3 @@ Treat PARTIAL the same as FAIL — do not advance to Stage 6 with unmapped crite
 - **Cherry-picking checks** — picking the easy criteria and skipping the hard ones. If a criterion can't be checked, surface it; don't hide it.
 - **Stale runs** — running checks against an old build. Re-run after every implementation change.
 - **Flaky checks counted as PASS** — a check that passes 80% of the time is not a check. Fix the flake or strike the check.
-

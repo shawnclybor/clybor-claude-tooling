@@ -8,11 +8,12 @@ Invoke the `quality-review` skill against a target. Spawns the three review agen
 
 ## Usage
 
-```
+```text
 /quality-review <target>
 ```
 
 Where `<target>` is one of:
+
 - A file path (`docs/PRD.md`, `src/api/auth.ts`)
 - A description of an in-progress proposal in chat
 - A pasted block of plan / design text

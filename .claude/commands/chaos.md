@@ -8,7 +8,7 @@ Single-lens review using just the chaos-engineer agent. Use when you specificall
 
 ## Usage
 
-```
+```text
 /chaos <target>
 ```
 

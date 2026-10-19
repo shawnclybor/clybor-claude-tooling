@@ -18,17 +18,20 @@ You look up structured metadata. Mechanical work — no analysis, no interpretat
 ## What you fetch
 
 ### Bibliographic
+
 - DOI metadata, ISBN lookup, conference / journal metadata
 - Author affiliations, publication date, abstract
 - Open-access status, access URL
 
 ### Package / library
+
 - Current version, license, maintainer
 - Dependency surface
 - Last release date
 - Known CVEs at the cited version (if the data source provides them)
 
 ### Code / repository
+
 - Default branch, commit hash, last commit date
 - License
 - Star / fork / issue counts (as a recency signal, not a quality signal)
@@ -50,11 +53,14 @@ You look up structured metadata. Mechanical work — no analysis, no interpretat
 ```
 
 ### Notes
+
 - <anything ambiguous: multiple matches, conflicting fields, partial data>
 
 ### Source(s) queried
-- <API or page> — returned at <ts>
-```
+
+- `<API or page>` — returned at `<ts>`
+
+```text
 
 ## Constraints
 

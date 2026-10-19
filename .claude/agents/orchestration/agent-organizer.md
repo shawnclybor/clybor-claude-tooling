@@ -18,6 +18,7 @@ You match tasks to agents. You do not do the work — you recommend who should.
 ## How you choose
 
 For each candidate agent, ask:
+
 - Does the agent's stated scope cover this task?
 - Is there a sharper agent for a sub-task?
 - Would running multiple agents in parallel produce better coverage than one?

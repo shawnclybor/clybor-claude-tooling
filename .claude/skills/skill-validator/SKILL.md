@@ -30,7 +30,7 @@ A continuous-iteration eval loop for skills. Geoffrey Huntley-style: run the ski
 
 ## The Loop
 
-```
+```text
 iteration = 0
 while iteration < BUDGET.max_iterations:
     iteration += 1
@@ -89,6 +89,7 @@ Each iteration:
 **PASS** — every criterion green for two consecutive iterations against every representative input. Two consecutive is the stability check; one good run could be a fluke.
 
 **FAIL (budget exhausted)** — emit:
+
 - Final SKILL.md state (with all patches applied)
 - A diff vs. the original
 - A numbered list of criteria that never passed, with the last failure mode for each

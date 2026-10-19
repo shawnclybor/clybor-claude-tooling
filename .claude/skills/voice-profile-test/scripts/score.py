@@ -11,7 +11,10 @@ Reads <work>/judges/<judge>/PNN.md for every judge folder, and the key. Reports:
 
 usage: score.py <work>
 """
-import argparse, json, re, statistics as st
+import argparse
+import json
+import re
+import statistics as st
 from collections import defaultdict
 from pathlib import Path
 
@@ -29,8 +32,8 @@ nq = next(iter(key.values()))["questions"]
 def parse(path):
     text = path.read_text()
     rows = {int(m.group(1)): tuple(int(g) for g in m.groups()[1:])
-            for m in (ROW.match(l.strip()) for l in text.splitlines()) if m}
-    quotes = sum(1 for l in text.splitlines() if not l.strip().startswith("|") and re.search(r"[\"“][^\"”]{3,}[\"”]", l))
+            for m in (ROW.match(line.strip()) for line in text.splitlines()) if m}
+    quotes = sum(1 for line in text.splitlines() if not line.strip().startswith("|") and re.search(r"[\"“][^\"”]{3,}[\"”]", line))
     tot = {k: int(v) for k, v in re.findall(r"(THINKING|SOUND):\s*\**\s*(\d+)", text)}
     return rows, quotes, tot
 

@@ -7,7 +7,11 @@ numbers are shuffled so a number says nothing; the key (packet -> profile, run) 
 
 usage: build_packets.py <work> --person "Name" [--runs 3]
 """
-import argparse, json, random, re, secrets
+import argparse
+import json
+import random
+import re
+import secrets
 from pathlib import Path
 
 PROMPTS = Path(__file__).resolve().parent.parent / "references/prompts.md"
@@ -37,7 +41,7 @@ W, rng = a.work, random.Random(secrets.randbits(64))
 text = PROMPTS.read_text()
 judge = text[text.index("You are a judge."):text.index("QUESTIONS:\n[PASTE]")].replace("[PERSON]", a.person)
 q = (W / "heldout/questions.md").read_text()
-questions = "\n".join(l for l in q.splitlines() if not l.startswith(("SETTING:", "LENGTH:"))).strip()
+questions = "\n".join(line for line in q.splitlines() if not line.startswith(("SETTING:", "LENGTH:"))).strip()
 answers = (W / "heldout/SEALED-answers.md").read_text().strip()
 
 profiles = sorted(p.stem for p in (W / "profiles").glob("*.md"))

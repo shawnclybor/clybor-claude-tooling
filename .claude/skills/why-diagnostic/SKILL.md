@@ -26,6 +26,7 @@ Trigger when the user asks "why" about anything in the agent/tool workflow:
 - **A design choice needs justifying** — "why am I using Langfuse here vs. GitHub Actions", "why should the scorer be flat instead of nested"
 
 Do NOT use for:
+
 - Factual lookups ("why is the sky blue") — just answer
 - Emotional/personal "why" questions — that's not what this is for
 - Cases where the user just wants the direct fix and the "why" is rhetorical
@@ -50,7 +51,7 @@ This labeled structure is the methodology. It is not the output.
 
 Translate the analysis into a short incident-report-style write-up. No labels. No bullet lists for the assumptions. One bold header that restates the question, then five short paragraphs of connected prose.
 
-```
+```text
 **[Question, restated as one line.]**
 
 [Paragraph 1, 1-2 sentences: name what kind of question this actually is — the language-game in plain words. What practice is the "why" inside? The point is to redirect away from the wrong frame the question might invite.]
@@ -87,7 +88,7 @@ Translate the analysis into a short incident-report-style write-up. No labels. N
 
 **Output:**
 
-```
+```text
 **Why did the scorer come back as a nested rubric when I asked for flat plain-English checks?**
 
 This is a question about prompt design for an LLM scorer, not about code execution. The model is doing something its training pulled it toward; the real question is which training pattern won.
@@ -115,7 +116,7 @@ The assumption worth testing first: whether the agent is rereading prior constra
 
 **Output:**
 
-```
+```text
 **Why did the Vapi `transfer_personal_trainer` tool fail when the result said "Transfer initiated"?**
 
 This is a voice-agent telephony question — specifically a SIP-layer protocol mismatch between Vapi and the downstream carrier. It's not about the tool config as a static document.
@@ -143,6 +144,7 @@ The assumption worth testing first: whether "Transfer initiated" actually means 
 - **why-diagnostic** is for **frame clarification.** The thing isn't necessarily broken; the question is whether you're asking inside the right language-game and what hinges are doing silent work. The chain bottoms out at a hinge, not a root. Output reads as an incident report: it ends at an honest stop point and points at the hinge worth testing first.
 
 When to reach for which:
+
 - Tool failed twice, retry is dangerous, need a documented fix → **five-whys**
 - "Why did the agent do X" / "why is this design the right one" / "where am I confused about what this even is" → **why-diagnostic**
 - Both can fit → run **why-diagnostic** first to make sure you're in the right language-game, then **five-whys** if a fix is the actual goal.

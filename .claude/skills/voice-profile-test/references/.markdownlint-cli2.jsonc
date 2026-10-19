@@ -1,0 +1,3 @@
+// prompts.md is the voice test itself: build_packets.py copies its judge prompt out as raw text, so a
+// lint fix would change the test. It stays exactly as tested; rules whose fix would change it are off.
+{ "config": { "MD032": false, "MD060": false } }

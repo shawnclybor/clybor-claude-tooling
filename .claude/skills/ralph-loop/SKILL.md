@@ -11,7 +11,7 @@ Based on Anthropic's official `ralph-loop` plugin and Geoffrey Huntley's origina
 
 ## Core concept
 
-```
+```text
 /ralph-loop "<prompt>" --completion-promise "DONE" --max-iterations 50
 
 # Then Claude Code automatically:
@@ -29,12 +29,14 @@ The loop is **self-referential**: the prompt never changes between iterations. C
 ## When to use
 
 Good for:
+
 - Well-defined tasks with automatic verification (tests, linters, build, type-check)
 - Tasks requiring iteration to refine (getting tests to pass, fixing a flaky integration)
 - Greenfield projects you can walk away from
 - Overnight unattended runs
 
 Not good for:
+
 - Tasks requiring human judgment or design decisions (use `quality-review` instead)
 - One-shot operations
 - Tasks without a clear binary signal for completion
@@ -66,7 +68,8 @@ To cancel mid-flight: `rm .ralph-loop/state.json` — the next exit attempt comp
 Bad: *"Build a todo API and make it good."*
 
 Good:
-```
+
+```text
 Build a REST API for todos.
 
 When complete:
@@ -82,7 +85,8 @@ When complete:
 Bad: *"Create a complete e-commerce platform."*
 
 Good:
-```
+
+```text
 Phase 1: Authentication (JWT, tests)
 Phase 2: Product catalog (list/search, tests)
 Phase 3: Shopping cart (add/remove, tests)
@@ -95,7 +99,8 @@ Output <promise>COMPLETE</promise> when all phases done.
 Bad: *"Write code for feature X."*
 
 Good:
-```
+
+```text
 Implement feature X following TDD:
 1. Write failing tests
 2. Implement feature
@@ -110,7 +115,7 @@ Implement feature X following TDD:
 
 Always set `--max-iterations`. Include in the prompt what to do if stuck:
 
-```
+```text
 If not complete after 15 iterations:
 - Document what is blocking progress
 - List what was attempted

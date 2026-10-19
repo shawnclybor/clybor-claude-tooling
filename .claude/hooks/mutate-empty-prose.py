@@ -1,4 +1,9 @@
-import re, shutil, subprocess, sys, tempfile, os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import os
 SRC = ".claude/hooks/check-empty-prose.py"
 orig = open(SRC, encoding="utf-8").read()
 
@@ -31,16 +36,20 @@ caught = survived = 0
 for name, expect, fn in MUTATIONS:
     mutated = fn(orig)
     if mutated == orig:
-        print(f"  ERROR      {name:<26} -> patch was a no-op"); survived += 1; continue
+        print(f"  ERROR      {name:<26} -> patch was a no-op")
+        survived += 1
+        continue
     path = os.path.join(d, "mut.py")
     open(path, "w", encoding="utf-8").write(mutated)
     env = dict(os.environ, GATE=path)
     r = subprocess.run(["bash", ".claude/hooks/test-empty-prose.sh"],
                        capture_output=True, text=True, env=env)
     if re.search(rf"FAIL {expect}\b", r.stdout):
-        print(f"  caught     {name:<26} -> {expect} fails"); caught += 1
+        print(f"  caught     {name:<26} -> {expect} fails")
+        caught += 1
     else:
-        print(f"  SURVIVED   {name:<26} -> {expect} still passes"); survived += 1
+        print(f"  SURVIVED   {name:<26} -> {expect} still passes")
+        survived += 1
 
 shutil.rmtree(d)
 print(f"\ncaught {caught}, survived {survived}")

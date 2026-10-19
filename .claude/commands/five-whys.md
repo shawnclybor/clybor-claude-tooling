@@ -8,7 +8,7 @@ Invoke the `five-whys` skill. Use when a tool failed twice, output is wrong desp
 
 ## Usage
 
-```
+```text
 /five-whys
 ```
 

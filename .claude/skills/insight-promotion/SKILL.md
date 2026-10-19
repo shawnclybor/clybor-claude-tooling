@@ -29,7 +29,7 @@ Skip promotion if:
 ## Target file selection
 
 | Target | When | Example |
-|---|---|---|
+| --- | --- | --- |
 | `CLAUDE.md` Hard Rules section | Universal rule that applies to ALL requests | "Two Strikes — same op fails twice → STOP" |
 | `CLAUDE.md` Router table | New domain or new skill / rule file added | Routing row for a new governance file |
 | `.claude/rules/<domain>.md` main body | Domain-specific protocol or workflow | API design rule, DB migration rule |
@@ -55,7 +55,7 @@ Match the target file's existing format. Most rule files have rule sections, Kno
 
 **4a. Run the three lenses against the draft.** Spawn all three in one message. A governance file is loaded into every session that touches its domain, so a bad rule compounds on every one of them — this is the cheapest place to catch it, and the only place before it goes always-on.
 
-```
+```text
 Agent(
   subagent_type="adversarial-reviewer",
   description="Challenge the proposed governance rule",
