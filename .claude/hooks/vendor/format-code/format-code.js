@@ -20,30 +20,48 @@
  * }
  */
 
-const fs = require('fs');
-const path = require('path');
-const { spawnSync } = require('child_process');
+const fs = require("fs");
+const path = require("path");
+const { spawnSync } = require("child_process");
 
-const LOG_DIR = path.join(process.env.HOME, '.claude', 'hooks-logs');
+const LOG_DIR = path.join(process.env.HOME, ".claude", "hooks-logs");
 
-const PRETTIER_EXTS = new Set(['.js', '.ts', '.json', '.md', '.yaml', '.yml', '.html']);
+const PRETTIER_EXTS = new Set([
+  ".js",
+  ".ts",
+  ".json",
+  ".md",
+  ".yaml",
+  ".yml",
+  ".html",
+]);
 
 const FORMATTERS = {
-  '.py': (fp) => [
-    ['uv', 'run', 'ruff', 'check', '--fix', '--exit-zero', '--quiet', fp],
-    ['uv', 'run', 'ruff', 'format', '--quiet', fp],
+  ".py": (fp) => [
+    ["uv", "run", "ruff", "check", "--fix", "--exit-zero", "--quiet", fp],
+    ["uv", "run", "ruff", "format", "--quiet", fp],
   ],
 };
 
 for (const ext of PRETTIER_EXTS) {
-  FORMATTERS[ext] = (fp) => [['npx', '--yes', 'prettier', '--write', fp]];
+  FORMATTERS[ext] = (fp) => [["npx", "--yes", "prettier", "--write", fp]];
 }
 
 function log(data) {
   try {
     if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-    const file = path.join(LOG_DIR, `${new Date().toISOString().slice(0, 10)}.jsonl`);
-    fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), hook: 'format-code', ...data }) + '\n');
+    const file = path.join(
+      LOG_DIR,
+      `${new Date().toISOString().slice(0, 10)}.jsonl`,
+    );
+    fs.appendFileSync(
+      file,
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        hook: "format-code",
+        ...data,
+      }) + "\n",
+    );
   } catch {}
 }
 
@@ -52,67 +70,139 @@ function getFormatter(filePath) {
   return FORMATTERS[ext] || null;
 }
 
+// Git toplevel of a directory, resolved through symlinks; null when not in a repo.
+function gitTop(dir) {
+  const r = spawnSync("git", ["-C", dir, "rev-parse", "--show-toplevel"], {
+    stdio: "pipe",
+  });
+  return r.status === 0 ? fs.realpathSync(r.stdout.toString().trim()) : null;
+}
+
+// Format only files that belong to the project's own git repo. A session can edit files in
+// other repos (a CRM repo, a nested client repo) or outside any repo (memory, scratch); the
+// formatter must not reformat those — measured 2026-11-03: it realigned a whole table in
+// another repo's file, layered on that repo's uncommitted work.
+function insideProjectRepo(absPath, cwd) {
+  const root = process.env.CLAUDE_PROJECT_DIR || cwd;
+  const rootTop = gitTop(root);
+  if (rootTop === null) {
+    const realRoot = fs.realpathSync(root);
+    return fs.realpathSync(absPath).startsWith(realRoot + path.sep);
+  }
+  return gitTop(path.dirname(absPath)) === rootTop;
+}
+
 function formatFile(filePath, cwd, sessionId) {
-  const absPath = path.isAbsolute(filePath) ? filePath : path.join(cwd, filePath);
+  const absPath = path.isAbsolute(filePath)
+    ? filePath
+    : path.join(cwd, filePath);
 
   if (!fs.existsSync(absPath)) {
-    log({ level: 'SKIP', reason: 'file not found', file: absPath, session_id: sessionId });
-    return { success: false, error: 'file not found' };
+    log({
+      level: "SKIP",
+      reason: "file not found",
+      file: absPath,
+      session_id: sessionId,
+    });
+    return { success: false, error: "file not found" };
+  }
+
+  if (!insideProjectRepo(absPath, cwd)) {
+    log({
+      level: "SKIP",
+      reason: "outside project repo",
+      file: absPath,
+      session_id: sessionId,
+    });
+    return { success: false, error: "outside project repo" };
   }
 
   const ext = path.extname(absPath).toLowerCase();
   const getCommands = FORMATTERS[ext];
   if (!getCommands) {
-    log({ level: 'SKIP', reason: 'unsupported file type', file: absPath, session_id: sessionId });
-    return { success: false, error: 'unsupported file type' };
+    log({
+      level: "SKIP",
+      reason: "unsupported file type",
+      file: absPath,
+      session_id: sessionId,
+    });
+    return { success: false, error: "unsupported file type" };
   }
 
-  const formatterName = PRETTIER_EXTS.has(ext) ? 'prettier' : 'ruff';
+  const formatterName = PRETTIER_EXTS.has(ext) ? "prettier" : "ruff";
   const dir = path.dirname(absPath);
 
   for (const args of getCommands(absPath)) {
     try {
-      const result = spawnSync(args[0], args.slice(1), { cwd: dir, stdio: 'pipe' });
+      const result = spawnSync(args[0], args.slice(1), {
+        cwd: dir,
+        stdio: "pipe",
+      });
       if (result.status !== 0) {
-        const msg = result.stderr?.toString().trim() || `Process exited with code ${result.status}`;
-        log({ level: 'ERROR', formatter: formatterName, file: absPath, error: msg, session_id: sessionId });
+        const msg =
+          result.stderr?.toString().trim() ||
+          `Process exited with code ${result.status}`;
+        log({
+          level: "ERROR",
+          formatter: formatterName,
+          file: absPath,
+          error: msg,
+          session_id: sessionId,
+        });
         return { success: false, error: msg, formatter: formatterName };
       }
     } catch (e) {
-      log({ level: 'ERROR', formatter: formatterName, file: absPath, error: e.message, session_id: sessionId });
+      log({
+        level: "ERROR",
+        formatter: formatterName,
+        file: absPath,
+        error: e.message,
+        session_id: sessionId,
+      });
       return { success: false, error: e.message, formatter: formatterName };
     }
   }
 
-  log({ level: 'FORMATTED', formatter: formatterName, file: absPath, session_id: sessionId });
+  log({
+    level: "FORMATTED",
+    formatter: formatterName,
+    file: absPath,
+    session_id: sessionId,
+  });
   return { success: true, formatter: formatterName };
 }
 
 async function main() {
-  let input = '';
+  let input = "";
   for await (const chunk of process.stdin) input += chunk;
 
   let data;
   try {
     data = JSON.parse(input);
   } catch (e) {
-    log({ level: 'ERROR', error: e.message });
-    return console.log('{}');
+    log({ level: "ERROR", error: e.message });
+    return console.log("{}");
   }
-  if (data === null || typeof data !== 'object') data = {};
+  if (data === null || typeof data !== "object") data = {};
 
   const { tool_name, tool_input, session_id, cwd } = data;
 
-  if (!['Write', 'Edit'].includes(tool_name) || !tool_input?.file_path) {
-    return console.log('{}');
+  if (!["Write", "Edit"].includes(tool_name) || !tool_input?.file_path) {
+    return console.log("{}");
   }
 
   formatFile(tool_input.file_path, cwd || process.cwd(), session_id);
-  console.log('{}');
+  console.log("{}");
 }
 
 if (require.main === module) {
   main();
 } else {
-  module.exports = { getFormatter, formatFile, log, FORMATTERS };
+  module.exports = {
+    getFormatter,
+    formatFile,
+    insideProjectRepo,
+    log,
+    FORMATTERS,
+  };
 }
