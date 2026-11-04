@@ -148,3 +148,33 @@ When to reach for which:
 - Tool failed twice, retry is dangerous, need a documented fix → **five-whys**
 - "Why did the agent do X" / "why is this design the right one" / "where am I confused about what this even is" → **why-diagnostic**
 - Both can fit → run **why-diagnostic** first to make sure you're in the right language-game, then **five-whys** if a fix is the actual goal.
+
+<!-- INSIGHT-CHAIN v1 -->
+## The insight chain
+
+Type "insight" to find the trio. Each step ends by recommending the next one.
+
+| # | Skill | Required? | What it gives you |
+|---|---|---|---|
+| 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
+| 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
+| 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
+| 4 | `insight-promotion` | Optional | The lesson made always-on, pointing at the fix |
+
+You are here: **step 1**. Fix before promote: a rule written before its fix is proven
+tells every future session to follow a guess.
+
+## Next step (end every run with this)
+
+Finish with this block, filled in. Short, plain, numbered.
+
+```
+Next step
+1. <one action, who does it>  (recommended)
+2. <alternative, if any>
+Why: <one sentence>
+```
+
+- **Always next: `insight-crystallizer`.** File the explanation and the first thing to test.
+- Cause still unclear, or it failed twice: recommend `five-whys` for a full root-cause pass.
+- Cause clear and something must change: after crystallizing, `insight-builder`.

@@ -172,3 +172,38 @@ If the insight meets any of these criteria, suggest promoting it via the `insigh
 - **`evidence-auditor`** — if the insight cites external sources (URLs, papers, claims attributed to third parties), runs before filing. Confirms each citation traces accurately. An insight with fabricated citations is worse than no insight.
 - **`research-analyst`** — if the insight synthesizes across 3+ external sources, invoke before drafting the Analysis section. Produces the cited-claims table the insight depends on.
 - **`knowledge-synthesizer`** — invoked when Phase 4 detects 3+ related insights in `docs/insights/`. Combines them into a consolidated overview so individual insights compound into knowledge rather than a pile.
+
+<!-- INSIGHT-CHAIN v1 -->
+## The insight chain
+
+Type "insight" to find the trio. Each step ends by recommending the next one.
+
+| # | Skill | Required? | What it gives you |
+|---|---|---|---|
+| 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
+| 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
+| 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
+| 4 | `insight-promotion` | Optional | The lesson made always-on, pointing at the fix |
+
+You are here: **step 2**. Fix before promote: a rule written before its fix is proven
+tells every future session to follow a guess.
+
+## Next step (end every run with this)
+
+Finish with this block, filled in. Short, plain, numbered.
+
+```
+Next step
+1. <one action, who does it>  (recommended)
+2. <alternative, if any>
+Why: <one sentence>
+```
+
+Only recommend this chain when the insight came from a failure or a fix. For other insights
+(a comparison, a strategy), stop after filing.
+
+- **Something must be built or changed** (a script, hook, gate, config, prompt, plugin or
+  skill): recommend `insight-builder`.
+- **The only change is a rule** future sessions must follow: recommend `insight-promotion`.
+  If a script or gate could enforce it instead, recommend `insight-builder` first.
+- **Nothing to change:** stop. Say "Filed, no further step" and why.
