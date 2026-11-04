@@ -124,6 +124,7 @@ const NONEXEC = new Set(['echo', 'printf', 'grep', 'egrep', 'fgrep', 'rg', 'ag',
 const ASSIGN_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/s;
 const isRedirect = (w) => /^\d*(?:>>?|<)/.test(w) || /^&?>/.test(w);
 const baseName = (w) => String(w).slice(String(w).lastIndexOf('/') + 1);
+const refDst = (x) => x.slice(x.lastIndexOf(':') + 1);
 
 // ---- text normalisation ----------------------------------------------------------
 
@@ -302,14 +303,14 @@ const SELF_DIR_RE = /^\$\(\s*(?:git\s+rev-parse\s+--show-toplevel|pwd)\s*\)$/;
  *   ref: a pattern hit from the ANY-branch rules (or UNRESOLVED)
  *   toMain, dynamic, alias, gitDir, firstCdExempt, creates: { seg, name }, segs
  */
-function scan(text, vars, threshold, depth = 0) {
+function scan(text, vars, threshold, depth = 0, topSegs = null) {
   const r = { uses: [], cds: [], envC: [], ref: null, toMain: false, dynamic: false, alias: false, gitDir: false, firstCdExempt: false, creates: null, segs: [] };
   const merge = (o) => {
     r.uses.push(...o.uses); r.cds.push(...o.cds); r.envC.push(...o.envC);
     r.ref = r.ref || o.ref; r.toMain = r.toMain || o.toMain; r.dynamic = r.dynamic || o.dynamic;
     r.alias = r.alias || o.alias; r.gitDir = r.gitDir || o.gitDir;
   };
-  const segs = shellSegments(text);
+  const segs = topSegs || shellSegments(text);
   r.segs = segs;
   let onlyAssignBefore = true;
   segs.forEach((seg, si) => {
@@ -363,7 +364,6 @@ function scan(text, vars, threshold, depth = 0) {
       if (assignsBefore && seg.sep === '&&' && !segs.parens) r.firstCdExempt = true;
       return;
     }
-    if (head === 'popd') return;
     if (NONEXEC.has(head) && !toks.some(x => x.dyn)) return;
     if (head === 'gh') {
       if (t[k + 1] === 'api') { const g = ghApi(t.slice(k)); if (g) r.ref = r.ref || g; }
@@ -441,7 +441,7 @@ function refRule(sub, a, aT, vars, threshold) {
       if (pos[k].includes('$')) {
         const e = expandAll(pos[k], vars);
         if (e === UNRESOLVED) return UNRESOLVED;
-        pos[k] = e.find(v => isProtected(v.includes(':') ? v.split(':').pop() : v)) || e[0];
+        pos[k] = e.find(v => isProtected(refDst(v))) || e[0];
       }
     }
     return null;
@@ -454,14 +454,14 @@ function refRule(sub, a, aT, vars, threshold) {
       if (flags.includes('--all') || flags.includes('--mirror')) return PAT['push-main'];
       if ((shortHas('d') || flags.includes('--delete')) && prot()) return PAT['push-main'];
       for (const x of pos.slice(1)) {
-        const dst = x.includes(':') ? x.split(':').pop() : x;
+        const dst = refDst(x);
         if (isProtected(dst) || dst.includes('*')) return /master/.test(dst) ? PAT['push-master'] : PAT['push-main'];
       }
       return null;
     }
     case 'pull': {
       if (expandPos(1) === UNRESOLVED) return null;  // pull itself is allowed; only a ref write into main is not
-      for (const x of pos.slice(1)) if (x.includes(':') && (isProtected(x.split(':').pop()) || x.split(':').pop().includes('*'))) return PAT['move-protected-ref'];
+      for (const x of pos.slice(1)) if (x.includes(':') && (isProtected(refDst(x)) || refDst(x).includes('*'))) return PAT['move-protected-ref'];
       return null;
     }
     case 'branch':
@@ -482,7 +482,7 @@ function refRule(sub, a, aT, vars, threshold) {
       const forced = shortHas('f') || flags.includes('--force');
       for (const x of pos.slice(1)) {
         if (!x.includes(':')) continue;
-        const dst = x.split(':').pop();
+        const dst = refDst(x);
         if ((isProtected(dst) || dst.includes('*')) && (pos[0] === '.' || forced || x.startsWith('+'))) return PAT['move-protected-ref'];
       }
       return null;
@@ -601,18 +601,20 @@ function checkCommand(cmd, branch = null, safetyLevel = SAFETY_LEVEL, cwd = null
       return deny(PAT['unresolved-target'], 'Cannot tell what this runs: it feeds text that mentions git to a shell. Run the git command directly');
     }
     const text = dropQuotedHeredocs(raw);
-    for (const id of ['gh-pr-close', 'gh-issue-close', 'gh-release-delete', 'gh-repo-delete']) {
-      if (PAT[id].regex.test(stripDataArgs(text))) return deny(PAT[id]);
+    const stripped = stripDataArgs(text);
+    for (const p of PATTERNS.filter(p => p.id.startsWith('gh-'))) {
+      if (p.regex.test(stripped)) return deny(p);
     }
     const baseDir = cwd ? path.resolve(cwd) : process.cwd();
-    const vars = assignments(text, shellSegments(text), baseDir);
-    const s = scan(text, vars, threshold);
+    const topSegs = shellSegments(text);
+    const vars = assignments(text, topSegs, baseDir);
+    const s = scan(text, vars, threshold, 0, topSegs);
     if (s.ref === UNRESOLVED) return deny(PAT['unresolved-target'], 'Cannot tell which branch this git command writes: a branch or refspec comes from text it cannot read. Spell the branch out');
     if (s.ref) return deny(s.ref);
 
     // Union with the quote-blind reading: a verb it finds that the quote-aware one missed counts too.
     const uses = [...s.uses];
-    for (const u of rawVerbUses(execOnly(stripDataArgs(text)))) if (!uses.some(x => x.verb === u.verb)) uses.push(u);
+    for (const u of rawVerbUses(execOnly(stripped))) if (!uses.some(x => x.verb === u.verb)) uses.push(u);
     const mentionsVerb = VERB_WORD_RE.test(text);
     if (!uses.length && !((s.dynamic || s.alias) && mentionsVerb)) return { blocked: false };
 
@@ -693,5 +695,5 @@ async function main() {
 if (require.main === module) {
   main();
 } else {
-  module.exports = { PATTERNS, PROTECTED_BRANCHES, LEVELS, SAFETY_LEVEL, checkCommand, shellSegments, scan, rawVerbUses };
+  module.exports = { checkCommand, PATTERNS };
 }
