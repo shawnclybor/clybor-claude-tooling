@@ -39,3 +39,31 @@ On re-vendor
   re-apply the one character class and keep the fork.
 
 Upstream: karanb192/claude-code-hooks @ 888ef0827f12 (MIT)
+
+Second change, 2026-11-04 — git-safety judges every repo the command could touch
+  Upstream git-safety asked `git branch --show-current` in the hook's own directory, so
+  `cd /other/repo && git <commit>` was judged by the session's repo. Measured that day: a
+  commit onto main in one repo was allowed (session on a side branch elsewhere), and a
+  commit on a side branch was denied (session on main).
+
+  Design (after three chaos rounds): over-approximate, and read every command twice.
+  - Quote-aware reading finds repos and subcommands (paths with spaces, -C "$(...)");
+    a quote-blind reading finds verbs hidden in any string; the results are unioned, and
+    quoted strings are re-read as commands. Quoted heredoc bodies (<<'EOF') are data.
+  - Candidates = the session directory plus every cd / pushd / git -C / env -C target
+    (variables with several possible values contribute all of them). The session
+    directory is dropped only when the command starts with `cd <path> &&` (outside any
+    subshell) or every verb call names its repo with -C.
+  - Deny if any candidate is on main/master, if the command switches to main first, if a
+    target cannot be resolved or does not exist yet, or past 50 candidates. From any
+    branch, moving/deleting/renaming/pushing to main/master is denied.
+  - `git pull` stays allowed (switch to main + pull after a PR merge is the normal route).
+  - Accepted costs: with a main-branch repo in play, text that merely names a verb (an
+    echo, an unquoted heredoc) is blocked, as upstream did; clone-then-commit in one
+    command is denied. Out of scope: disguised commands (verb built in pieces, interpreter
+    strings such as awk system()), config-defined git aliases, ssh, scripts in files.
+  Files: lib/git-safety.js, guard-pack.js (passes the session cwd), test/ (36 tests,
+  including the probes from all three chaos rounds). Validated on 10,300 historical
+  commands: 0 exceptions, worst 10 ms; pathological inputs worst under 20 ms.
+  This fork now differs from vendor/guard-pack in lib/protect-secrets.js, lib/git-safety.js,
+  guard-pack.js, and the added test/ folder.
