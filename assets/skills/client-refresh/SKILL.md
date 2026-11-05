@@ -24,6 +24,7 @@ message, write the file, then continue. Never guess an ID, path or domain.
 - Memory log: <abs path>                              # optional dated log; append at END only
 - Working brief(s): <path>                            # proposals only
 - Client repo to fetch: <path> <remote> <branch>      # optional; fetch only
+- Counting script: <cmd> <inputs> -> <counts.json>   # optional; source of every count in a draft
 - Coverage gaps: <channels this skill cannot see>     # e.g. chat apps, meetings without transcripts
 ```
 
@@ -82,6 +83,20 @@ Before any write, one table, one row per fact (not per email), printed in chat:
 
 Proceed without an approval wait. Empty manifest → name the searches, the window, and the record that would
 have shown a positive, then skip to step 7.
+
+## 4b. Reading, counting and drafting — scripts, not care
+
+Reminders to "verify" do not stop reading and counting errors. These scripts do, and each failure stops
+the work.
+
+- **Read every document you rely on** with `python3 scripts/read-source.py <file> <scratch dir>`. Open every
+  image it lists under VIEW THESE IMAGES. Exit 1 means unreadable: report it, and never use an older note or
+  summary in its place while the file is on disk.
+- **Count from the files, never from notes.** Any count that goes in a draft comes from a counting script
+  that writes a JSON file. Put the project's counting script in the overlay.
+- **Before anything goes to the client or a partner,** run
+  `python3 scripts/check-draft.py <draft> --sources <read-source .txt files> --counts <counts.json>` and fix
+  every finding.
 
 ## 5. Write
 
