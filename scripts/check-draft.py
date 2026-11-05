@@ -21,11 +21,16 @@ recomputed. Reminders to "verify" did not stop it. This does: every check fails 
                "49 <!-- count: backlog.open -->". A tagged number must equal the value at that path (dot
                path into COUNTS.json, list positions as numbers). --strict requires a tag on every number.
 
-Source texts come from read-source.py (OUTDIR/<stem>.txt) or any plain-text extraction.
+  4. Originals (--strict, needs --sources) Every source must be a read-source.py extract: its first line
+               is "[read-source] original: <path>". Our own notes (a brief, a digest, page text we wrote)
+               only prove the draft agrees with our notes. The originals read are listed in the output.
+
+Source texts come from read-source.py (OUTDIR/<stem>.txt); it also takes .txt, .md and .eml originals.
 Exit 0 = clean. 1 = findings (printed file:line). 2 = bad input.
 """
 import argparse
 import json
+STAMP = "[read-source] original: "  # first line of every read-source.py extract
 import re
 import sys
 import unicodedata
@@ -112,7 +117,8 @@ def main(argv):
     try:
         a = ap.parse_args(argv)
         lines = open(a.draft, encoding="utf-8").read().split("\n")
-        corpus = norm(" ".join(open(p, encoding="utf-8", errors="replace").read() for p in a.sources))
+        texts = [open(p, encoding="utf-8-sig", errors="replace").read().lstrip() for p in a.sources]
+        corpus = norm(" ".join(texts))
         counts, docs = None, []
         for cf in a.counts or []:
             docs.append(json.load(open(cf)))
@@ -185,6 +191,16 @@ def main(argv):
     has_numbers = any(x not in allow for _, l in body for x in numbers_left(l))
     if a.strict and has_quotes and not a.sources:
         findings.append((0, "the draft quotes text but no --sources were given, so no quote was checked"))
+    # Originals only (2026-11-05, a draft checked against our own brief passed and was wrong).
+    originals, unstamped = [], []
+    for p, t in zip(a.sources, texts):
+        if t.startswith(STAMP):
+            originals += [x.strip() for x in re.findall(r"^\[read-source\] original: (.+)$", t, re.M)]
+        else:
+            unstamped.append(p)
+            if a.strict:
+                findings.append((0, f"source {p} is not a read-source extract, so it may be our own notes. "
+                                    "Check against the original document: read it with read-source.py"))
     if a.strict and has_numbers and counts is None:
         findings.append((0, "the draft states numbers but no --counts were given, so no number was checked"))
     for n, msg in findings:
@@ -193,6 +209,10 @@ def main(argv):
     print(f"check-draft: {len(findings)} finding(s); checked {n_quotes} quote(s), {n_counts} number(s) and every settled word")
     if allow or waived:
         print(f"  waved through by hand: --allow {','.join(sorted(allow)) or '(none)'}; {waived} settled-ok marker(s)")
+    if originals:
+        print("  originals read: " + "; ".join(originals))
+    if unstamped and not a.strict:
+        print("  note: not read-source extracts (may be our own notes): " + ", ".join(unstamped))
     if counts is not None and not a.strict:
         print("  note: untagged numbers were only checked to EXIST in the counts file, not to be the right count")
     return 1 if findings else 0

@@ -94,5 +94,18 @@ python3 "$CD" "$T/nope.md" >/dev/null 2>&1; [ $? = 2 ] && echo "ok   missing dra
 printf 'x\n' > "$T/d.md"; printf '{bad' > "$T/bad.json"
 python3 "$CD" "$T/d.md" --counts "$T/bad.json" >/dev/null 2>&1; [ $? = 2 ] && echo "ok   bad counts file is bad input" || { echo "FAIL bad counts json"; fail=1; }
 
+# Originals only under --strict (2026-11-05)
+{ echo "[read-source] original: /x/downloads/sow.pdf"; cat "$T/src.txt"; } > "$T/stamped.txt"
+expect "--strict fails a source that is not a read-source extract (our own notes)" 1 'Alex: "June 30 was chosen as the latest date" for the plan.' "${S[@]}" --strict
+expect "--strict passes a stamped read-source extract" 0 'Alex: "June 30 was chosen as the latest date" for the plan.' --sources "$T/stamped.txt" --strict
+expect "--strict fails if any one source is unstamped" 1 'Alex: "June 30 was chosen as the latest date" for the plan.' --sources "$T/stamped.txt" "$T/src.txt" --strict
+expect "without --strict an unstamped source still works" 0 'Alex: "June 30 was chosen as the latest date" for the plan.' "${S[@]}"
+printf 'Alex: "June 30 was chosen as the latest date" for the plan.\n' > "$T/od.md"
+python3 "$CD" "$T/od.md" --sources "$T/stamped.txt" --strict | grep -q "originals read: /x/downloads/sow.pdf" && echo "ok   the output lists the originals read" || { echo "FAIL originals not listed"; fail=1; }
+printf '\xef\xbb\xbf' > "$T/bom.txt"; cat "$T/stamped.txt" >> "$T/bom.txt"
+expect "--strict passes a stamped extract that starts with a byte-order mark" 0 'Alex: "June 30 was chosen as the latest date" for the plan.' --sources "$T/bom.txt" --strict
+{ cat "$T/stamped.txt"; echo "[read-source] original: /x/downloads/memo.docx"; echo more; } > "$T/two.txt"
+python3 "$CD" "$T/od.md" --sources "$T/two.txt" --strict | grep -q "sow.pdf; /x/downloads/memo.docx" && echo "ok   every stamp in a joined file is listed" || { echo "FAIL joined stamps not listed"; fail=1; }
+python3 "$CD" "$T/od.md" --sources "$T/src.txt" | grep -q "not read-source extracts" && echo "ok   without --strict an unstamped source is noted" || { echo "FAIL no note without --strict"; fail=1; }
 [ $fail -eq 0 ] && echo "test-check-draft: all passed" || echo "test-check-draft: FAILURES"
 exit $fail

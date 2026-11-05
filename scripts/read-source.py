@@ -11,6 +11,13 @@ five-week-old summary instead. The pages were images and could have been rendere
   PPTX  text per slide + the pictures each slide uses (read straight from the zip)
   DOCX  text only (no page images: LibreOffice is not assumed)
   XLSX  every non-empty row of every sheet (openpyxl)
+  TXT / MD / EML  plain-text originals (transcripts, emails received): copied as they are; .eml keeps
+        From, To, Date and Subject above the body
+
+The .txt starts with the line  [read-source] original: <absolute path>  so check-draft.py --strict can
+tell an extract of an original from our own notes (2026-11-05: a glossary "checked" against our brief
+passed, and was wrong against the client's files). The stamp records which file was read; reading our own
+notes through this script stamps them too, so it stops accidents, not a deliberate shortcut.
 
 Writes OUTDIR/<stem>.txt (all text) plus page images, then prints "VIEW THESE IMAGES": every page or
 slide with under --min-words of text. The script cannot prove you looked; that list is the next step.
@@ -111,6 +118,36 @@ def read_xlsx(path):
     return out
 
 
+TEXT_TYPES = (".txt", ".md", ".eml")
+STAMP = "[read-source] original: "
+
+
+def read_text(path, ext):
+    """Plain-text originals: one part, no image. An .eml keeps its headers above the plain-text body."""
+    if ext != ".eml":
+        raw = open(path, "rb").read()
+        enc = "utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig"
+        text = raw.decode(enc, errors="replace")
+        if text.count("\ufffd") > max(3, len(text) // 200):  # not UTF-8/16: unreadable, not garbage
+            raise ValueError("text is not UTF-8 or UTF-16; save it as UTF-8 and try again")
+        return [("text", text, None, [])]
+    import email
+    from email import policy
+    with open(path, "rb") as f:
+        m = email.message_from_binary_file(f, policy=policy.default)
+    head = "\n".join(f"{h}: {m[h]}" for h in ("From", "To", "Cc", "Date", "Subject") if m[h])
+    att = [a.get_filename() or a.get_content_type() for a in m.iter_attachments()]
+    if att:
+        head += "\nAttachments (NOT read here; run read-source on each): " + ", ".join(att)
+    part = m.get_body(preferencelist=("plain", "html"))
+    body = part.get_content() if part is not None else ""
+    if part is not None and part.get_content_type() == "text/html":
+        import html
+        body = re.sub(r"(?is)<(style|script)\b.*?</\1>", " ", body)
+        body = html.unescape(re.sub(r"<[^>]+>", " ", body))
+    return [("message", head + "\n\n" + body, None, [])]
+
+
 def main(argv):
     import argparse
     ap = argparse.ArgumentParser(description="Read a source document completely, or fail loudly.")
@@ -130,8 +167,28 @@ def main(argv):
     ext = ext.lower()
     readers = {".pdf": lambda: read_pdf(path, out, stem), ".pptx": lambda: read_pptx(path, out, stem),
                ".docx": lambda: read_docx(path, out, stem), ".xlsx": lambda: read_xlsx(path)}
+    readers.update({t: (lambda: read_text(path, ext)) for t in TEXT_TYPES})
     if ext not in readers:
-        print(f"read-source: unsupported type {ext} (pdf, pptx, docx, xlsx)")
+        print(f"read-source: unsupported type {ext} (pdf, pptx, docx, xlsx, txt, md, eml)")
+        return 2
+    target = os.path.join(out, f"{stem}.txt")
+    if os.path.realpath(out) == os.path.realpath(os.path.dirname(os.path.abspath(path))) or (
+            os.path.exists(target) and os.path.samefile(target, path)):
+        print("read-source: OUTDIR is the original's own folder; pick another folder")
+        return 2
+    if os.path.exists(target):  # replace only an earlier extract of this same original
+        first = open(target, encoding="utf-8", errors="replace").readline()
+        if first[len(STAMP):].strip() != os.path.abspath(path) or not first.startswith(STAMP):
+            print(f"read-source: {target} already exists and is not an extract of this file; use another OUTDIR")
+            return 2
+    try:
+        tracked = subprocess.run(["git", "-C", os.path.dirname(os.path.abspath(path)), "ls-files", "--error-unmatch",
+                                  os.path.basename(path)], capture_output=True).returncode == 0
+    except OSError:  # no git on this machine: nothing is tracked
+        tracked = False
+    if tracked and "raw" not in os.path.abspath(path).lower().split(os.sep):
+        print(f"read-source: {os.path.basename(path)} is tracked in git, so it is probably our own notes, not an "
+              "original. Originals live outside git (a downloads folder) or under a raw/ folder.")
         return 2
     try:
         pages = readers[ext]()
@@ -143,12 +200,15 @@ def main(argv):
         print(f"UNREADABLE {os.path.basename(path)}: no pages, slides or sheets found")
         return 1
     with open(os.path.join(out, f"{stem}.txt"), "w") as f:
+        f.write(f"{STAMP}{os.path.abspath(path)}\n")
         for label, text, _, _ in pages:
             f.write(f"--- {label} ---\n{text}\n")
     view, dead, also = [], [], []
     for label, text, imgs, notes in pages:
         n = words(text)
-        if imgs is None:  # Excel: text only
+        if imgs is None:  # Excel and plain text: text only; an empty text file is unreadable
+            if ext in TEXT_TYPES and n == 0:
+                dead.append((label, n))
             continue
         if n < min_words and imgs:
             view.append((label, n, imgs))
@@ -163,7 +223,7 @@ def main(argv):
             also.append((label, [note]))
     print(f"read-source: {os.path.basename(path)} — {len(pages)} {'pages/slides' if ext in ('.pdf', '.pptx') else 'parts'}, "
           f"{sum(words(t) for _, t, _, _ in pages)} words → {os.path.join(out, stem + '.txt')}")
-    if ext in (".docx", ".xlsx"):
+    if ext in (".docx", ".xlsx") + TEXT_TYPES:
         print("  text only (no page images for Word/Excel); embedded pictures are listed below when present.")
     if view:
         print("VIEW THESE IMAGES (little or no text on these pages — the content is in the picture):")
