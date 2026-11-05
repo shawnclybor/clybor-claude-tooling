@@ -580,6 +580,22 @@ function resolveDirs(tok, vars, cwd) {
   return out;
 }
 
+// `git push <remote> --delete <name>...` (or `<remote> :<name>...`) writes only the named remote
+// branches, never the current one, so the current branch being main does not matter.
+// refRule has already denied protected names. Only plain literal names and a short flag list qualify:
+// HEAD and @ name the current branch, so they, and anything unreadable, fall back to the main check.
+const DELETE_PUSH_FLAGS = /^(?:--delete|--quiet|--verbose|--porcelain|-[dqv]+)$/;
+function pushOnlyDeletes(args) {
+  const flags = args.filter(x => x.startsWith('-'));
+  const pos = args.filter(x => !x.startsWith('-'));
+  if (!flags.every(f => DELETE_PUSH_FLAGS.test(f)) || pos.length < 2) return false;
+  const delFlag = flags.some(f => f === '--delete' || /^-[qv]*d[dqv]*$/.test(f));
+  const names = pos.slice(1).map(x => (delFlag ? x : (x.startsWith(':') ? x.slice(1) : null)));
+  // `n &&` matters: a null name would coerce to "null" and pass the charset. `@` fails the charset.
+  return names.every(n => n && /^\w[\w./-]*$/.test(n) && !/(^|\/)HEAD$/.test(n) &&
+    !isProtected(n) && !/^refs\/(?!heads\/)/.test(n));
+}
+
 function checkCommand(cmd, branch = null, safetyLevel = SAFETY_LEVEL, cwd = null) {
   const threshold = LEVELS[safetyLevel] || LEVELS.high;
   cmd = typeof cmd === 'string' ? cmd : String(cmd == null ? '' : cmd);
@@ -626,7 +642,8 @@ function checkCommand(cmd, branch = null, safetyLevel = SAFETY_LEVEL, cwd = null
     if (s.gitDir) return unresolved('GIT_DIR, GIT_WORK_TREE, --git-dir or --work-tree points git somewhere else');
 
     const real = uses.filter(u => !(['commit', 'push', 'merge'].includes(u.verb) &&
-      u.args.some(x => x === '--dry-run' || (u.verb === 'push' && x === '-n'))));
+      u.args.some(x => x === '--dry-run' || (u.verb === 'push' && x === '-n'))) &&
+      !(u.verb === 'push' && pushOnlyDeletes(u.args)));
     if (!real.length) return { blocked: false };
 
     // Candidate repos.
