@@ -47,6 +47,19 @@ The suite of adversarial review agents, skills, and hooks. Blends mechanical, de
 
 `review-drift.py` records each round and flags four ways a review ratchets: never coming back clean, counts rising on an unchanged target, self-inflicted findings, and re-grades against unchanged text. The logic underlying this is that agents do a terrible job assessing things over multiple iterations, due to the underlying imperatives of their system prompts and engineering. Mechanical checks keep standards consistent and prevent mission creep.
 
+## The insight chain
+
+Four skills that turn a failure into a fix that stays fixed. Type "insight" to find the trio. Every one of them ends by recommending the next step in a short numbered block, so you always know what to run next.
+
+| # | Skill | Required? | What it gives you |
+|---|---|---|---|
+| 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
+| 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
+| 3 | `insight-builder` | Optional | A built fix: checked for an easier way (`/simplify`), every test run twice (clean, then proven able to fail), attacked by `/chaos`, shipped and proven on disk |
+| 4 | `insight-promotion` | Optional | The lesson made always-on, pointing at the fix |
+
+Fix before promote: a rule written before its fix is proven tells every future session to follow a guess. When the only change is a rule, skip `insight-builder` unless a script or gate could enforce it instead.
+
 ## Agents
 
 Nineteen subagents in four lanes, spawned by the skills above. Read-only by default. Generally I find that these are not well utilized unless they are baked directly into commands and skills. 
@@ -65,7 +78,7 @@ Full table in [`.claude/agents/README.md`](.claude/agents/README.md).
 
 **Ralph loops.** `ralph-loop` / `/ralph-loop` is the Stop-hook loop cycle that was all the rage of last month: one prompt re-fed until Claude emits the completion promise or the iteration cap. `ralph-implement` is the task-driven sibling. `skill-validator` is the ralph specialised for validating a SKILL.md. I use this for rote coding projects. It gets the job done right.
 
-**Prose and knowledge.** `writing-quality` strips AI-isms and empty prose from anything a person will read. `session-output` writes the report of what a session did. `insight-crystallizer` files a decision so it survives the chat; `insight-promotion` turns one into an always-on rule. `promote-to-tooling` reviews a tooling change in a working repo and promotes the universal part here. `ooda` runs Boyd's decision cycle on a task you ask to work that way.
+**Prose and knowledge.** `writing-quality` strips AI-isms and empty prose from anything a person will read. `session-output` writes the report of what a session did. `insight-crystallizer` files a decision so it survives the chat; `insight-builder` builds and proves the fix; `insight-promotion` turns the lesson into an always-on rule. Together they are [the insight chain](#the-insight-chain). `promote-to-tooling` reviews a tooling change in a working repo and promotes the universal part here. `ooda` runs Boyd's decision cycle on a task you ask to work that way.
 
 **Third-party, installed not vendored.** `scripts/install-archify.sh` puts [Archify](https://github.com/tt-a1i/archify) (MIT) at a pinned release into `~/.claude/skills/`, so every project draws on one copy. It renders an architecture, workflow, sequence, data-flow or lifecycle diagram from typed JSON into one self-contained HTML file, and refuses a layout whose text would fall below 6px on a 1440px desktop — which caps a single canvas at roughly a dozen nodes and makes it a tool for a flow, never an inventory. Upstream code is not copied in here: the script and its commit pin are the artifact, and the script refuses to install when the tag has moved off the pinned commit. A vendored copy would put a repository we do not control behind the drift gate. `scripts/archify-render.sh [dir]` compiles a directory of diagram sources for any project, defaulting to `<git root>/docs/diagrams`, so no repository keeps its own copy of the build step. Archify documents itself well but states none of its layout geometry, and that geometry is what decides whether a diagram renders at all — `knowledge/archify-layout.md` carries the measured constants per type, the readability floor they all answer to, and the trap that narrowing a node shrinks its text just as fast.
 
@@ -116,7 +129,7 @@ I used slash commands for a while to orchestrate skills into larger workflows. I
 
 ## Catalog
 
-`assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Eight today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`.
+`assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Nine today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`, `client-refresh`.
 
 A skill lands in `assets/` rather than `.claude/skills/` when a project's filled copy legitimately differs from the canonical one (client paths, matter names). `check-promotion.sh` skips a project's copy of any catalog asset, so the filled copy never reads as drift. To set up a new project from the catalog, invoke `project-bootstrap`: it profiles the project, proposes an install set, copies assets, fills tokens and writes a `TOOLING.md` manifest.
 
@@ -188,7 +201,7 @@ Six scenarios, as the tooling runs today.
 
 > *"The same command failed twice with the same error."*
 
-Two Strikes. No third blind retry. `why-diagnostic` first if the framing is unclear; then `/five-whys`, which refuses to advance without a precise problem statement. `debugger` reproduces the failure and narrows the cause with evidence; `code-analyzer` traces the blast radius across files. The fix is the smallest change that addresses the root cause. Then the part that stops it recurring: `insight-promotion` writes the lesson as a rule and, wherever a script can check it, as a hook with a negative control. A rule nobody enforces gets skipped; a gate does not.
+Two Strikes. No third blind retry. `why-diagnostic` first if the framing is unclear; then `/five-whys`, which refuses to advance without a precise problem statement. `debugger` reproduces the failure and narrows the cause with evidence; `code-analyzer` traces the blast radius across files. The fix is the smallest change that addresses the root cause. Then the [insight chain](#the-insight-chain): `insight-crystallizer` files what you learned, `insight-builder` builds the fix and tests it both ways, and `insight-promotion` writes the lesson as a rule and, wherever a script can check it, as a hook with a negative control. A rule nobody enforces gets skipped; a gate does not.
 
 ### 4. A document that will be reviewed more than once
 

@@ -154,3 +154,35 @@ Five-whys is the protocol for unexpected failures with no reproduction. `debugge
 - **why-diagnostic** is for **frame clarification** — "why did this happen" moments where the question may be asked inside the wrong frame. The chain bottoms out at a silent assumption, not a fixable root.
 
 Tool failed twice and retry is dangerous → **five-whys**. "Why did the agent do X" / "why is this design right" → **why-diagnostic**. Both fit → **why-diagnostic** first to check the frame, then **five-whys**.
+
+<!-- INSIGHT-CHAIN v1 -->
+## The insight chain
+
+Type "insight" to find the trio. Each step ends by recommending the next one.
+
+| # | Skill | Required? | What it gives you |
+|---|---|---|---|
+| 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
+| 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
+| 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
+| 4 | `insight-promotion` | Optional | The lesson made always-on, pointing at the fix |
+
+You are here: **step 1**. Fix before promote: a rule written before its fix is proven
+tells every future session to follow a guess.
+
+## Next step (end every run with this)
+
+Finish with this block, filled in. Short, plain, numbered.
+
+```
+Next step
+1. <one action, who does it>  (recommended)
+2. <alternative, if any>
+Why: <one sentence>
+```
+
+- **Always next: `insight-crystallizer`.** File the verdict, the evidence and the fix you
+  propose so the lesson outlives this chat.
+- Then, if the verdict says something must change, `insight-builder` builds and proves it.
+- Verdict "cause not established": still crystallize what you ruled out. Recommend the one
+  test that would settle it.

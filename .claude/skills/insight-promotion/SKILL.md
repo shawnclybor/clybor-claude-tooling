@@ -146,3 +146,37 @@ Example (if essential): minimal concrete case.
 ```markdown
 N. **Rule Name** — one-sentence statement of the rule and its scope.
 ```
+
+<!-- INSIGHT-CHAIN v1 -->
+## The insight chain
+
+Type "insight" to find the trio. Each step ends by recommending the next one.
+
+| # | Skill | Required? | What it gives you |
+|---|---|---|---|
+| 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
+| 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
+| 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
+| 4 | `insight-promotion` | Optional | The lesson made always-on, pointing at the fix |
+
+You are here: **step 4**. Fix before promote: a rule written before its fix is proven
+tells every future session to follow a guess.
+
+## Next step (end every run with this)
+
+Finish with this block, filled in. Short, plain, numbered.
+
+```
+Next step
+1. <one action, who does it>  (recommended)
+2. <alternative, if any>
+Why: <one sentence>
+```
+
+This is the last step of the chain.
+
+- **Confirm the rule is live.** If it went into a skill or plugin, it must be rebuilt or synced and the
+  ship check must pass. Name the restart if one is needed.
+- **The rule describes a check a script could run:** recommend `insight-builder` to turn it
+  into a gate. A gate is enforced; a rule can be skipped.
+- Otherwise: stop. Say "Chain complete" and link the rule and the filed lesson.
