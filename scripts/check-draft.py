@@ -11,7 +11,7 @@ recomputed. Reminders to "verify" did not stop it. This does: every check fails 
                text. Comparison ignores case, spacing, curly vs straight quotes and markdown emphasis; a
                quote with "..." or "…" is checked piece by piece.
   2. Settled   (always) Words that claim something is settled (agreed, confirmed, approved, decided,
-               signed off) fail unless negated ("not yet confirmed") or the same line cites its evidence: a message ID (16 hex),
+               signed off, finalized, ratified, locked in, aligned on) fail unless negated ("not yet confirmed") or the same line cites its evidence: a message ID (16 hex),
                a file path, a link or a §-reference. Mark a deliberate line with  <!-- settled-ok -->  (a reason may follow: <!-- settled-ok: why -->).
   3. Counts    (needs --counts) Every number left after removing dates, years, times, money, IDs and
                versions (digits attached to letters, _ . - or /), numbered labels ("Phase 1", "WS1") and
@@ -30,7 +30,7 @@ import re
 import sys
 import unicodedata
 
-SETTLED = re.compile(r"\b(agreed|confirmed|approved|decided|signed[- ]off)\b", re.I)
+SETTLED = re.compile(r"\b(agreed|confirmed|approved|decided|signed[- ]off|finali[sz]ed|ratified|locked in|aligned on)\b", re.I)
 NEGATED = re.compile(r"\b(?:not|never|pending|un|yet to be|to be)\s+(?:yet\s+)?$|\bun$", re.I)
 CITED = re.compile(r"\b[0-9a-f]{16}\b|[\w.-]+/[\w./-]+\.\w+|\]\(|https?://|§|<!-- settled-ok")
 LABEL = (r"phase|goal|step|page|slide|section|activity|option|round|session|meeting|"
@@ -124,6 +124,7 @@ def main(argv):
         return 2
     allow = {x.strip() for x in a.allow.split(",") if x.strip()}
     findings = []
+    n_quotes = n_counts = 0
     in_front = lines[:1] == ["---"]
     in_code = False
     body = []  # (line number, text) outside frontmatter and code blocks
@@ -150,6 +151,8 @@ def main(argv):
             for q in quotes(" ".join(para)):
                 for piece in re.split(r"\.\.\.|…", q):
                     p = norm(piece).strip(" .,;:")
+                    if len(p.split()) >= 4:
+                        n_quotes += 1
                     if len(p.split()) >= 4 and p not in corpus:
                         findings.append((start, f'quote not found in sources: "{piece.strip()[:80]}"'))
             para, start = [], None
@@ -169,16 +172,27 @@ def main(argv):
                     findings.append((n, f"number {num} is tagged {path}, but that count is {got[0]}"))
             tagged = {x.replace(",", "") for x, _ in TAGGED.findall(line)}
             for num in numbers_left(line):
+                n_counts += 1
                 if num in tagged:
                     continue
                 if a.strict and num not in allow:
                     findings.append((n, f"number {num} has no count: tag (--strict)"))
                 elif not ({num, num.rstrip("%")} & (counts | allow)):
                     findings.append((n, f"number {num} is not in {', '.join(a.counts)}"))
+    # A clean run must not be a vacuous one (rule review 2026-11-05): under --strict, fail when the draft has
+    # quotes or numbers that nothing checked; always say what was checked and what was waved through.
+    has_quotes = any(len(norm(q).split()) >= 4 for _, l in body for q in quotes(l))
+    has_numbers = any(x not in allow for _, l in body for x in numbers_left(l))
+    if a.strict and has_quotes and not a.sources:
+        findings.append((0, "the draft quotes text but no --sources were given, so no quote was checked"))
+    if a.strict and has_numbers and counts is None:
+        findings.append((0, "the draft states numbers but no --counts were given, so no number was checked"))
     for n, msg in findings:
         print(f"FAIL {a.draft}:{n}  {msg}")
-    checks = ["settled words"] + (["quotes"] if a.sources else []) + (["counts"] if counts is not None else [])
-    print(f"check-draft: {len(findings)} finding(s) ({', '.join(checks)} checked)")
+    waived = sum(l.count("settled-ok") for _, l in body)
+    print(f"check-draft: {len(findings)} finding(s); checked {n_quotes} quote(s), {n_counts} number(s) and every settled word")
+    if allow or waived:
+        print(f"  waved through by hand: --allow {','.join(sorted(allow)) or '(none)'}; {waived} settled-ok marker(s)")
     if counts is not None and not a.strict:
         print("  note: untagged numbers were only checked to EXIST in the counts file, not to be the right count")
     return 1 if findings else 0

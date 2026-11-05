@@ -79,6 +79,16 @@ expect "--strict passes when every number is tagged" 0 'Open 49 <!-- count: back
 expect "day-before-month dates are ignored" 0 'Deck dated 29 Mar 2026.' "${C[@]}" --strict
 expect "plural labels and ranges are ignored" 0 'Phases 2–4 need sponsorship; see Sections 3-5.' "${C[@]}" --strict
 
+# Rule review 2026-11-05: a clean run must not be vacuous
+expect "--strict fails a draft with quotes but no --sources" 1 'He said "the plan is final and done" today.' --strict
+expect "--strict fails a draft with numbers but no --counts" 1 'There are 49 open items.' --strict
+expect "a settled claim without quote marks is still checked" 1 'Sam confirmed the scope last week.'
+out=$(printf 'Open 49.\n' > "$T/d.md"; python3 "$CD" "$T/d.md" "${C[@]}" --allow 360 2>&1)
+grep -q "checked 0 quote(s), 1 number(s)" <<<"$out" && grep -q "waved through by hand: --allow 360" <<<"$out" && echo "ok   output says what was checked and what was waved through" || { echo "FAIL checked/waived summary"; echo "$out"; fail=1; }
+
+expect "'finalized' with no source fails" 1 'The scope is finalized.'
+expect "'aligned on' with no source fails" 1 'We aligned on the March statement.'
+
 # Bad input
 python3 "$CD" "$T/nope.md" >/dev/null 2>&1; [ $? = 2 ] && echo "ok   missing draft is bad input" || { echo "FAIL missing draft"; fail=1; }
 printf 'x\n' > "$T/d.md"; printf '{bad' > "$T/bad.json"
