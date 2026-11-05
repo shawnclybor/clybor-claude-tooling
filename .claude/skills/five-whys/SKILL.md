@@ -57,7 +57,7 @@ Use Sequential Thinking for the chain. Each thought = one "Why?" iteration. Set 
 
 Each answer becomes the subject of the next "Why?" Stop when you reach a cause that explains the symptom — you don't always need all five levels.
 
-```
+```text
 Problem: Draft landed on wrong record
 Why 1?  → The tool resolved the wrong target ID
 Why 2?  → ID resolution uses fuzzy matching, not exact lookup
@@ -75,7 +75,7 @@ Keep going past the surface-level "what" and into the structural "why." "The API
 > **Before asking what to do, ask whose defect it is.** This single question is what keeps the protocol from converting other people's bugs into your process burden.
 
 | Locus | Meaning | Examples |
-|---|---|---|
+| --- | --- | --- |
 | **Ours — process** | We have a step and didn't follow it, or we don't have a step and should | Skipped find-first; no pre-flight check for date windows |
 | **Ours — mechanism** | Our code, config, script, prompt, or data | A wrong ID in a lookup table; a broken one-liner; a bad hook |
 | **Theirs — external** | A defect in a component we neither own nor can patch | A third-party MCP server bug; a vendor API quirk; a client app's cache |
@@ -103,7 +103,7 @@ Also check, before proposing anything — is this a **known** issue?
 Name one. This is where diagnosis ends.
 
 | # | Verdict | When it applies | Available consequences |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **A** | **Root found — governance change warranted** | Locus is *ours — process*. The behavior genuinely closes the gap, and the pattern has recurred or the blast radius justifies permanent cost. | Rule / pre-flight item / Known Issues row. Prefer a script that exits non-zero over prose — honor-system gates fail. |
 | **B** | **Root found — no governance change** | Locus is *ours*, but the fix is a mechanism (code, config, ID, script), or it's a genuine one-off where a rule would over-fit to n=1. | Just fix it. Write nothing. |
 | **C** | **Root found — already documented** | The issue is in Known Issues and we missed it. | Fix the instance. Ask why it wasn't found — that's a discoverability problem, possibly a routing gap. Do NOT re-document. |
@@ -161,7 +161,7 @@ Tool failed twice and retry is dangerous → **five-whys**. "Why did the agent d
 Type "insight" to find the trio. Each step ends by recommending the next one.
 
 | # | Skill | Required? | What it gives you |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
 | 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
 | 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
@@ -174,7 +174,7 @@ tells every future session to follow a guess.
 
 Finish with this block, filled in. Short, plain, numbered.
 
-```
+```text
 Next step
 1. <one action, who does it>  (recommended)
 2. <alternative, if any>

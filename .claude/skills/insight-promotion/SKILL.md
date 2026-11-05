@@ -153,7 +153,7 @@ N. **Rule Name** — one-sentence statement of the rule and its scope.
 Type "insight" to find the trio. Each step ends by recommending the next one.
 
 | # | Skill | Required? | What it gives you |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
 | 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
 | 3 | `insight-builder` | Optional | A built fix, tested twice, proven shipped |
@@ -166,7 +166,7 @@ tells every future session to follow a guess.
 
 Finish with this block, filled in. Short, plain, numbered.
 
-```
+```text
 Next step
 1. <one action, who does it>  (recommended)
 2. <alternative, if any>

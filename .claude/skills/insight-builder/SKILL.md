@@ -13,7 +13,7 @@ Turns a diagnosed problem into a fix that is small, tested both ways, and proven
 Type "insight" to find the trio. Each step ends by recommending the next one.
 
 | # | Skill | Required? | What it gives you |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | `five-whys` or `why-diagnostic` | Optional | The cause, or an honest "cause not established" |
 | 2 | `insight-crystallizer` | **Always** | The lesson, filed so it outlives the chat |
 | 3 | `insight-builder` (this skill) | Optional | A built fix, tested twice, proven shipped |
@@ -101,7 +101,7 @@ output (clean and red), the version shipped, and anything left open.
 
 End every run with this block, filled in. Short, plain, numbered.
 
-```
+```text
 Next step
 1. <one action, who does it>  (recommended)
 2. <alternative, if any>
