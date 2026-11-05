@@ -230,7 +230,7 @@
       ],
       "summary": "Manual pre-session knowledge refresh for one client engagement: checks Notion, our commits and the client repo, then client email and calendar, and logs what is missing (notes, tasks, current-state block, optional registry line, attachments filed and byte-verified). Brief changes are proposed only. Dedupes on content, newer record wins. Client specifics live in the consuming repo's .claude/refresh-sources.md, which the skill writes on first use if absent.",
       "source": {
-        "repo": "icf-advisory (icf-refresh, generalized)",
+        "repo": "a client repo (generalized)",
         "harvested": "2026-11-05"
       },
       "requires": {
