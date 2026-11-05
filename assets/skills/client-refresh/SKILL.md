@@ -131,8 +131,9 @@ report; don't fix silently.
 ## 7. Report
 
 Big picture in a few sentences (window, sources, what was new, what was logged), then **first** what the user
-owes next: every open task they own that is due within 2 days or before the next client meeting, by deadline,
-plus any unanswered question to them found this run (logging it as owed is not telling them). Then: logged items by what
+owes next: paste the output of `python3 scripts/owed.py <Project ID> --before <next client meeting>` (overdue,
+due soon and undated tasks, read from Notion, not from memory; exit 1 means Notion was not read, so never say
+"nothing owed"), plus any unanswered question to them found this run (logging it as owed is not telling them). Then: logged items by what
 they are; stale-and-fixed vs stale-and-flagged; brief proposals; client-repo changes; the overlay's coverage
 gaps every run, with one question (*anything from <gap> since FLOOR to log?*); numbered next steps marking which
 need the user.
