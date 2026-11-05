@@ -69,6 +69,16 @@ expect "hyphenated counts are counts" 1 'A 98-row sheet.' "${C[@]}"
 expect "'row N' is a count, not a label" 1 'See row 98.' "${C[@]}"
 expect "a percentage matches its count" 0 'Coverage: 49% of items.' "${C[@]}"
 
+# Tagged counts: a number tied to the count it claims to be (2026-11-05: "7" passed by coincidence)
+expect "a correctly tagged count passes" 0 'Open items: 49 <!-- count: backlog.open -->.' "${C[@]}"
+expect "a wrongly tagged count fails even if the number exists elsewhere" 1 'Open items: 45 <!-- count: backlog.open -->.' "${C[@]}"
+expect "a tag pointing nowhere fails" 1 'Open items: 49 <!-- count: backlog.nope -->.' "${C[@]}"
+expect "--strict fails an untagged number" 1 'Open items: 49.' "${C[@]}" --strict
+expect "--strict passes when every number is tagged" 0 'Open 49 <!-- count: backlog.open --> of 99 <!-- count: backlog.items -->.' "${C[@]}" --strict
+
+expect "day-before-month dates are ignored" 0 'Deck dated 29 Mar 2026.' "${C[@]}" --strict
+expect "plural labels and ranges are ignored" 0 'Phases 2–4 need sponsorship; see Sections 3-5.' "${C[@]}" --strict
+
 # Bad input
 python3 "$CD" "$T/nope.md" >/dev/null 2>&1; [ $? = 2 ] && echo "ok   missing draft is bad input" || { echo "FAIL missing draft"; fail=1; }
 printf 'x\n' > "$T/d.md"; printf '{bad' > "$T/bad.json"

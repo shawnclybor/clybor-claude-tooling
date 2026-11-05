@@ -16,6 +16,10 @@ recomputed. Reminders to "verify" did not stop it. This does: every check fails 
   3. Counts    (needs --counts) Every number left after removing dates, years, times, money, IDs and
                versions (digits attached to letters, _ . - or /), numbered labels ("Phase 1", "WS1") and
                list markers must be a value in COUNTS.json (any nesting) or in --allow.
+               ⚠ That proves the number EXISTS in the file, not that it is the right one: a wrong "7" passes
+               if any count happens to be 7. For the numbers that matter, tag the claim with its exact count:
+               "49 <!-- count: backlog.open -->". A tagged number must equal the value at that path (dot
+               path into COUNTS.json, list positions as numbers). --strict requires a tag on every number.
 
 Source texts come from read-source.py (OUTDIR/<stem>.txt) or any plain-text extraction.
 Exit 0 = clean. 1 = findings (printed file:line). 2 = bad input.
@@ -51,12 +55,35 @@ def numbers_left(line):
     s = re.sub(r"`[^`]*`|https?://\S+|<!--.*?-->", " ", line)
     s = re.sub(r"\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}:\d{2}\b|[$€£]\s?[\d,.]+[kKmM]?\b", " ", s)
     s = re.sub(r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b", " ", s, flags=re.I)
-    s = re.sub(rf"\b(?:{LABEL})\s*#?\d+\b", " ", s, flags=re.I)
+    s = re.sub(r"\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b", " ", s, flags=re.I)
+    s = re.sub(rf"\b(?:{LABEL})s?\s*#?\d+(?:\s*[–-]\s*\d+)?\b", " ", s, flags=re.I)
     s = re.sub(r"\b(?:19|20)\d{2}\b", " ", s)
     s = re.sub(r"^\s*(?:[-*]\s+)?\d+[.)]\s", " ", s)
     # IDs and versions (_001, D4, v1.2, FY2028, deadbeef, 1a2b3c4d-5e6f) are digits touching letters, _ . - or /.
     # Decimals, fractions and "99-row" are still counts (chaos review 2026-11-05).
     return [n.replace(",", "") for n in re.findall(r"(?<![\w.\-/])\d[\d,]*(?:\.\d+)?%?(?![\w]|\.\d)", s)]
+
+
+TAGGED = re.compile(r"(\d[\d,]*(?:\.\d+)?%?)\s*<!--\s*count:\s*([\w.\-]+)\s*-->")
+
+
+def lookup(doc, path):
+    """Value at a dot path ("backlog.open", "a.list.0"), or None."""
+    cur = doc
+    for part in path.split("."):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        elif isinstance(cur, list) and part.isdigit() and int(part) < len(cur):
+            cur = cur[int(part)]
+        else:
+            return None
+    if isinstance(cur, bool):
+        return None
+    if isinstance(cur, (int, float)):
+        return cur
+    if isinstance(cur, str) and re.fullmatch(r"\d+(?:\.\d+)?", cur.strip()):
+        return float(cur)
+    return None
 
 
 def count_values(obj, acc):
@@ -81,13 +108,15 @@ def main(argv):
     ap.add_argument("--sources", nargs="*", default=[])
     ap.add_argument("--counts", nargs="*")
     ap.add_argument("--allow", default="")
+    ap.add_argument("--strict", action="store_true", help="every counted number must carry a count: tag")
     try:
         a = ap.parse_args(argv)
         lines = open(a.draft, encoding="utf-8").read().split("\n")
         corpus = norm(" ".join(open(p, encoding="utf-8", errors="replace").read() for p in a.sources))
-        counts = None
+        counts, docs = None, []
         for cf in a.counts or []:
-            counts = count_values(json.load(open(cf)), counts or set())
+            docs.append(json.load(open(cf)))
+            counts = count_values(docs[-1], counts or set())
     except SystemExit:
         return 2
     except (OSError, ValueError) as e:
@@ -131,13 +160,27 @@ def main(argv):
             findings.append((n, f'"{m.group(0)}" with no cited message, file or link on the line'))
             break
         if counts is not None:
+            for num, path in TAGGED.findall(line):
+                num = num.replace(",", "")
+                got = [v for v in (lookup(d, path) for d in docs) if v is not None]
+                if not got:
+                    findings.append((n, f"count tag {path} is not in {', '.join(a.counts)}"))
+                elif num.rstrip("%") not in {str(int(v)) if float(v).is_integer() else str(v) for v in got}:
+                    findings.append((n, f"number {num} is tagged {path}, but that count is {got[0]}"))
+            tagged = {x.replace(",", "") for x, _ in TAGGED.findall(line)}
             for num in numbers_left(line):
-                if not ({num, num.rstrip("%")} & (counts | allow)):
+                if num in tagged:
+                    continue
+                if a.strict and num not in allow:
+                    findings.append((n, f"number {num} has no count: tag (--strict)"))
+                elif not ({num, num.rstrip("%")} & (counts | allow)):
                     findings.append((n, f"number {num} is not in {', '.join(a.counts)}"))
     for n, msg in findings:
         print(f"FAIL {a.draft}:{n}  {msg}")
     checks = ["settled words"] + (["quotes"] if a.sources else []) + (["counts"] if counts is not None else [])
     print(f"check-draft: {len(findings)} finding(s) ({', '.join(checks)} checked)")
+    if counts is not None and not a.strict:
+        print("  note: untagged numbers were only checked to EXIST in the counts file, not to be the right count")
     return 1 if findings else 0
 
 
