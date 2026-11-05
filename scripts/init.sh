@@ -72,15 +72,20 @@ mkdir -p "$TARGET/scripts" "$TARGET/.githooks"
 cp "$REPO_ROOT/scripts/check-knowledge.sh" "$TARGET/scripts/check-knowledge.sh"
 cp "$REPO_ROOT/scripts/check-context-budget.sh" "$TARGET/scripts/check-context-budget.sh"
 cp "$REPO_ROOT/.githooks/pre-commit" "$TARGET/.githooks/pre-commit"
-chmod +x "$TARGET/scripts/check-knowledge.sh" "$TARGET/scripts/check-context-budget.sh" "$TARGET/.githooks/pre-commit"
+# read-source.py + check-draft.py ship too: the router's source-reading and draft-check rows run them
+# (2026-11-05). A row pointing at a script the repo lacks gets skipped, or worse, improvised around.
+cp "$REPO_ROOT/scripts/read-source.py" "$TARGET/scripts/read-source.py"
+cp "$REPO_ROOT/scripts/check-draft.py" "$TARGET/scripts/check-draft.py"
+chmod +x "$TARGET/scripts/check-knowledge.sh" "$TARGET/scripts/check-context-budget.sh" "$TARGET/.githooks/pre-commit" \
+  "$TARGET/scripts/read-source.py" "$TARGET/scripts/check-draft.py"
 if [ ! -f "$TARGET/.claude/knowledge-check.conf" ]; then
   cp "$REPO_ROOT/templates/knowledge-check.conf.template" "$TARGET/.claude/knowledge-check.conf"
 fi
 if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "$TARGET" config core.hooksPath .githooks
-  echo "[6/8] installed check-knowledge.sh + check-context-budget.sh + pre-commit gate (core.hooksPath=.githooks)"
+  echo "[6/8] installed check-knowledge.sh + check-context-budget.sh + read-source.py + check-draft.py + pre-commit gate (core.hooksPath=.githooks)"
 else
-  echo "[6/8] copied check-knowledge.sh + check-context-budget.sh + .githooks/pre-commit (run 'git init' then 'git config core.hooksPath .githooks' to arm the gate)"
+  echo "[6/8] copied check-knowledge.sh + check-context-budget.sh + read-source.py + check-draft.py + .githooks/pre-commit (run 'git init' then 'git config core.hooksPath .githooks' to arm the gate)"
 fi
 
 # 7. .gitignore (never clobber an existing one — append-worthy entries are the user's call)
