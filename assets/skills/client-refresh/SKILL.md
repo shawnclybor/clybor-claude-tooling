@@ -75,7 +75,8 @@ Before any write, one table, one row per fact (not per email), printed in chat:
   registry · attachment · brief proposal. Most facts have two homes.
 - **Already logged?** = the detail is in the record's text, quoted. A rightly titled Note missing the detail is
   NOT logged. A thread already covered by a Note gets that Note extended, not a new one.
-- **Stale record?** = a block line, registry phrase, open task or brief line that says otherwise. Quote it.
+- **Stale record?** = a block line, registry phrase, open task (its **title** as well as its body) or brief line
+  that says otherwise. Quote it. Task titles carry claims too, and they are what a list view shows.
 - **Order by source date; newer wins.** An older message never overwrites a record built from a newer one. Two
   in-window sources disagree → flag both, edit neither. Hedged ("likely", "TBD") → log as hedged; no state change.
 
@@ -114,7 +115,9 @@ report; don't fix silently.
 
 ## 7. Report
 
-Big picture in a few sentences (window, sources, what was new, what was logged), then: logged items by what
+Big picture in a few sentences (window, sources, what was new, what was logged), then **first** what the user
+owes next: every open task they own that is due within 2 days or before the next client meeting, by deadline,
+plus any unanswered question to them found this run (logging it as owed is not telling them). Then: logged items by what
 they are; stale-and-fixed vs stale-and-flagged; brief proposals; client-repo changes; the overlay's coverage
 gaps every run, with one question (*anything from <gap> since FLOOR to log?*); numbered next steps marking which
 need the user.
