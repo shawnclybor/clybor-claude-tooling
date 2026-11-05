@@ -91,6 +91,24 @@
             "command": "h=.claude/hooks/availability-claim-validator.py; [ -n \"$CLAUDE_PROJECT_DIR\" ] && [ -f \"$CLAUDE_PROJECT_DIR/$h\" ] && exec python3 \"$CLAUDE_PROJECT_DIR/$h\"; p=\"$PWD\"; while [ \"$p\" != \"/\" ]; do [ -f \"$p/$h\" ] && exec python3 \"$p/$h\"; p=$(dirname \"$p\"); done; echo \"availability-claim-validator.py: not found from $PWD - HOOK SKIPPED (fails open by design)\" >&2; exit 0"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "h=\"$HOME/gits/clybor-claude-tooling/scripts/check-public-text.py\"; [ -f \"$h\" ] && exec python3 \"$h\"; echo \"check-public-text.py: not found - HOOK SKIPPED (fails open)\" >&2; exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__claude_ai_Gmail__(create_draft|update_draft|send_message|reply|forward)|mcp__notion__notion-(create-pages|update-page)|mcp__claude_ai_Zapier__execute_zapier_write_action",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "h=\"$HOME/gits/clybor-claude-tooling/scripts/check-send-text.py\"; [ -f \"$h\" ] && exec python3 \"$h\"; echo \"check-send-text.py: not found - HOOK SKIPPED (fails open)\" >&2; exit 0"
+          }
+        ]
       }
     ],
     "PostToolUse": [
