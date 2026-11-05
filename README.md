@@ -129,7 +129,7 @@ I used slash commands for a while to orchestrate skills into larger workflows. I
 
 ## Catalog
 
-`assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Eight today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`.
+`assets/` holds sanitized, tokenised skills harvested from real projects, indexed in `catalog.json` with each asset's adaptation points. Nine today: `five-whys`, `writing-quality`, `meeting-workflow`, `governance-skill-template`, `project-bootstrap`, `graduate-project`, `notion-governance`, `yellow-sheet-corpus`, `client-refresh`.
 
 A skill lands in `assets/` rather than `.claude/skills/` when a project's filled copy legitimately differs from the canonical one (client paths, matter names). `check-promotion.sh` skips a project's copy of any catalog asset, so the filled copy never reads as drift. To set up a new project from the catalog, invoke `project-bootstrap`: it profiles the project, proposes an install set, copies assets, fills tokens and writes a `TOOLING.md` manifest.
 
