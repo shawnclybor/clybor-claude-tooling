@@ -153,3 +153,37 @@ test('guard-pack passes the session cwd through to git-safety', () => {
   const allow = pack.evaluate('Bash', { command: `cd ${F} && git commit -m x` }, M, {});
   assert.ok(!allow || allow.guard !== 'git-safety', 'expected no git-safety deny');
 });
+test('from main, a push that only deletes named non-main remote branches -> ALLOW', () => {
+  assert.equal(blocked(`git -C ${M} push origin --delete old-feat`, F), false);
+  assert.equal(blocked(`git -C ${M} push origin --delete a b c`, F), false);
+  assert.equal(blocked(`git -C ${M} push -d origin old-feat`, F), false);
+  assert.equal(blocked(`git -C ${M} push --delete origin old-feat`, F), false);
+  assert.equal(blocked(`git -C ${M} push origin :old-feat :other`, F), false);
+  assert.equal(blocked(`git -C ${M} push -q origin --delete refs/heads/old-feat`, F), false);
+  assert.equal(blocked(`cd ${M} && git push origin --delete old-feat`, F), false);
+  assert.equal(blocked('git push origin --delete old-feat', M), false);
+});
+test('from main, delete-push escapes stay blocked', () => {
+  const B = (c) => assert.equal(blocked(c, M), true, c);
+  B('git push origin --delete main');
+  B('git push origin --delete master');
+  B('git push origin --delete refs/heads/main');
+  B('git push origin :main');
+  B('git push origin --delete old-feat main');
+  B('git push origin --delete HEAD');
+  B('git push origin --delete @');
+  B('git push origin --delete origin/HEAD');
+  B('git push origin --delete refs/tags/v1');
+  B('git push origin --delete old-feat --force');
+  B('git push origin --delete old-feat --no-verify');
+  B('git push --all --delete origin');
+  B('git push origin --delete $B');
+  B('git push origin --delete "$(echo x)"');
+  B('git push origin old-feat :other');
+  B('git push origin old-feat');
+  B('git push origin');
+  B('git push --delete old-feat');
+  B('git push origin --delete old-feat && git push origin');
+  B('git push origin --delete old-feat; git push -u origin main');
+  B('git push origin --delete old-feat 2>&1 && git commit -m x');
+});
