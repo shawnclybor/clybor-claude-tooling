@@ -14,3 +14,6 @@ bundles/
 # client identifiers. Committing one to this repo is a one-way door (git history), so the
 # folder is ignored until a draft has been through the scrub. See each PARKED.md.
 knowledge/drafts/
+
+# Node dependencies (scripts/package.json declares them; install with npm install --prefix scripts)
+node_modules/

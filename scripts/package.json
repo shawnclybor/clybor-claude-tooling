@@ -1,0 +1,8 @@
+{
+  "name": "clybor-tooling-scripts",
+  "private": true,
+  "description": "Node dependencies for scripts/generate-deliverable-docx.js. Install: npm install --prefix scripts",
+  "dependencies": {
+    "docx": "9.15.2"
+  }
+}
