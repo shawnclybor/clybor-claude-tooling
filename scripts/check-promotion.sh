@@ -8,6 +8,7 @@
 #              (per-project .githooks/pre-commit — managed projects must never drift)
 #
 # Canonical repo: $CLYBOR_TOOLING or ~/gits/clybor-claude-tooling.
+# Also: cowork/<plugin>/ source vs bundle vs installed copies, via check-plugin-sync.py.
 # Reusable categories (relative to repo root): .claude/skills .claude/hooks .claude/commands
 #   .claude/agents .claude/workflows .githooks scripts/*.sh, and the Python scripts init.sh installs
 #   (read-source.py, check-draft.py, owed.py) — EXCLUDING per-project files (see SKIP).
@@ -139,6 +140,22 @@ if [ "${#bundle_drift[@]}" -gt 0 ]; then
   echo "~ packaged plugin skills differ from clybor-claude-tooling (informational, not blocking):" >&2
   for d in "${bundle_drift[@]}"; do echo "    ~ $d" >&2; done
   echo "  Reconcile with the promote-to-tooling skill, or keep the local version deliberately." >&2
+fi
+
+# ---- Plugin source -> bundle -> installed copies ----------------------------
+# Everything above compares this project against the master. A plugin source folder
+# (cowork/<plugin>/) syncs along its own path instead: source -> .plugin bundle (with a
+# version bump) -> installed copies. A plugin carrying private details must never reach a
+# public master, so that path is the only place its drift can show. Missed 2026-11-11: a
+# hooks plugin was fixed in source with no bump, no rebuild, on an unmerged branch, and this
+# check said nothing. check-plugin-sync.py walks that path. Information only, never blocking:
+# the normal flow is edit, commit, then rebuild, and a block there would train --no-verify.
+if [ -d cowork ] && command -v python3 >/dev/null 2>&1 && [ -f "$CANON/scripts/check-plugin-sync.py" ]; then
+  psync="$(python3 "$CANON/scripts/check-plugin-sync.py" "$REPO" 2>/dev/null)"
+  if [ -n "$psync" ]; then
+    echo "⚠ plugin source / bundle / installed copies out of step:" >&2
+    while IFS=$'\t' read -r cls subj advice; do echo "  ! [$cls] $subj — $advice" >&2; done <<< "$psync"
+  fi
 fi
 
 if [ "$MODE" = "--gate" ] && [ "${#drift[@]}" -gt 0 ]; then
