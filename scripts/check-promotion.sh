@@ -150,8 +150,22 @@ fi
 # hooks plugin was fixed in source with no bump, no rebuild, on an unmerged branch, and this
 # check said nothing. check-plugin-sync.py walks that path. Information only, never blocking:
 # the normal flow is edit, commit, then rebuild, and a block there would train --no-verify.
-if [ -d cowork ] && command -v python3 >/dev/null 2>&1 && [ -f "$CANON/scripts/check-plugin-sync.py" ]; then
-  psync="$(python3 "$CANON/scripts/check-plugin-sync.py" "$REPO" 2>/dev/null)"
+# A check that cannot run must say so: empty output from a crash reads exactly like
+# "all in step", which is the blind spot this section exists to close.
+if [ -d cowork ]; then
+  psc="$CANON/scripts/check-plugin-sync.py"; psync=""
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "⚠ plugin sync check failed to run: python3 not found" >&2
+  elif [ ! -f "$psc" ]; then
+    echo "⚠ plugin sync check failed to run: $psc not found" >&2
+  else
+    perr="$(mktemp)"
+    psync="$(python3 "$psc" "$REPO" 2>"$perr")"; prc=$?
+    if [ "$prc" != 0 ]; then   # last stderr line: for a traceback that is the exception itself
+      echo "⚠ plugin sync check failed to run (exit $prc): $(grep . "$perr" | tail -1 | cut -c1-200)" >&2
+    fi
+    rm -f "$perr"
+  fi
   if [ -n "$psync" ]; then
     echo "⚠ plugin source / bundle / installed copies out of step:" >&2
     while IFS=$'\t' read -r cls subj advice; do echo "  ! [$cls] $subj — $advice" >&2; done <<< "$psync"

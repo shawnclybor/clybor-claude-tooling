@@ -9,6 +9,7 @@
 #   install updated                    -> quiet again
 #   fix committed on a side branch     -> UNMERGED
 #   plugin listed in promotion-ignore  -> no plugin finding (a retired plugin kept as history)
+#   the check crashes / is missing     -> one "failed to run" warning, never silence
 #   --gate with all of the above       -> still exit 0 (information, not a block)
 #
 #   bash scripts/test-check-plugin-sync.sh            # this checkout
@@ -77,6 +78,21 @@ PY
   ! grep -q 'cowork/demo-gate/' <<<"$out" && ok "promotion-ignore silences a retired plugin" \
     || bad "promotion-ignore silences a retired plugin"
 
+  rm -f "$P/.claude/promotion-ignore"
+  cp "$C/scripts/check-plugin-sync.py" "$T/sync.ok" 2>/dev/null
+  printf 'import plugin_sync_module_that_does_not_exist\n' > "$C/scripts/check-plugin-sync.py"
+  out="$(probe)"                                                     # the check itself crashes
+  grep -q 'plugin sync check failed to run.*plugin_sync_module_that_does_not_exist' <<<"$out" \
+    && ok "a crashing check says so (not silence)" || bad "a crashing check says so (not silence)"
+  probe --gate >/dev/null; rc=$?
+  [ "$rc" = 0 ] && ok "--gate stays exit 0 when the check crashes" || bad "--gate stays exit 0 when the check crashes (rc=$rc)"
+
+  rm -f "$C/scripts/check-plugin-sync.py"                            # the check is missing
+  out="$(probe)"
+  grep -q 'plugin sync check failed to run.*not found' <<<"$out" \
+    && ok "a missing check says so (not silence)" || bad "a missing check says so (not silence)"
+  [ -f "$T/sync.ok" ] && cp "$T/sync.ok" "$C/scripts/check-plugin-sync.py"
+
   probe --gate >/dev/null; rc=$?
   [ "$rc" = 0 ] && ok "--gate stays exit 0 on plugin findings" || bad "--gate stays exit 0 (rc=$rc)"
 
@@ -100,5 +116,14 @@ mutant "same-version source change ignored" "('elif vkey(sver) == vkey(bver) and
 mutant "installed copies never compared"    "('        if vkey(iv) < vkey(target):', '        if False:')"
 mutant "unmerged branches never checked"     "('        if n and n != \"0\":', '        if False:')"
 mutant "promotion-ignore not honoured"       "('        if any(fnmatch.fnmatchcase(f\"cowork/{name}/\", g) for g in ignore):', '        if False:')"
+# These two break check-promotion.sh itself, restoring the silent behaviour.
+mutant_check() {
+  local M; M="$(mktemp)"
+  python3 -c "s=open('$CHECK').read(); old,new=$2; assert s.count(old)==1, old; open('$M','w').write(s.replace(old,new))" || exit 2
+  if QUIET=1 run "$M" "$SYNC"; then echo "SURVIVED - $1"; survived=$((survived+1)); else echo "caught   - $1"; fi
+  rm -f "$M"
+}
+mutant_check "crash swallowed (exit code ignored)" "('    if [ \"\$prc\" != 0 ]; then', '    if false; then')"
+mutant_check "missing check skipped silently"     "('    echo \"⚠ plugin sync check failed to run: \$psc not found\" >&2', '    :')"
 echo
 [ "$survived" = 0 ] && echo "PASS: every break caught" || { echo "FAIL: $survived break(s) survived"; exit 1; }
