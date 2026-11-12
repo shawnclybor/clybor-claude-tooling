@@ -81,6 +81,49 @@ list_files() {
 # what is staged. This is what makes --gate non-honor-system.
 while IFS= read -r f; do [ -n "$f" ] && scan "$f"; done < <(list_files)
 
+# Plugin findings print FIRST, under one line addressed to the session that reads this report.
+# The SessionStart hook hands this whole report to Claude as background context, not to the
+# user, so a finding at the bottom of a long drift list was read and never raised (2026-11-12).
+plugin_head_done=""
+plugin_head() {
+  [ -n "$plugin_head_done" ] && return 0
+  plugin_head_done=1
+  echo "⚠ ACTION FOR CLAUDE: tell the user about the plugin problems below before any other work; a plugin out of step ships stale rules. Everything after this block is informational." >&2
+}
+
+# ---- Plugin source -> bundle -> installed copies ----------------------------
+# Everything above compares this project against the master. A plugin source folder
+# (cowork/<plugin>/) syncs along its own path instead: source -> .plugin bundle (with a
+# version bump) -> installed copies. A plugin carrying private details must never reach a
+# public master, so that path is the only place its drift can show. Missed 2026-11-11: a
+# hooks plugin was fixed in source with no bump, no rebuild, on an unmerged branch, and this
+# check said nothing. check-plugin-sync.py walks that path. Information only, never blocking:
+# the normal flow is edit, commit, then rebuild, and a block there would train --no-verify.
+# A check that cannot run must say so: empty output from a crash reads exactly like
+# "all in step", which is the blind spot this section exists to close.
+plugin_sync_report() {
+  [ -d cowork ] || return 0
+  psc="$CANON/scripts/check-plugin-sync.py"; psync=""
+  if ! command -v python3 >/dev/null 2>&1; then
+    plugin_head; echo "  ! plugin sync check failed to run: python3 not found" >&2
+  elif [ ! -f "$psc" ]; then
+    plugin_head; echo "  ! plugin sync check failed to run: $psc not found" >&2
+  else
+    perr="$(mktemp)"
+    psync="$(python3 "$psc" "$REPO" 2>"$perr")"; prc=$?
+    if [ "$prc" != 0 ]; then   # last stderr line: for a traceback that is the exception itself
+      plugin_head; echo "  ! plugin sync check failed to run (exit $prc): $(grep . "$perr" | tail -1 | cut -c1-200)" >&2
+    fi
+    rm -f "$perr"
+  fi
+  if [ -n "$psync" ]; then
+    plugin_head; echo "  plugin source / bundle / installed copies out of step:" >&2
+    while IFS=$'\t' read -r cls subj advice; do echo "  ! [$cls] $subj — $advice" >&2; done <<< "$psync"
+  fi
+}
+
+plugin_sync_report   # printed FIRST, before any drift: see plugin_head above
+
 if [ "${#drift[@]}" -gt 0 ]; then
   echo "⚠ tooling DRIFT vs clybor-claude-tooling:" >&2
   # Name the direction and whether the project copy is private (classify-drift.py), so the
@@ -140,36 +183,6 @@ if [ "${#bundle_drift[@]}" -gt 0 ]; then
   echo "~ packaged plugin skills differ from clybor-claude-tooling (informational, not blocking):" >&2
   for d in "${bundle_drift[@]}"; do echo "    ~ $d" >&2; done
   echo "  Reconcile with the promote-to-tooling skill, or keep the local version deliberately." >&2
-fi
-
-# ---- Plugin source -> bundle -> installed copies ----------------------------
-# Everything above compares this project against the master. A plugin source folder
-# (cowork/<plugin>/) syncs along its own path instead: source -> .plugin bundle (with a
-# version bump) -> installed copies. A plugin carrying private details must never reach a
-# public master, so that path is the only place its drift can show. Missed 2026-11-11: a
-# hooks plugin was fixed in source with no bump, no rebuild, on an unmerged branch, and this
-# check said nothing. check-plugin-sync.py walks that path. Information only, never blocking:
-# the normal flow is edit, commit, then rebuild, and a block there would train --no-verify.
-# A check that cannot run must say so: empty output from a crash reads exactly like
-# "all in step", which is the blind spot this section exists to close.
-if [ -d cowork ]; then
-  psc="$CANON/scripts/check-plugin-sync.py"; psync=""
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "⚠ plugin sync check failed to run: python3 not found" >&2
-  elif [ ! -f "$psc" ]; then
-    echo "⚠ plugin sync check failed to run: $psc not found" >&2
-  else
-    perr="$(mktemp)"
-    psync="$(python3 "$psc" "$REPO" 2>"$perr")"; prc=$?
-    if [ "$prc" != 0 ]; then   # last stderr line: for a traceback that is the exception itself
-      echo "⚠ plugin sync check failed to run (exit $prc): $(grep . "$perr" | tail -1 | cut -c1-200)" >&2
-    fi
-    rm -f "$perr"
-  fi
-  if [ -n "$psync" ]; then
-    echo "⚠ plugin source / bundle / installed copies out of step:" >&2
-    while IFS=$'\t' read -r cls subj advice; do echo "  ! [$cls] $subj — $advice" >&2; done <<< "$psync"
-  fi
 fi
 
 if [ "$MODE" = "--gate" ] && [ "${#drift[@]}" -gt 0 ]; then

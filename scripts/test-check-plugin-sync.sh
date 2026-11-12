@@ -10,6 +10,7 @@
 #   fix committed on a side branch     -> UNMERGED
 #   plugin listed in promotion-ignore  -> no plugin finding (a retired plugin kept as history)
 #   the check crashes / is missing     -> one "failed to run" warning, never silence
+#   plugin findings + ordinary drift   -> plugin block prints first, under ACTION FOR CLAUDE
 #   --gate with all of the above       -> still exit 0 (information, not a block)
 #
 #   bash scripts/test-check-plugin-sync.sh            # this checkout
@@ -56,6 +57,17 @@ PY
   out="$(probe)"
   grep -q '\[UNBUMPED\] cowork/demo-gate/' <<<"$out" && ok "edited source, same version -> UNBUMPED" \
     || bad "edited source, same version -> UNBUMPED"
+
+  printf 'echo canon\n' > "$C/scripts/drifted.sh"; mkdir -p "$P/scripts"
+  printf 'echo local\n' > "$P/scripts/drifted.sh"                   # an ordinary drift line too
+  out="$(probe)"
+  ln_of() { grep -n -- "$1" <<<"$out" | head -1 | cut -d: -f1; }
+  pl="$(ln_of '\[UNBUMPED\]')"; dl="$(ln_of 'tooling DRIFT')"; al="$(ln_of 'ACTION FOR CLAUDE')"
+  [ -n "$pl" ] && [ -n "$dl" ] && [ "$pl" -lt "$dl" ] && ok "plugin findings print before drift lines" \
+    || bad "plugin findings print before drift lines (plugin line ${pl:-none}, drift line ${dl:-none})"
+  [ -n "$al" ] && [ -n "$pl" ] && [ "$al" -lt "$pl" ] && ok "an ACTION FOR CLAUDE line heads the plugin findings" \
+    || bad "an ACTION FOR CLAUDE line heads the plugin findings"
+  rm -f "$P/scripts/drifted.sh" "$C/scripts/drifted.sh"             # --gate would block on it later
 
   mf 1.0.1 > "$S/.claude-plugin/plugin.json"; pack
   out="$(probe)"
@@ -124,6 +136,20 @@ mutant_check() {
   rm -f "$M"
 }
 mutant_check "crash swallowed (exit code ignored)" "('    if [ \"\$prc\" != 0 ]; then', '    if false; then')"
-mutant_check "missing check skipped silently"     "('    echo \"⚠ plugin sync check failed to run: \$psc not found\" >&2', '    :')"
+mutant_check "missing check skipped silently"     "('    plugin_head; echo \"  ! plugin sync check failed to run: \$psc not found\" >&2', '    :')"
+# Multi-pair: every (old, new) must match exactly once.
+mutant_check_n() {
+  local M; M="$(mktemp)"
+  python3 -c "
+s=open('$CHECK').read()
+for old,new in $2:
+    assert s.count(old)==1, old
+    s=s.replace(old,new)
+open('$M','w').write(s)" || exit 2
+  if QUIET=1 run "$M" "$SYNC"; then echo "SURVIVED - $1"; survived=$((survived+1)); else echo "caught   - $1"; fi
+  rm -f "$M"
+}
+mutant_check_n "plugin findings moved back to the bottom" "[('plugin_sync_report   # printed FIRST, before any drift: see plugin_head above\n', ''), ('if [ \"\$MODE\" = \"--gate\" ] && [ \"\${#drift[@]}\" -gt 0 ]; then', 'plugin_sync_report\nif [ \"\$MODE\" = \"--gate\" ] && [ \"\${#drift[@]}\" -gt 0 ]; then')]"
+mutant_check "instruction line dropped"           "('  echo \"⚠ ACTION FOR CLAUDE:', '  : \"')"
 echo
 [ "$survived" = 0 ] && echo "PASS: every break caught" || { echo "FAIL: $survived break(s) survived"; exit 1; }
