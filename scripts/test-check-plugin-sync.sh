@@ -8,6 +8,7 @@
 #   bumped + rebuilt, install still old -> INSTALLED-LAGS (and no UNBUMPED)
 #   install updated                    -> quiet again
 #   fix committed on a side branch     -> UNMERGED
+#   plugin listed in promotion-ignore  -> no plugin finding (a retired plugin kept as history)
 #   --gate with all of the above       -> still exit 0 (information, not a block)
 #
 #   bash scripts/test-check-plugin-sync.sh            # this checkout
@@ -70,6 +71,12 @@ PY
   grep -q '\[UNMERGED\] records-fix' <<<"$out" && ok "fix only on a side branch -> UNMERGED" \
     || bad "fix only on a side branch -> UNMERGED"
 
+  printf "export const ROOM = 'retired'\n" > "$S/hooks/meeting.ts"   # unbumped again...
+  mkdir -p "$P/.claude"; printf 'cowork/demo-gate/   # retired, kept as history\n' > "$P/.claude/promotion-ignore"
+  out="$(probe)"                                                     # ...but opted out
+  ! grep -q 'cowork/demo-gate/' <<<"$out" && ok "promotion-ignore silences a retired plugin" \
+    || bad "promotion-ignore silences a retired plugin"
+
   probe --gate >/dev/null; rc=$?
   [ "$rc" = 0 ] && ok "--gate stays exit 0 on plugin findings" || bad "--gate stays exit 0 (rc=$rc)"
 
@@ -92,5 +99,6 @@ mutant() {
 mutant "same-version source change ignored" "('elif vkey(sver) == vkey(bver) and changed:', 'elif False:')"
 mutant "installed copies never compared"    "('        if vkey(iv) < vkey(target):', '        if False:')"
 mutant "unmerged branches never checked"     "('        if n and n != \"0\":', '        if False:')"
+mutant "promotion-ignore not honoured"       "('        if any(fnmatch.fnmatchcase(f\"cowork/{name}/\", g) for g in ignore):', '        if False:')"
 echo
 [ "$survived" = 0 ] && echo "PASS: every break caught" || { echo "FAIL: $survived break(s) survived"; exit 1; }

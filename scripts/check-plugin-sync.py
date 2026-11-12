@@ -21,9 +21,11 @@ Labels printed:
                   branch lacks, so new worktrees start without them.
 
 Install locations: CLYBOR_PLUGIN_INSTALL_GLOBS (os.pathsep-separated globs, each matching
-plugin root folders); defaults below. Output: one tab-separated "LABEL<TAB>subject<TAB>advice"
+plugin root folders); defaults below. A plugin is skipped when 'cowork/<name>/' matches a
+line of .claude/promotion-ignore (a retired plugin kept as history, say). Output: one tab-separated "LABEL<TAB>subject<TAB>advice"
 line per finding, nothing when all is in step. Always exits 0: information, not a gate.
 """
+import fnmatch
 import glob
 import json
 import os
@@ -125,6 +127,17 @@ def unmerged_branches(repo):
     return out
 
 
+def ignore_globs(repo):
+    """The same opt-out file check-promotion.sh reads: one glob per line, '#' comments.
+    A plugin is skipped when 'cowork/<name>/' matches a line."""
+    path = os.path.join(repo, ".claude", "promotion-ignore")
+    if not os.path.isfile(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        lines = (ln.split("#", 1)[0].strip() for ln in f)
+        return [ln for ln in lines if ln]
+
+
 def check_plugin(cw, name, globs):
     src = os.path.join(cw, name)
     with open(os.path.join(src, MANIFEST), encoding="utf-8") as f:
@@ -169,10 +182,13 @@ def main():
         return
     env = os.environ.get("CLYBOR_PLUGIN_INSTALL_GLOBS")
     globs = [g for g in env.split(os.pathsep) if g] if env else DEFAULT_GLOBS
+    ignore = ignore_globs(repo)
     findings = []
     for name in sorted(os.listdir(cw)):
         if name.startswith(("_", ".")) or not os.path.isfile(os.path.join(cw, name, MANIFEST)):
             continue
+        if any(fnmatch.fnmatchcase(f"cowork/{name}/", g) for g in ignore):
+            continue  # e.g. a retired plugin kept as history: never rebuilt, never reinstalled
         try:
             findings += check_plugin(cw, name, globs)
         except OSError as e:
