@@ -202,6 +202,26 @@ while IFS=$'\t' read -r sec fol_path; do
   fi
 done < "$TMP_FOLDER"
 
+# --- Check 7: recent drafts/deliverables are named by a cold-start entry point ---
+# Checks 1-6 never look inside drafts/ or deliverables/, so a deliverable named only in a task
+# tracker passed all of them. Logic lives in check-unlinked-deliverables.py (exit 0/1/2, prints counts).
+section "Check 7: recent drafts/deliverables named in registry, memory file or index.md"
+C7_SCRIPT="${CHECK7_SCRIPT:-$REPO_ROOT/scripts/check-unlinked-deliverables.py}"  # override is for tests only
+C7_OUT=$(python3 "$C7_SCRIPT" --root "$REPO_ROOT" 2>&1); C7_RC=$?
+echo "  $(printf '%s\n' "$C7_OUT" | tail -1)"
+if (( C7_RC == 0 )); then
+  log_ok "no unlinked recent drafts/deliverables"
+elif (( C7_RC == 1 )); then
+  grep -q '^UNLINKED ' <<< "$C7_OUT" || log_gap "Check 7 exited 1 with no UNLINKED lines: ${C7_OUT//$'\n'/ }" "Treat as could-not-check; fix the script."
+  while IFS= read -r line; do
+    [[ "$line" == UNLINKED\ * ]] || continue
+    log_gap "${line#UNLINKED } is not named in the registry, memory/projects/*.md or its index.md." \
+            "Name the file (or its sibling .md) in the project's registry block, memory file or index.md."
+  done <<< "$C7_OUT"
+else
+  log_gap "Check 7 could not run (exit $C7_RC): ${C7_OUT//$'\n'/ }" "Fix the layout block or the script, then rerun."
+fi
+
 # --- Report ---
 section "Summary"
 if (( GAPS == 0 )); then
