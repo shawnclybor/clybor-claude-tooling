@@ -63,7 +63,8 @@ def numbers_left(line):
     s = re.sub(r"\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b", " ", s, flags=re.I)
     s = re.sub(rf"\b(?:{LABEL})s?\s*#?\d+(?:\s*[–-]\s*\d+)?\b", " ", s, flags=re.I)
     s = re.sub(r"\b(?:19|20)\d{2}\b", " ", s)
-    s = re.sub(r"^\s*(?:[-*]\s+)?\d+[.)]\s", " ", s)
+    # Numbered list items and numbered headings ("## 2. Title") are labels, not counts (2026-11-18).
+    s = re.sub(r"^\s*(?:[-*]\s+|#{1,6}\s+)?\d+[.)]\s", " ", s)
     # IDs and versions (_001, D4, v1.2, FY2028, deadbeef, 1a2b3c4d-5e6f) are digits touching letters, _ . - or /.
     # Decimals, fractions and "99-row" are still counts (chaos review 2026-11-05).
     return [n.replace(",", "") for n in re.findall(r"(?<![\w.\-/])\d[\d,]*(?:\.\d+)?%?(?![\w]|\.\d)", s)]
