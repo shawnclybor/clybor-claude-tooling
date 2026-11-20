@@ -116,6 +116,7 @@ def newest_mtime(p):
 B = r"(?<![\w.-])"
 cutoff = time.time() - a.days * 86400 if a.days > 0 else None
 folders = evaluated = skipped_old = unmapped = 0
+unmapped_names = []  # a bare count is unactionable: name them (granola-processing 2026-11-19)
 unlinked = []
 for proj in list(dict.fromkeys(list(owned) + layout_folders)):
     if not os.path.isdir(os.path.join(root, proj)):
@@ -124,6 +125,7 @@ for proj in list(dict.fromkeys(list(owned) + layout_folders)):
     texts = owned.get(proj)
     if texts is None:
         unmapped += 1
+        unmapped_names.append(proj)
         texts = [read(os.path.join(root, "memory", "projects", proj + ".md"))]
     hay = norm(expand_braces("\n".join(texts + [read(os.path.join(root, proj, "index.md"))])))
     for sub in ("drafts", "deliverables"):
@@ -150,6 +152,9 @@ for u in unlinked:
 window = f"{a.days}d" if cutoff else "none"
 print(f"folders={folders} evaluated={evaluated} unlinked={len(unlinked)} skipped_older={skipped_old} "
       f"unmapped_folders={unmapped} window={window}")
+if unmapped_names:
+    print("UNMAPPED_FOLDERS " + " ".join(sorted(unmapped_names)) +
+          "  (no registry folder row; Check 7 fell back to memory/projects/<name>.md only)")
 if folders == 0:
     print("FAIL: found no project folders (registry Local folder rows or layout). Wrong --root?"); sys.exit(2)
 sys.exit(1 if unlinked else 0)
