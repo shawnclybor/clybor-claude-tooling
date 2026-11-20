@@ -13,6 +13,14 @@ wrong by a factor of two within four days (written Aug 23 for 61 tasks; 21 of th
 
 Tool: `estimate.py` beside this file. Ledger: `calibration.json` beside it. Stdlib Python only.
 
+## If the estimate turns into a client price
+
+This tool gives calendar effort, not a price. Hours from logged history undercount meetings,
+coordination, discovery and one-time platform work, so pricing them as-is under-quotes. When the
+hours feed a quote, proposal, or partner pricing memo, apply the project's pricing calibration
+first (`docs/references/pricing-calibration.md`, where the project keeps one). Keep internal rates
+and multipliers out of client-facing text.
+
 ## When
 
 | Moment | Mode | Who calls it |
